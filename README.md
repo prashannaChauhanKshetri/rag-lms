@@ -12,12 +12,16 @@ This is a **Final Year Project (FYP)** for building an intelligent Learning Mana
 ## 🚀 Features
 
 - **Smart PDF Ingestion**: Automatically processes and chunks PDFs with page-level metadata
+- **OCR Support**: Handles scanned PDFs using Tesseract OCR with parallel processing (4-core)
+- **Hybrid Processing**: Extracts text directly when possible, falls back to OCR for scanned pages
 - **Intelligent Search**: Uses FAISS vector search with local embeddings (MiniLM)
 - **AI-Powered Answers**: Integrates with Groq LLM for accurate, context-aware responses
 - **Page Citations**: Every answer includes specific page references from source materials
 - **Subject Namespaces**: Organize content by subject for multi-course support
 - **Web UI**: Simple browser interface for upload and chat
 - **Chainlit Interface**: Developer-friendly chat UI for testing
+
+**Performance**: Processes 200-page textbooks in ~80 seconds, generating 400-500 searchable chunks
 
 ## 🛠️ Tech Stack
 
@@ -58,7 +62,19 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-4. **Set up environment variables**
+**4. Install Tesseract OCR (for scanned PDFs)**
+```bash
+# On macOS
+brew install tesseract
+
+# On Ubuntu/Debian
+sudo apt-get install tesseract-ocr
+
+# On Windows
+# Download from: https://github.com/UB-Mannheim/tesseract/wiki
+```
+
+5. **Set up environment variables**
 Create a `.env` file:
 ```bash
 GROQ_API_KEY=your_groq_api_key_here
