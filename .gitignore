@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# Virtual environment
+env/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+vectorstores/
+fin_ed_docs/*.pdf
+!fin_ed_docs/.gitkeep
+*.pkl
+*.index
+
+# Chainlit
+.chainlit/
+
+# Test files
+test_*.py
+diagnose_*.py
+create_test_pdf.py
+*.pdf
+!README.md
+
+# Logs
+*.log

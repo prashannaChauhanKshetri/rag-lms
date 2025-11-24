@@ -1,0 +1,44 @@
+<!-- static/index.html -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>RAG Upload + Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width:900px; margin:40px auto; }
+    .box { padding:12px; border:1px solid #ddd; margin-bottom:12px; border-radius:6px }
+    label { display:block; margin-bottom:6px; font-weight:600; }
+    textarea { width:100%; height:120px; }
+    .sources { font-size:0.9rem; color:#444; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <h2>RAG: Upload PDF & Chat</h2>
+
+  <div class="box">
+    <h3>Upload PDF (ingest)</h3>
+    <form id="uploadForm">
+      <label>Subject (namespace)</label>
+      <input id="subject" name="subject" value="general" />
+      <label>PDF file</label>
+      <input type="file" id="file" accept="application/pdf" />
+      <br/><br/>
+      <button type="submit">Upload & Ingest</button>
+    </form>
+    <div id="uploadResult"></div>
+  </div>
+
+  <div class="box">
+    <h3>Ask a question</h3>
+    <label>Subject (same as ingest)</label>
+    <input id="qsubject" value="general" />
+    <label>Question</label>
+    <textarea id="question"></textarea>
+    <br/>
+    <button id="ask">Ask</button>
+    <div id="answer"></div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
