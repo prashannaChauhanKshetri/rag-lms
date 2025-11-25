@@ -1,44 +1,73 @@
-<!-- static/index.html -->
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <title>RAG Upload + Chat</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width:900px; margin:40px auto; }
-    .box { padding:12px; border:1px solid #ddd; margin-bottom:12px; border-radius:6px }
-    label { display:block; margin-bottom:6px; font-weight:600; }
-    textarea { width:100%; height:120px; }
-    .sources { font-size:0.9rem; color:#444; margin-top:8px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG-LMS Student Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/student.css">
 </head>
+
 <body>
-  <h2>RAG: Upload PDF & Chat</h2>
+    <div class="student-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <div class="logo-icon">S</div>
+                <span>Student Portal</span>
+            </div>
+            <div class="subject-selector">
+                <label>Current Subject:</label>
+                <select id="subject-select" onchange="changeSubject()">
+                    <option value="" disabled selected>Select a Subject...</option>
+                </select>
+            </div>
+        </header>
 
-  <div class="box">
-    <h3>Upload PDF (ingest)</h3>
-    <form id="uploadForm">
-      <label>Subject (namespace)</label>
-      <input id="subject" name="subject" value="general" />
-      <label>PDF file</label>
-      <input type="file" id="file" accept="application/pdf" />
-      <br/><br/>
-      <button type="submit">Upload & Ingest</button>
-    </form>
-    <div id="uploadResult"></div>
-  </div>
+        <!-- Chat Area -->
+        <main class="chat-area">
+            <div class="chat-container">
+                <div id="chat-history" class="chat-history">
+                    <div class="message bot-message">
+                        <div class="avatar">AI</div>
+                        <div class="bubble">
+                            <h3>Welcome! 👋</h3>
+                            <p>Please select a subject from the top menu to start learning.</p>
+                        </div>
+                    </div>
+                </div>
 
-  <div class="box">
-    <h3>Ask a question</h3>
-    <label>Subject (same as ingest)</label>
-    <input id="qsubject" value="general" />
-    <label>Question</label>
-    <textarea id="question"></textarea>
-    <br/>
-    <button id="ask">Ask</button>
-    <div id="answer"></div>
-  </div>
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <input type="text" id="user-input" placeholder="Ask a question..." disabled
+                            onkeypress="handleEnter(event)">
+                        <button id="send-btn" onclick="sendMessage()" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
 
-  <script src="/static/app.js"></script>
+        <!-- Source Panel (Slide-over) -->
+        <aside class="source-panel" id="source-panel">
+            <div class="panel-header">
+                <h3>📚 Sources</h3>
+                <button onclick="toggleSources()">×</button>
+            </div>
+            <div id="source-content" class="source-content">
+                <!-- Sources will appear here -->
+            </div>
+        </aside>
+    </div>
+
+    <script src="js/student.js"></script>
 </body>
+
 </html>

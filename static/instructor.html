@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG-LMS Instructor Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/instructor.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">R</div>
+                <span>RAG-LMS</span>
+            </div>
+
+            <ul class="nav-links">
+                <li class="active" data-panel="creation">
+                    <span class="icon">✨</span> Creation
+                </li>
+                <li data-panel="training">
+                    <span class="icon">📚</span> Training
+                </li>
+                <li data-panel="testing">
+                    <span class="icon">🧪</span> Testing
+                </li>
+                <li data-panel="monitoring">
+                    <span class="icon">📊</span> Monitoring
+                </li>
+            </ul>
+
+            <div class="user-profile">
+                <div class="avatar">I</div>
+                <div class="info">
+                    <span class="name">Instructor</span>
+                    <span class="role">Admin</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- 1. Creation Panel (Orange) -->
+            <section id="creation-panel" class="panel active">
+                <header class="panel-header">
+                    <h1>Create New Chatbot</h1>
+                    <p>Configure your AI assistant's personality and knowledge base.</p>
+                </header>
+
+                <div class="card-grid">
+                    <div class="card form-card">
+                        <div class="form-group">
+                            <label>Chatbot Name</label>
+                            <input type="text" id="bot-name" placeholder="e.g., Grade 10 Science Bot">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Greeting Message</label>
+                            <textarea id="bot-greeting" placeholder="Hello! I'm here to help you with..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>External Knowledge Ratio <span id="ratio-value">50%</span></label>
+                            <div class="slider-container">
+                                <span>Strict</span>
+                                <input type="range" id="bot-ratio" min="0" max="1" step="0.1" value="0.5">
+                                <span>Creative</span>
+                            </div>
+                            <p class="hint">Controls how much the AI relies on outside knowledge vs. your documents.</p>
+                        </div>
+
+                        <button class="btn-primary" onclick="createChatbot()">Create Chatbot</button>
+                    </div>
+
+                    <div class="card preview-card">
+                        <h3>Live Preview</h3>
+                        <div class="chat-preview">
+                            <div class="message bot-message">
+                                <div class="avatar">AI</div>
+                                <div class="bubble" id="preview-greeting">Hello! I'm here to help you with...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Training Panel (Teal) -->
+            <section id="training-panel" class="panel">
+                <header class="panel-header">
+                    <h1>Knowledge Base</h1>
+                    <p>Upload textbooks and documents to train your chatbot.</p>
+                </header>
+
+                <div class="chatbot-selector">
+                    <label>Select Chatbot:</label>
+                    <select id="training-bot-select" onchange="loadDocuments()"></select>
+                </div>
+
+                <div class="upload-area" id="drop-zone">
+                    <div class="icon">📂</div>
+                    <h3>Drag & Drop PDF Files</h3>
+                    <p>or <span class="highlight" onclick="document.getElementById('file-upload').click()">browse
+                            files</span></p>
+                    <input type="file" id="file-upload" accept=".pdf" hidden onchange="handleFileUpload(this.files)">
+                </div>
+
+                <div class="documents-list">
+                    <h3>Uploaded Documents</h3>
+                    <div id="doc-list-container">
+                        <!-- Doc items will go here -->
+                        <div class="empty-state">No documents uploaded yet.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Testing Panel (Light Blue) -->
+            <section id="testing-panel" class="panel">
+                <header class="panel-header">
+                    <h1>Test Playground</h1>
+                    <p>Verify your chatbot's responses before deploying.</p>
+                </header>
+
+                <div class="chatbot-selector">
+                    <label>Select Chatbot:</label>
+                    <select id="testing-bot-select"></select>
+                </div>
+
+                <div class="chat-interface">
+                    <div class="chat-history" id="test-chat-history">
+                        <div class="message bot-message">
+                            <div class="avatar">AI</div>
+                            <div class="bubble">Ready to test! Ask me anything from the uploaded documents.</div>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="test-input" placeholder="Type a question..."
+                            onkeypress="handleTestEnter(event)">
+                        <button class="btn-send" onclick="sendTestMessage()">➤</button>
+                    </div>
+                </div>
+
+                <div class="retrieval-info" id="retrieval-debug">
+                    <h4>Retrieval Debug Info</h4>
+                    <div class="debug-content">Run a query to see retrieved chunks here...</div>
+                </div>
+            </section>
+
+            <!-- 4. Monitoring Panel (Purple) -->
+            <section id="monitoring-panel" class="panel">
+                <header class="panel-header">
+                    <h1>Monitoring & Feedback</h1>
+                    <p>Review conversations and improve accuracy.</p>
+                </header>
+
+                <div class="chatbot-selector">
+                    <label>Select Chatbot:</label>
+                    <select id="monitoring-bot-select" onchange="loadHistory()"></select>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <h3>Total Queries</h3>
+                        <div class="value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Avg. Confidence</h3>
+                        <div class="value" id="stat-conf">--</div>
+                    </div>
+                </div>
+
+                <div class="history-list" id="history-container">
+                    <!-- History items -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="js/instructor.js"></script>
+</body>
+
+</html>
