@@ -158,7 +158,7 @@ rag-lms/
 ## 🎓 Educational Context
 
 This project is designed for:
-- Grade 10-12 Science & Technology courses
+- Grade 10-12
 - Large textbooks (200-300 pages each)
 - Multiple subjects per semester
 - Student self-study and exam preparation
