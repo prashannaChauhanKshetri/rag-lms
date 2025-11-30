@@ -21,6 +21,7 @@ load_dotenv()
 # Import local modules
 import database as db
 from utils import process_pdf, build_system_user_prompt
+import ollama # Added for local chat
 from vectorstore import (
     add_documents, 
     hybrid_query, 
@@ -292,8 +293,51 @@ async def submit_feedback_endpoint(
 
 # --- Helpers ---
 
+def call_local_qwen(system_prompt: str, user_prompt: str) -> str:
+    """Call Local Qwen3-VL-4B via Ollama"""
+    try:
+        # Combine prompts for the model
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        response = ollama.chat(
+            model='qwen3-vl:4b',
+            messages=[{'role': 'user', 'content': full_prompt}]
+        )
+        return response['message']['content']
+    except Exception as e:
+        logger.error(f"Ollama API error: {e}")
+        return f"Error: {str(e)}"
+
 def call_groq_llm(system_prompt: str, user_prompt: str) -> str:
-    """Call Groq API"""
+    """
+    Hybrid Setup:
+    - OCR: Local Qwen3-VL-4B (in utils.py)
+    - Chat: Cloud Groq (Fast & Free)
+    """
+    # --- LOCAL MODE (Phi-3-Mini) - COMMENTED OUT ---
+    # return call_local_phi3(system_prompt, user_prompt)
+
+    # --- CLOUD MODE (Groq) ---
+    return _call_groq_llm_original(system_prompt, user_prompt)
+
+def call_local_phi3(system_prompt: str, user_prompt: str) -> str:
+    """Helper for Local Phi-3-Mini (Experimental)"""
+    try:
+        response = ollama.chat(
+            model='phi3:mini',
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': user_prompt}
+            ],
+            options={'keep_alive': -1}
+        )
+        return response['message']['content']
+    except Exception as e:
+        logger.error(f"Phi-3-Mini error: {e}")
+        return f"Error: {str(e)}"
+
+def _call_groq_llm_original(system_prompt: str, user_prompt: str) -> str:
+    """Original Groq API Call (Backup)"""
     groq_api_key = os.getenv("GROQ_API_KEY")
     if not groq_api_key:
         return "⚠️ GROQ_API_KEY not configured."

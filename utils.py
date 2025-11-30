@@ -1,10 +1,14 @@
 import io
 import logging
+import io
+import logging
 import re
+import json # Added for TOC parsing
 from typing import List, Dict, Tuple, Optional
 import fitz  # PyMuPDF
 import tiktoken
-import pytesseract
+import tiktoken
+import ollama  # Replaced pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
 
@@ -37,6 +41,64 @@ def extract_toc(doc: fitz.Document) -> Dict[int, str]:
         
     return {}
 
+def extract_toc_with_qwen(doc: fitz.Document) -> Dict[int, str]:
+    """
+    Use Qwen3-VL-4B to read the Table of Contents from the first 10 pages.
+    """
+    logger.info("Attempting AI-powered TOC extraction with Qwen3-VL...")
+    toc_map = {}
+    
+    # Scan first 10 pages (usually TOC is here)
+    for i in range(min(10, len(doc))):
+        try:
+            page = doc[i]
+            text = page.get_text().lower()
+            
+            # Heuristic: If page 1-3, scan it regardless (often TOC is early). 
+            # For pages 4-10, require keywords.
+            if i > 2:
+                if "content" not in text and "index" not in text and "chapter" not in text and "unit" not in text:
+                    continue
+                
+            logger.info(f"Scanning Page {i+1} for TOC...")
+            pix = page.get_pixmap(dpi=150)
+            img_data = pix.tobytes("png")
+            
+            response = ollama.chat(
+                model='qwen3-vl:4b',
+                messages=[{
+                    'role': 'user',
+                    'content': 'Analyze this Table of Contents image. Extract the Unit/Chapter Name and its Starting Page Number. \nFormat: JSON {PageNumber: "Unit X: Title"}. \nExample: {"1": "Unit 1: Algebra", "162": "Unit 5: Trigonometry"}. \nLook closely for "Unit" followed by a number and a title. Ignore dots/lines.',
+                    'images': [img_data]
+                }]
+            )
+            
+            content = response['message']['content']
+            # Clean up code blocks if present
+            content = content.replace("```json", "").replace("```", "").strip()
+            
+            try:
+                page_toc = json.loads(content)
+                if page_toc:
+                    # Convert keys to int and update map
+                    for p, title in page_toc.items():
+                        try:
+                            toc_map[int(p)] = title
+                        except:
+                            pass
+            except json.JSONDecodeError:
+                pass # Qwen didn't output valid JSON
+                
+        except Exception as e:
+            logger.error(f"Error scanning page {i+1} for TOC: {e}")
+            
+    if toc_map:
+        logger.info(f"AI extracted {len(toc_map)} chapters: {toc_map}")
+    else:
+        logger.warning("AI could not find a Table of Contents.")
+        
+    return toc_map
+
 def get_chapter_for_page(page_num: int, toc_map: Dict[int, str]) -> str:
     """Find the chapter for a given page number"""
     current_chapter = "Unknown"
@@ -58,6 +120,12 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
     
     # 1. Extract TOC
     toc_map = extract_toc(doc)
+    
+    # 2. If Metadata TOC failed, try AI TOC
+    if not toc_map:
+        toc_map = extract_toc_with_qwen(doc)
+        
+    # 3. Fallback (Last Resort)
     if not toc_map:
         # Fallback for Grade 10 Science
         toc_map = {
@@ -85,6 +153,25 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
 
     chunks = []
     
+    # --- SYNTHETIC TOC CHUNK ---
+    # Create a perfect text chunk so the LLM knows the structure
+    if toc_map:
+        toc_text = "Table of Contents / Structure of this Document:\n"
+        sorted_pages = sorted(toc_map.keys())
+        for p in sorted_pages:
+            toc_text += f"- Page {p}: {toc_map[p]}\n"
+            
+        chunks.append({
+            "text": toc_text,
+            "page": 1,
+            "chapter": "Table of Contents",
+            "section_type": "structure",
+            "token_count": count_tokens(toc_text),
+            "original_text": toc_text
+        })
+        logger.info("Added Synthetic TOC Chunk")
+    # ---------------------------
+    
     # Convert to images for OCR if needed (lazy loading would be better but keeping it simple)
     # We'll convert on demand to save memory
     
@@ -97,14 +184,25 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
         
         # OCR Fallback
         if len(text.strip()) < 50:
-            print(f"DEBUG: Page {real_page_num} triggering OCR...")
-            logger.info(f"Page {real_page_num} has little text ({len(text.strip())} chars). Attempting OCR...")
+            print(f"DEBUG: Page {real_page_num} triggering OCR (Qwen3-VL)...")
+            logger.info(f"Page {real_page_num} has little text ({len(text.strip())} chars). Attempting OCR with Qwen3-VL...")
             try:
                 # Render page to image
-                pix = page.get_pixmap(dpi=300)
+                pix = page.get_pixmap(dpi=150)
                 img_data = pix.tobytes("png")
-                image = Image.open(io.BytesIO(img_data))
-                text = pytesseract.image_to_string(image)
+                
+                # Use Qwen3-VL-4B for OCR
+                response = ollama.chat(
+                    model='qwen3-vl:4b',
+                    messages=[{
+                        'role': 'user',
+                        'content': 'Extract all text from this image. Output ONLY the text, no conversational filler.',
+                        'images': [img_data]
+                    }],
+                    options={'keep_alive': 0}  # Unload immediately to free RAM
+                )
+                text = response['message']['content']
+                
                 print(f"DEBUG: Page {real_page_num} OCR result len: {len(text)}")
                 logger.info(f"OCR extracted {len(text)} chars from Page {real_page_num}")
             except Exception as e:
@@ -161,12 +259,18 @@ def split_text_by_tokens(text: str, chunk_size: int, overlap: int) -> List[str]:
 
 def build_system_user_prompt(context_docs: List[Dict], question: str) -> Tuple[str, str]:
     """
-    Build prompt with structure awareness.
+    Build prompt with structure awareness and Teacher Persona.
     """
-    system_prompt = """You are an intelligent educational assistant. 
-Answer the student's question based ONLY on the provided textbook excerpts.
-If the answer is not in the text, say "I cannot find the answer in the provided documents."
-Cite the Chapter and Page number for every fact you mention.
+    system_prompt = """You are an expert and friendly teacher. 
+Your goal is to help the student understand the concept using the provided educational material (Textbooks, Tutorials, Questions).
+
+Guidelines:
+1. **Be Teacher-like:** Don't just dump facts. Explain them simply. Use analogies if helpful.
+2. **Context First:** Answer based ONLY on the provided excerpts.
+3. **Structure Aware:** If asked about chapters, units, or the first topic, refer to the "Table of Contents" section if available.
+4. **Cite Sources:** Always mention the Unit/Chapter and Page number (e.g., "As discussed in Unit 1, Page 5...").
+5. **Encourage:** If the concept is hard, encourage the student.
+6. **Honesty:** If the answer is not in the text, say "I couldn't find that specific topic in our material, but I can explain the general concept if you like."
 """
     
     context_str = ""
