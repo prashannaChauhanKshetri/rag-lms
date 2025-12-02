@@ -1,13 +1,12 @@
 import io
 import logging
-import io
-import logging
+
 import re
 import json # Added for TOC parsing
 from typing import List, Dict, Tuple, Optional
 import fitz  # PyMuPDF
 import tiktoken
-import tiktoken
+
 import ollama  # Replaced pytesseract
 from pdf2image import convert_from_bytes
 from PIL import Image
@@ -48,8 +47,8 @@ def extract_toc_with_qwen(doc: fitz.Document) -> Dict[int, str]:
     logger.info("Attempting AI-powered TOC extraction with Qwen3-VL...")
     toc_map = {}
     
-    # Scan first 10 pages (usually TOC is here)
-    for i in range(min(10, len(doc))):
+    # Scan first 5 pages (usually TOC is here) - Reduced from 10 to save RAM
+    for i in range(min(5, len(doc))):
         try:
             page = doc[i]
             text = page.get_text().lower()
@@ -68,9 +67,10 @@ def extract_toc_with_qwen(doc: fitz.Document) -> Dict[int, str]:
                 model='qwen3-vl:4b',
                 messages=[{
                     'role': 'user',
-                    'content': 'Analyze this Table of Contents image. Extract the Unit/Chapter Name and its Starting Page Number. \nFormat: JSON {PageNumber: "Unit X: Title"}. \nExample: {"1": "Unit 1: Algebra", "162": "Unit 5: Trigonometry"}. \nLook closely for "Unit" followed by a number and a title. Ignore dots/lines.',
+                    'content': 'Analyze this Table of Contents image. Extract the structure (Unit/Chapter/Lesson/Section) Name and its Starting Page Number. \nFormat: JSON {PageNumber: "Title"}. \nExample: {"1": "Unit 1: Algebra", "15": "Chapter 2: Geometry", "30": "Lesson 5: History", "162": "3. Trigonometry"}. \nLook for: "Unit", "Chapter", "Lesson", "Section", "Part", or numbered lists followed by a title. Works for any language (English, Nepali, etc.). Ignore dots/lines.',
                     'images': [img_data]
-                }]
+                }],
+                options={'keep_alive': 0}  # Unload immediately to free RAM
             )
             
             content = response['message']['content']
@@ -126,30 +126,10 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
         toc_map = extract_toc_with_qwen(doc)
         
     # 3. Fallback (Last Resort)
+    # 3. Fallback (Last Resort)
     if not toc_map:
-        # Fallback for Grade 10 Science
-        toc_map = {
-            1: "Scientific Learning",
-            15: "Classification of Living Beings",
-            59: "Honey Bee",
-            73: "Heredity",
-            111: "Physiological Structure and Life Process",
-            142: "Nature and Environment",
-            167: "Motion and Force",
-            197: "Pressure",
-            224: "Heat",
-            242: "Wave",
-            302: "Electricity and Magnetism",
-            328: "Universe",
-            339: "Information and Communication Technology",
-            363: "Classification of Elements",
-            381: "Chemical Reaction",
-            395: "Gases",
-            415: "Metal and Not metals",
-            426: "Hydrocarbon and its Compounds",
-            442: "Chemicals used in Daily Life"
-        }
-        logger.info("Using fallback TOC mapping")
+        # REMOVED hardcoded fallback to prevent hallucinations
+        logger.warning("No TOC found. Proceeding without structure awareness.")
 
     chunks = []
     
@@ -180,11 +160,11 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
         
         # Try text extraction
         text = page.get_text()
-        print(f"DEBUG: Page {real_page_num} text len: {len(text)}")
+        # print(f"DEBUG: Page {real_page_num} text len: {len(text)}")
         
         # OCR Fallback
         if len(text.strip()) < 50:
-            print(f"DEBUG: Page {real_page_num} triggering OCR (Qwen3-VL)...")
+            # print(f"DEBUG: Page {real_page_num} triggering OCR (Qwen3-VL)...")
             logger.info(f"Page {real_page_num} has little text ({len(text.strip())} chars). Attempting OCR with Qwen3-VL...")
             try:
                 # Render page to image
@@ -196,17 +176,17 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
                     model='qwen3-vl:4b',
                     messages=[{
                         'role': 'user',
-                        'content': 'Extract all text from this image. Output ONLY the text, no conversational filler.',
+                        'content': 'Extract all text from this image. Use Markdown formatting for headers (e.g. # Chapter 1, ## Section). Output ONLY the text.',
                         'images': [img_data]
                     }],
                     options={'keep_alive': 0}  # Unload immediately to free RAM
                 )
                 text = response['message']['content']
                 
-                print(f"DEBUG: Page {real_page_num} OCR result len: {len(text)}")
+                # print(f"DEBUG: Page {real_page_num} OCR result len: {len(text)}")
                 logger.info(f"OCR extracted {len(text)} chars from Page {real_page_num}")
             except Exception as e:
-                print(f"DEBUG: Page {real_page_num} OCR failed: {e}")
+                # print(f"DEBUG: Page {real_page_num} OCR failed: {e}")
                 logger.error(f"OCR failed for Page {real_page_num}: {e}")
         
         # Determine Chapter

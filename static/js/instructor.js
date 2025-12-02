@@ -16,6 +16,9 @@ document.querySelectorAll('.nav-links li').forEach(item => {
 
         // Refresh data based on panel
         if (item.getAttribute('data-panel') === 'training') loadChatbots('training-bot-select');
+        if (item.getAttribute('data-panel') === 'students') {
+            // Future: Load students
+        }
         if (item.getAttribute('data-panel') === 'testing') loadChatbots('testing-bot-select');
         if (item.getAttribute('data-panel') === 'monitoring') {
             loadChatbots('monitoring-bot-select').then(() => loadHistory());
@@ -37,7 +40,7 @@ async function createChatbot() {
     const greeting = document.getElementById('bot-greeting').value;
     const ratio = document.getElementById('bot-ratio').value;
 
-    if (!name) return alert("Please enter a chatbot name");
+    if (!name) return alert("Please enter a course name");
 
     const formData = new FormData();
     formData.append('name', name);
@@ -50,11 +53,11 @@ async function createChatbot() {
             body: formData
         });
         const data = await res.json();
-        alert(`Chatbot '${data.name}' created successfully!`);
+        alert(`Course '${data.name}' created successfully!`);
         // Reset form
         document.getElementById('bot-name').value = '';
     } catch (e) {
-        alert("Error creating chatbot: " + e);
+        alert("Error creating course: " + e);
     }
 }
 
@@ -115,7 +118,7 @@ async function loadDocuments() {
 
 async function handleFileUpload(files) {
     const botId = document.getElementById('training-bot-select').value;
-    if (!botId) return alert("Please select a chatbot first");
+    if (!botId) return alert("Please select a course first");
 
     const file = files[0];
     if (!file) return;

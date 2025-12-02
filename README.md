@@ -1,219 +1,129 @@
-# RAG-Based Learning Management System
+# RAG-Based Learning Management System (LMS)
 
-A RAG (Retrieval Augmented Generation) powered educational platform for student learning and question answering from uploaded course materials.
+A privacy-focused, AI-powered educational platform that enables students to learn from their textbooks using local LLMs.
 
 ## 🎯 Project Overview
 
-This is a **Final Year Project (FYP)** for building an intelligent Learning Management System (LMS) that allows:
-- **Teachers** to upload educational PDFs (textbooks, lecture notes)
-- **Students** to ask questions and receive AI-powered answers with page citations
-- **Administrators** to manage subjects and content
+This is a **Final Year Project (FYP)** building an intelligent LMS that runs locally. It allows:
+- **Instructors** to create courses, upload textbooks, and manage student access.
+- **Students** to ask questions and receive accurate answers with page citations.
+- **AI Tutors** to provide context-aware explanations using RAG (Retrieval Augmented Generation).
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Smart PDF Ingestion**: Automatically processes and chunks PDFs with page-level metadata
-- **OCR Support**: Handles scanned PDFs using Tesseract OCR with parallel processing (4-core)
-- **Hybrid Processing**: Extracts text directly when possible, falls back to OCR for scanned pages
-- **Intelligent Search**: Uses FAISS vector search with local embeddings (MiniLM)
-- **AI-Powered Answers**: Integrates with Groq LLM for accurate, context-aware responses
-- **Page Citations**: Every answer includes specific page references from source materials
-- **Subject Namespaces**: Organize content by subject for multi-course support
-- **Web UI**: Simple browser interface for upload and chat
-- **Chainlit Interface**: Developer-friendly chat UI for testing
-
-**Performance**: Processes 200-page textbooks in ~80 seconds, generating 400-500 searchable chunks
+- **Local-First AI**: Uses **Phi-3-Mini** for chat and **Qwen3-VL** for OCR, running entirely on your machine via Ollama.
+- **Smart Ingestion**: 
+  - Automatically detects Table of Contents (TOC) for structure-aware chunking.
+  - Uses Vision-Language Models (VLM) to read scanned pages and diagrams.
+- **Instructor Dashboard**: A modern interface for:
+  - **Course Management**: Create and configure AI tutors.
+  - **Content Management**: Upload and process PDFs.
+  - **Student Management**: Track enrollment (Mock).
+  - **Analytics**: Monitor query performance and improve answers.
+- **Hybrid Retrieval**: Combines Keyword Search (BM25) and Semantic Search (FAISS) for high accuracy.
+- **Page Citations**: Every answer is backed by specific page references.
 
 ## 🛠️ Tech Stack
 
 ### Backend
 - **FastAPI** - High-performance API framework
-- **LangChain** - Document processing and text splitting
-- **FAISS** - Vector similarity search
-- **Groq API** - Fast LLM inference (Llama 3.3 70B)
-- **Sentence Transformers** - Local embeddings (all-MiniLM-L6-v2)
-- **PyPDF** - PDF text extraction
+- **Ollama** - Local LLM runner (Phi-3-Mini, Qwen3-VL)
+- **LangChain & FAISS** - RAG pipeline and Vector Store
+- **Sentence Transformers** - Local embeddings (`all-MiniLM-L6-v2`)
+- **PyMuPDF (Fitz)** - PDF processing
 
 ### Frontend
-- **HTML/CSS/JavaScript** - Simple web interface
-- **Chainlit** - Interactive chat UI for development
+- **HTML5 / CSS3 / JavaScript** - Responsive Instructor Dashboard
+- **Chart.js** - Analytics visualization
 
 ## 📋 Prerequisites
 
 - Python 3.11+
-- Mac M1/M2 (optimized for Apple Silicon)
-- Groq API key (free at https://console.groq.com)
+- **Ollama** installed (https://ollama.com)
+- 8GB+ RAM recommended (for running models locally)
 
 ## 🔧 Installation
 
 1. **Clone the repository**
-```bash
-git clone <your-repo-url>
-cd rag-lms
-```
+   ```bash
+   git clone <your-repo-url>
+   cd rag-lms
+   ```
 
-2. **Create virtual environment**
-```bash
-python3 -m venv env
-source env/bin/activate
-```
+2. **Set up Virtual Environment**
+   ```bash
+   python3 -m venv env
+   source env/bin/activate
+   pip install -r requirements.txt
+   ```
 
-3. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
+3. **Install & Pull Local Models**
+   Make sure Ollama is running, then pull the required models:
+   ```bash
+   ollama pull phi3:mini
+   ollama pull qwen3-vl:4b
+   ```
 
-**4. Install Tesseract OCR (for scanned PDFs)**
-```bash
-# On macOS
-brew install tesseract
-
-# On Ubuntu/Debian
-sudo apt-get install tesseract-ocr
-
-# On Windows
-# Download from: https://github.com/UB-Mannheim/tesseract/wiki
-```
-
-5. **Set up environment variables**
-Create a `.env` file:
-```bash
-GROQ_API_KEY=your_groq_api_key_here
-GROQ_MODEL=llama-3.3-70b-versatile
-```
+4. **(Optional) Environment Variables**
+   Create a `.env` file if you plan to use Cloud fallbacks (Groq), otherwise, it runs locally by default.
+   ```bash
+   # GROQ_API_KEY=your_key_here (Optional)
+   ```
 
 ## 🏃 Running the Application
 
-### Option 1: FastAPI Web Interface (Recommended for Production)
-
+Start the backend server:
 ```bash
 python api.py
 ```
 
-Then visit: `http://127.0.0.1:8000`
+- **Instructor Dashboard**: Visit `http://127.0.0.1:8000/static/instructor.html`
+- **API Docs**: Visit `http://127.0.0.1:8000/docs`
 
-### Option 2: Chainlit Developer Interface
+## 📚 Usage Guide
 
-```bash
-chainlit run app.py -w
-```
+### For Instructors
+1. Go to the **Courses** panel and create a new Course Bot (e.g., "Grade 10 Science").
+2. Switch to **Content** and upload your PDF textbooks.
+   - *Note: The system will automatically OCR scanned pages.*
+3. Use the **Simulator** to test the bot's responses.
+4. Monitor usage in the **Analytics** tab.
 
-## 📚 Usage
-
-### 1. Upload Documents
-
-1. Navigate to the web interface
-2. Enter a subject name (e.g., "physics", "chemistry")
-3. Select a PDF file
-4. Click "Upload & Ingest"
-5. Wait for confirmation showing the number of chunks created
-
-### 2. Ask Questions
-
-1. Enter the same subject name used during upload
-2. Type your question
-3. Click "Ask"
-4. Receive AI-generated answer with page citations
-
-### Example
-
-**Upload**: `grade-10-science-part-1.pdf` under subject `science`
-
-**Question**: "What is Newton's first law?"
-
-**Answer**: "Newton's first law states that an object at rest stays at rest and an object in motion stays in motion unless acted upon by an external force (Page 45)."
+### For Students
+(Student portal is currently under development. Use the Simulator for testing.)
 
 ## 📁 Project Structure
 
 ```
 rag-lms/
-├── api.py                 # FastAPI backend
-├── app.py                 # Chainlit chat interface
-├── utils.py               # PDF processing & chunking
-├── vectorstore.py         # FAISS index management
-├── requirements.txt       # Python dependencies
-├── .env                   # Environment variables (create this)
-├── static/                # Web UI files
-│   ├── index.html
-│   └── app.js
-├── fin_ed_docs/          # Uploaded PDFs storage
-├── vectorstores/         # FAISS indexes (auto-created)
-└── README.md
+├── api.py                 # Main FastAPI backend
+├── utils.py               # PDF processing, OCR, and TOC extraction
+├── vectorstore.py         # RAG logic (FAISS, Embeddings)
+├── database.py            # SQLite database for chat history
+├── static/                # Frontend Assets
+│   ├── instructor.html    # Dashboard UI
+│   ├── css/               # Styles
+│   └── js/                # Frontend Logic
+├── fin_ed_docs/           # PDF Storage
+└── rag_lms.db             # Local Database
 ```
 
-## 🔍 How It Works
+## � Roadmap
 
-1. **Ingestion Pipeline**
-   - PDF uploaded → Text extracted page-by-page
-   - Text split into ~1000 char chunks with 200 char overlap
-   - Each chunk tagged with page number and source
-   - Chunks embedded using MiniLM model (384 dimensions)
-   - Embeddings stored in FAISS index per subject
-
-2. **Question Answering**
-   - User question → Embedded with same model
-   - FAISS retrieves top-K similar chunks
-   - Context + question sent to Groq LLM
-   - LLM generates answer with page citations
-
-## 🎓 Educational Context
-
-This project is designed for:
-- Grade 10-12
-- Large textbooks (200-300 pages each)
-- Multiple subjects per semester
-- Student self-study and exam preparation
-
-## 🐛 Troubleshooting
-
-### "Only 6 chunks created from large PDF"
-- **Cause**: PDF contains scanned images, not text
-- **Solution**: Use OCR-enabled PDF processing (future enhancement)
-
-### "Segmentation fault on startup"
-- **Cause**: Library incompatibility on Mac M1
-- **Fix**: Already handled with lifespan events and TOKENIZERS_PARALLELISM=false
-
-### "No answer returned"
-- Verify subject name matches between upload and query
-- Check if GROQ_API_KEY is set correctly
-- Ensure documents were uploaded successfully
-
-## 🚧 Roadmap
-
-### Phase 1: Core RAG (✅ Complete)
-- [x] PDF ingestion with chunking
-- [x] Vector search
-- [x] LLM integration
-- [x] Page citations
-
-### Phase 2: LMS Features (Planned)
-- [ ] User authentication (Admin/Teacher/Student roles)
-- [ ] Database integration (PostgreSQL/Supabase)
-- [ ] Chat history per student
-- [ ] Analytics dashboard
-- [ ] Multi-tenant support
-
-### Phase 3: Advanced Features (Future)
-- [ ] OCR for scanned PDFs
-- [ ] Semantic reranking
-- [ ] Multi-modal support (images, diagrams)
-- [ ] Gamification for students
-- [ ] Mobile app
+- [x] **Core RAG**: Text extraction, Chunking, Vector Search
+- [x] **Advanced Ingestion**: TOC detection, OCR for scanned docs
+- [x] **Local LLM Support**: Phi-3-Mini integration
+- [x] **Instructor Dashboard**: Course & Content management
+- [ ] **Student Portal**: Dedicated login and view for students
+- [ ] **User Auth**: Secure login for Admin/Teachers/Students
 
 ## 📄 License
 
-MIT License - Feel free to use for educational purposes
+MIT License
 
 ## 👥 Contributors
 
-- Prashanna - FYP Student
-
-## 🙏 Acknowledgments
-
-- Groq for free LLM API access
-- LangChain community for RAG patterns
-- Sentence Transformers for local embeddings
+- **Prashanna** - Lead Developer
 
 ---
-
-**Status**: Active Development | **Version**: 0.1.0 | **Last Updated**: November 2024
+**Status**: Active Development | **Version**: 0.2.0 | **Last Updated**: December 2025

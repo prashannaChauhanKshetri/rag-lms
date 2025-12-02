@@ -47,10 +47,31 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logging.error(f"Failed to load embedding model: {e}")
     
+    # Warm up the local LLM on startup
+    try:
+        import ollama
+        logging.info("Warming up local Phi-3-Mini model...")
+        # Send a dummy request to load model into memory
+        ollama.chat(
+            model='phi3:mini',
+            messages=[{'role': 'user', 'content': 'hi'}],
+            options={'keep_alive': -1}
+        )
+        logging.info("✓ Phi-3-Mini loaded and ready")
+    except Exception as e:
+        logging.warning(f"Could not warm up Phi-3-Mini: {e}")
+    
     yield
     
     # Clean up on shutdown
     EMBED_MODEL = None
+
+    # Try to unload models on shutdown (optional)
+    try:
+        import ollama
+        ollama.generate(model='phi3:mini', keep_alive=0)
+    except:
+        pass
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-api")
@@ -314,15 +335,18 @@ def call_groq_llm(system_prompt: str, user_prompt: str) -> str:
     - OCR: Local Qwen3-VL-4B (in utils.py)
     - Chat: Cloud Groq (Fast & Free)
     """
-    # --- LOCAL MODE (Phi-3-Mini) - COMMENTED OUT ---
-    # return call_local_phi3(system_prompt, user_prompt)
+    # --- LOCAL MODE (Phi-3-Mini) - ENABLED ---
+    return call_local_phi3(system_prompt, user_prompt)
 
-    # --- CLOUD MODE (Groq) ---
-    return _call_groq_llm_original(system_prompt, user_prompt)
+    # --- CLOUD MODE (Groq) - COMMENTED OUT ---
+    # return _call_groq_llm_original(system_prompt, user_prompt)
 
 def call_local_phi3(system_prompt: str, user_prompt: str) -> str:
     """Helper for Local Phi-3-Mini (Experimental)"""
+    import time
+    start_time = time.time()
     try:
+        logger.info("Sending request to local Phi-3-Mini...")
         response = ollama.chat(
             model='phi3:mini',
             messages=[
@@ -331,6 +355,9 @@ def call_local_phi3(system_prompt: str, user_prompt: str) -> str:
             ],
             options={'keep_alive': -1}
         )
+        end_time = time.time()
+        duration = end_time - start_time
+        logger.info(f"Phi-3-Mini response generated in {duration:.2f} seconds")
         return response['message']['content']
     except Exception as e:
         logger.error(f"Phi-3-Mini error: {e}")
