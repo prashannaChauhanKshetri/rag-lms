@@ -48,18 +48,19 @@ async def lifespan(app: FastAPI):
         logging.error(f"Failed to load embedding model: {e}")
     
     # Warm up the local LLM on startup
-    try:
-        import ollama
-        logging.info("Warming up local Phi-3-Mini model...")
-        # Send a dummy request to load model into memory
-        ollama.chat(
-            model='phi3:mini',
-            messages=[{'role': 'user', 'content': 'hi'}],
-            options={'keep_alive': -1}
-        )
-        logging.info("✓ Phi-3-Mini loaded and ready")
-    except Exception as e:
-        logging.warning(f"Could not warm up Phi-3-Mini: {e}")
+    # COMMENTED OUT FOR SPEED TESTING - Using Groq instead
+    # try:
+    #     import ollama
+    #     logging.info("Warming up local Phi-3-Mini model...")
+    #     # Send a dummy request to load model into memory
+    #     ollama.chat(
+    #         model='phi3:mini',
+    #         messages=[{'role': 'user', 'content': 'hi'}],
+    #         options={'keep_alive': -1}
+    #     )
+    #     logging.info("✓ Phi-3-Mini loaded and ready")
+    # except Exception as e:
+    #     logging.warning(f"Could not warm up Phi-3-Mini: {e}")
     
     yield
     
@@ -67,11 +68,11 @@ async def lifespan(app: FastAPI):
     EMBED_MODEL = None
 
     # Try to unload models on shutdown (optional)
-    try:
-        import ollama
-        ollama.generate(model='phi3:mini', keep_alive=0)
-    except:
-        pass
+    # try:
+    #     import ollama
+    #     ollama.generate(model='phi3:mini', keep_alive=0)
+    # except:
+    #     pass
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-api")
@@ -335,11 +336,11 @@ def call_groq_llm(system_prompt: str, user_prompt: str) -> str:
     - OCR: Local Qwen3-VL-4B (in utils.py)
     - Chat: Cloud Groq (Fast & Free)
     """
-    # --- LOCAL MODE (Phi-3-Mini) - ENABLED ---
-    return call_local_phi3(system_prompt, user_prompt)
+    # # --- LOCAL MODE (Phi-3-Mini) - ENABLED ---
+    # return call_local_phi3(system_prompt, user_prompt)
 
     # --- CLOUD MODE (Groq) - COMMENTED OUT ---
-    # return _call_groq_llm_original(system_prompt, user_prompt)
+    return _call_groq_llm_original(system_prompt, user_prompt)
 
 def call_local_phi3(system_prompt: str, user_prompt: str) -> str:
     """Helper for Local Phi-3-Mini (Experimental)"""
@@ -389,6 +390,27 @@ def _call_groq_llm_original(system_prompt: str, user_prompt: str) -> str:
 @app.get("/")
 def index():
     return FileResponse("static/index.html")
+
+@app.get("/admin.html")
+def admin():
+    return FileResponse("static/admin.html")
+
+@app.get("/instructor.html")
+def instructor():
+    return FileResponse("static/instructor.html")
+
+@app.get("/student.html")
+def student():
+    return FileResponse("static/student.html")
+
+# Serve CSS and JS files
+@app.get("/css/{filename}")
+def serve_css(filename: str):
+    return FileResponse(f"static/css/{filename}")
+
+@app.get("/js/{filename}")
+def serve_js(filename: str):
+    return FileResponse(f"static/js/{filename}")
 
 if __name__ == "__main__":
     import uvicorn

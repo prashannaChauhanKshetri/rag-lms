@@ -4,70 +4,404 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAG-LMS Student Portal</title>
+    <title>RAG-LMS | AI-Powered Learning Management System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/student.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-2xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background Gradient Orbs */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: var(--accent-orange);
+            top: -250px;
+            left: -150px;
+            opacity: 0.12;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--accent-blue);
+            bottom: -200px;
+            right: -150px;
+            opacity: 0.15;
+        }
+
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-cream);
+            top: 40%;
+            left: 60%;
+            opacity: 0.08;
+        }
+
+        /* Content */
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 900px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .logo-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--admin-gradient);
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            box-shadow: var(--shadow-glow-orange);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .logo-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-cream);
+        }
+
+        .hero-title {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .hero-title span {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-cream));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-2xl);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.7;
+        }
+
+        /* Role Cards */
+        .role-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-xl);
+            margin-top: var(--spacing-xl);
+        }
+
+        .role-card {
+            padding: var(--spacing-xl);
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .role-card:hover {
+            border-color: transparent;
+        }
+
+        .role-card:hover::before {
+            opacity: 1;
+        }
+
+        .role-card.admin::before {
+            background: var(--admin-gradient);
+        }
+
+        .role-card.admin:hover {
+            border-color: var(--accent-orange);
+            box-shadow: var(--shadow-glow-orange);
+        }
+
+        .role-card.instructor::before {
+            background: var(--instructor-gradient);
+        }
+
+        .role-card.instructor:hover {
+            border-color: var(--accent-blue);
+            box-shadow: var(--shadow-glow-blue);
+        }
+
+        .role-card.student::before {
+            background: var(--student-gradient);
+        }
+
+        .role-card.student:hover {
+            border-color: var(--accent-cream);
+        }
+
+        .role-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--spacing-lg);
+            transition: transform var(--transition-normal);
+        }
+
+        .role-icon svg {
+            width: 36px;
+            height: 36px;
+            stroke-width: 1.5;
+        }
+
+        .role-card:hover .role-icon {
+            transform: scale(1.1) rotate(3deg);
+        }
+
+        .role-card.admin .role-icon {
+            background: var(--admin-gradient);
+            color: white;
+        }
+
+        .role-card.instructor .role-icon {
+            background: var(--instructor-gradient);
+            color: white;
+        }
+
+        .role-card.student .role-icon {
+            background: var(--student-gradient);
+            color: var(--dark-bg);
+        }
+
+        .role-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .role-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .role-features {
+            margin-top: var(--spacing-lg);
+            text-align: left;
+            list-style: none;
+        }
+
+        .role-features li {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: 6px 0;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .role-features li svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .role-card.admin .role-features li svg {
+            color: var(--admin-primary);
+        }
+
+        .role-card.instructor .role-features li svg {
+            color: var(--instructor-primary);
+        }
+
+        .role-card.student .role-features li svg {
+            color: var(--student-primary);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-card);
+        }
+
+        .footer .author {
+            color: var(--accent-cream);
+            font-weight: 600;
+        }
+
+        .footer a {
+            color: var(--accent-orange);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .role-cards {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-title {
+                font-size: 2.2rem;
+            }
+
+            .logo-text {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div class="student-container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="logo">
-                <div class="logo-icon">S</div>
-                <span>Student Portal</span>
-            </div>
-            <div class="subject-selector">
-                <label>Current Subject:</label>
-                <select id="subject-select" onchange="changeSubject()">
-                    <option value="" disabled selected>Select a Subject...</option>
-                </select>
-            </div>
-        </header>
+    <!-- Background Orbs -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
 
-        <!-- Chat Area -->
-        <main class="chat-area">
-            <div class="chat-container">
-                <div id="chat-history" class="chat-history">
-                    <div class="message bot-message">
-                        <div class="avatar">AI</div>
-                        <div class="bubble">
-                            <h3>Welcome! 👋</h3>
-                            <p>Please select a subject from the top menu to start learning.</p>
-                        </div>
-                    </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content animate-slide">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i data-lucide="graduation-cap"></i>
                 </div>
+                <span class="logo-text">RAG-LMS</span>
+            </div>
 
-                <div class="input-area">
-                    <div class="input-wrapper">
-                        <input type="text" id="user-input" placeholder="Ask a question..." disabled
-                            onkeypress="handleEnter(event)">
-                        <button id="send-btn" onclick="sendMessage()" disabled>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                            </svg>
-                        </button>
+            <h1 class="hero-title">
+                AI-Powered <span>Learning</span><br>
+                Management System
+            </h1>
+
+            <p class="hero-subtitle">
+                Select your role to access the platform. Create intelligent tutors,
+                generate study materials, and enhance learning with AI.
+            </p>
+
+            <!-- Role Selection Cards -->
+            <div class="role-cards">
+                <!-- Admin Card -->
+                <a href="admin.html" class="card role-card admin">
+                    <div class="role-icon">
+                        <i data-lucide="shield-check"></i>
                     </div>
-                </div>
-            </div>
-        </main>
+                    <h3 class="role-title">Admin</h3>
+                    <p class="role-description">Manage users, monitor system performance, and oversee all courses.</p>
+                    <ul class="role-features">
+                        <li><i data-lucide="users"></i> User Management</li>
+                        <li><i data-lucide="bar-chart-3"></i> System Analytics</li>
+                        <li><i data-lucide="library"></i> All Courses Overview</li>
+                    </ul>
+                </a>
 
-        <!-- Source Panel (Slide-over) -->
-        <aside class="source-panel" id="source-panel">
-            <div class="panel-header">
-                <h3>📚 Sources</h3>
-                <button onclick="toggleSources()">×</button>
-            </div>
-            <div id="source-content" class="source-content">
-                <!-- Sources will appear here -->
-            </div>
-        </aside>
-    </div>
+                <!-- Instructor Card -->
+                <a href="instructor.html" class="card role-card instructor">
+                    <div class="role-icon">
+                        <i data-lucide="presentation"></i>
+                    </div>
+                    <h3 class="role-title">Instructor</h3>
+                    <p class="role-description">Create courses, upload content, and generate study materials.</p>
+                    <ul class="role-features">
+                        <li><i data-lucide="folder-plus"></i> Course Management</li>
+                        <li><i data-lucide="help-circle"></i> Question Generator</li>
+                        <li><i data-lucide="layers"></i> Flashcard Creator</li>
+                    </ul>
+                </a>
 
-    <script src="js/student.js"></script>
+                <!-- Student Card -->
+                <a href="student.html" class="card role-card student">
+                    <div class="role-icon">
+                        <i data-lucide="book-open"></i>
+                    </div>
+                    <h3 class="role-title">Student</h3>
+                    <p class="role-description">Chat with AI tutors, study flashcards, and take quizzes.</p>
+                    <ul class="role-features">
+                        <li><i data-lucide="message-circle"></i> AI Chat Assistant</li>
+                        <li><i data-lucide="bookmark"></i> Study Materials</li>
+                        <li><i data-lucide="check-square"></i> Interactive Quizzes</li>
+                    </ul>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2024 • <span class="author">Prashanna Chauhan Kshetri</span></p>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
 </body>
 
 </html>

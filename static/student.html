@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal | RAG-LMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/student.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+                    <span>RAG-LMS</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Learning</span>
+                <ul class="nav-links">
+                    <li class="active" data-panel="chat">
+                        <i data-lucide="message-circle"></i>
+                        <span>AI Tutor</span>
+                    </li>
+                    <li data-panel="flashcards">
+                        <i data-lucide="layers"></i>
+                        <span>Flashcards</span>
+                    </li>
+                    <li data-panel="quizzes">
+                        <i data-lucide="clipboard-check"></i>
+                        <span>Quizzes</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Progress</span>
+                <ul class="nav-links">
+                    <li data-panel="history">
+                        <i data-lucide="history"></i>
+                        <span>History</span>
+                    </li>
+                    <li data-panel="achievements">
+                        <i data-lucide="trophy"></i>
+                        <span>Achievements</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar avatar-student"><i data-lucide="user"></i></div>
+                    <div class="user-info">
+                        <span class="user-name">Student</span>
+                        <span class="user-role badge badge-student">Learner</span>
+                    </div>
+                </div>
+                <a href="index.html" class="btn-logout"><i data-lucide="arrow-left"></i> Back</a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Course Selector Header -->
+            <header class="content-header">
+                <div class="header-left">
+                    <h1 class="page-title"><i data-lucide="message-circle" class="header-icon"></i> AI Tutor</h1>
+                    <p class="page-subtitle">Chat with your AI assistant</p>
+                </div>
+                <div class="header-right">
+                    <div class="course-selector">
+                        <label>Current Course:</label>
+                        <select id="course-select" class="select">
+                            <option value="" disabled selected>Select a Course...</option>
+                        </select>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Panel -->
+            <section id="chat-panel" class="panel active">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message bot-message">
+                            <div class="message-avatar"><i data-lucide="bot"></i></div>
+                            <div class="message-content">
+                                <div class="message-bubble">
+                                    <h3>Welcome! 👋</h3>
+                                    <p>Select a course from the dropdown above to start learning. I'm here to help you
+                                        understand any topic!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <input type="text" id="user-input" class="chat-input" placeholder="Ask a question..."
+                                disabled>
+                            <button id="send-btn" class="send-btn" onclick="sendMessage()" disabled>
+                                <i data-lucide="send"></i>
+                            </button>
+                        </div>
+                        <div class="input-hint">Press Enter to send • Powered by AI</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Flashcards Panel -->
+            <section id="flashcards-panel" class="panel">
+                <div class="empty-state">
+                    <i data-lucide="layers" class="empty-icon-svg"></i>
+                    <h2>Flashcards Coming Soon</h2>
+                    <p>Your instructor will create flashcards for you to study.</p>
+                </div>
+            </section>
+
+            <!-- Quizzes Panel -->
+            <section id="quizzes-panel" class="panel">
+                <div class="empty-state">
+                    <i data-lucide="clipboard-check" class="empty-icon-svg"></i>
+                    <h2>Quizzes Coming Soon</h2>
+                    <p>Take quizzes to test your knowledge.</p>
+                </div>
+            </section>
+
+            <!-- History Panel -->
+            <section id="history-panel" class="panel">
+                <div class="empty-state">
+                    <i data-lucide="history" class="empty-icon-svg"></i>
+                    <h2>Chat History</h2>
+                    <p>Your previous conversations will appear here.</p>
+                </div>
+            </section>
+
+            <!-- Achievements Panel -->
+            <section id="achievements-panel" class="panel">
+                <div class="empty-state">
+                    <i data-lucide="trophy" class="empty-icon-svg"></i>
+                    <h2>Achievements</h2>
+                    <p>Complete quizzes and study sessions to earn badges!</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Source Panel (Slide-over) -->
+        <aside class="source-panel" id="source-panel">
+            <div class="source-header">
+                <h3><i data-lucide="book-open"></i> Sources</h3>
+                <button class="close-btn" onclick="toggleSources()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="source-content" id="source-content">
+                <!-- Sources will appear here -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer"
+        style="position: fixed; bottom: 0; left: 260px; right: 0; background: var(--bg-card); z-index: 50;">
+        <p>© 2024 <a href="index.html">RAG-LMS</a> • Built by <span class="author">Prashanna Chauhan Kshetri</span></p>
+    </footer>
+
+    <script src="js/student.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+
+</html>
