@@ -4,20 +4,18 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 *.egg-info/
 dist/
 build/
 
+# Virtual Environment
+env/
+venv/
+ENV/
+
 # Environment variables
 .env
 .env.local
-
-# Virtual environment
-env/
-venv/
 
 # IDE
 .vscode/
@@ -30,22 +28,24 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Project specific
+# Project Data (don't commit these)
 vectorstores/
 fin_ed_docs/*.pdf
 !fin_ed_docs/.gitkeep
 *.pkl
 *.index
+rag_lms.db
 
 # Chainlit
 .chainlit/
 
-# Test files
+# Test/Debug files
 test_*.py
 diagnose_*.py
-create_test_pdf.py
-*.pdf
-!README.md
+*_test.py
+docling_output.md
+verify_*.py
+check_*.py
 
 # Logs
 *.log

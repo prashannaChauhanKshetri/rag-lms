@@ -1,279 +1,471 @@
-// RAG-LMS Instructor Dashboard Logic
+// Instructor Dashboard JavaScript
+const API_BASE = '';
+let selectedCourseId = null;
 
-const API_BASE = "http://127.0.0.1:8000";
-
-// --- Navigation ---
-document.querySelectorAll('.nav-links li').forEach(item => {
-    item.addEventListener('click', () => {
-        // Remove active class from all
-        document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-
-        // Add active to clicked
-        item.classList.add('active');
-        const panelId = item.getAttribute('data-panel') + '-panel';
-        document.getElementById(panelId).classList.add('active');
-
-        // Refresh data based on panel
-        if (item.getAttribute('data-panel') === 'training') loadChatbots('training-bot-select');
-        if (item.getAttribute('data-panel') === 'students') {
-            // Future: Load students
-        }
-        if (item.getAttribute('data-panel') === 'testing') loadChatbots('testing-bot-select');
-        if (item.getAttribute('data-panel') === 'monitoring') {
-            loadChatbots('monitoring-bot-select').then(() => loadHistory());
-        }
-    });
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    setupNavigation();
+    setupUploadZone();
+    loadCourses();
+    setupSlider();
 });
 
-// --- Creation Panel ---
-document.getElementById('bot-ratio').addEventListener('input', (e) => {
-    document.getElementById('ratio-value').innerText = (e.target.value * 100) + '%';
-});
+// Navigation
+function setupNavigation() {
+    document.querySelectorAll('.nav-links li').forEach(item => {
+        item.addEventListener('click', () => {
+            const panel = item.dataset.panel;
+            switchPanel(panel);
 
-document.getElementById('bot-greeting').addEventListener('input', (e) => {
-    document.getElementById('preview-greeting').innerText = e.target.value || "Hello! I'm here to help you...";
-});
-
-async function createChatbot() {
-    const name = document.getElementById('bot-name').value;
-    const greeting = document.getElementById('bot-greeting').value;
-    const ratio = document.getElementById('bot-ratio').value;
-
-    if (!name) return alert("Please enter a course name");
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('greeting', greeting);
-    formData.append('external_knowledge_ratio', ratio);
-
-    try {
-        const res = await fetch(`${API_BASE}/chatbots/create`, {
-            method: 'POST',
-            body: formData
+            document.querySelectorAll('.nav-links li').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
         });
-        const data = await res.json();
-        alert(`Course '${data.name}' created successfully!`);
-        // Reset form
-        document.getElementById('bot-name').value = '';
-    } catch (e) {
-        alert("Error creating course: " + e);
+    });
+}
+
+function switchPanel(panelId) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`${panelId}-panel`).classList.add('active');
+}
+
+// Slider
+function setupSlider() {
+    const slider = document.getElementById('course-ratio');
+    const display = document.getElementById('ratio-value');
+
+    if (slider && display) {
+        slider.addEventListener('input', () => {
+            display.textContent = Math.round(slider.value * 100) + '%';
+        });
     }
 }
 
-// --- Shared: Load Chatbots ---
-async function loadChatbots(selectId) {
+// Load Courses
+async function loadCourses() {
     try {
-        const res = await fetch(`${API_BASE}/chatbots/list`);
-        const data = await res.json();
-        const select = document.getElementById(selectId);
-        select.innerHTML = '';
+        const response = await fetch(`${API_BASE}/chatbots/list`);
+        const data = await response.json();
+        const courses = data.chatbots || data || [];
 
-        data.chatbots.forEach(bot => {
+        // Update course lists
+        updateCoursesList(courses);
+        updateCourseSelects(courses);
+    } catch (error) {
+        console.error('Failed to load courses:', error);
+    }
+}
+
+function updateCoursesList(courses) {
+    const list = document.getElementById('courses-list');
+    if (!list) return;
+
+    if (courses.length === 0) {
+        list.innerHTML = '<div class="empty-state-small"><p>No courses yet. Create one!</p></div>';
+        return;
+    }
+
+    list.innerHTML = courses.map(course => `
+        <div class="course-item" data-id="${course.id}">
+            <span class="course-name">${course.name}</span>
+            <div class="course-actions">
+                <button class="btn-icon" onclick="selectCourse('${course.id}')" title="Select">
+                    ✓
+                </button>
+                <button class="btn-icon" onclick="deleteCourse('${course.id}')" title="Delete">
+                    🗑
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateCourseSelects(courses) {
+    const selects = [
+        'content-course-select',
+        'questions-course',
+        'flashcards-course',
+        'simulator-course'
+    ];
+
+    selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        select.innerHTML = '<option value="" disabled selected>Select Course...</option>';
+        courses.forEach(course => {
             const option = document.createElement('option');
-            option.value = bot.id;
-            option.innerText = bot.name;
+            option.value = course.id;
+            option.textContent = course.name;
             select.appendChild(option);
         });
 
-        // Trigger change event to load dependent data
-        if (select.options.length > 0) select.dispatchEvent(new Event('change'));
-
-    } catch (e) {
-        console.error("Error loading chatbots:", e);
-    }
+        select.addEventListener('change', () => {
+            selectedCourseId = select.value;
+            if (selectId === 'content-course-select') loadDocuments();
+            if (selectId === 'simulator-course') enableSimulator();
+        });
+    });
 }
 
-// --- Training Panel ---
-async function loadDocuments() {
-    const botId = document.getElementById('training-bot-select').value;
-    if (!botId) return;
+// Create Course
+async function createCourse() {
+    const name = document.getElementById('course-name').value.trim();
+    const greeting = document.getElementById('course-greeting').value.trim();
+    const ratio = document.getElementById('course-ratio').value;
 
-    const container = document.getElementById('doc-list-container');
-    container.innerHTML = '<div class="empty-state">Loading...</div>';
+    if (!name) {
+        alert('Please enter a course name');
+        return;
+    }
 
     try {
-        const res = await fetch(`${API_BASE}/chatbots/${botId}/documents`);
-        const data = await res.json();
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('greeting', greeting || `Welcome to ${name}! How can I help you today?`);
+        formData.append('external_knowledge_ratio', ratio);
 
-        container.innerHTML = '';
-        if (data.documents.length === 0) {
-            container.innerHTML = '<div class="empty-state">No documents uploaded yet.</div>';
-            return;
-        }
-
-        data.documents.forEach(doc => {
-            const div = document.createElement('div');
-            div.className = 'doc-item';
-            div.innerHTML = `
-                <span>📄 ${doc.filename}</span>
-                <span style="color:var(--text-secondary); font-size:0.8rem">${doc.chunk_count} chunks</span>
-            `;
-            container.appendChild(div);
+        const response = await fetch(`${API_BASE}/chatbots/create`, {
+            method: 'POST',
+            body: formData
         });
-    } catch (e) {
-        container.innerHTML = '<div class="empty-state">Error loading documents</div>';
+
+        if (response.ok) {
+            document.getElementById('course-name').value = '';
+            document.getElementById('course-greeting').value = '';
+            loadCourses();
+        }
+    } catch (error) {
+        console.error('Failed to create course:', error);
     }
 }
 
-async function handleFileUpload(files) {
-    const botId = document.getElementById('training-bot-select').value;
-    if (!botId) return alert("Please select a course first");
+// Delete Course
+async function deleteCourse(courseId) {
+    if (!confirm('Are you sure you want to delete this course?')) return;
 
-    const file = files[0];
-    if (!file) return;
+    try {
+        await fetch(`${API_BASE}/chatbots/${courseId}`, { method: 'DELETE' });
+        loadCourses();
+    } catch (error) {
+        console.error('Failed to delete course:', error);
+    }
+}
+
+// Upload Zone
+function setupUploadZone() {
+    const zone = document.getElementById('upload-zone');
+    const input = document.getElementById('file-input');
+
+    if (!zone || !input) return;
+
+    zone.addEventListener('click', () => input.click());
+
+    zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('dragover');
+    });
+
+    zone.addEventListener('dragleave', () => {
+        zone.classList.remove('dragover');
+    });
+
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) handleFileUpload(files[0]);
+    });
+
+    input.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFileUpload(e.target.files[0]);
+    });
+}
+
+async function handleFileUpload(file) {
+    const courseId = document.getElementById('content-course-select').value;
+    if (!courseId) {
+        alert('Please select a course first');
+        return;
+    }
+
+    const progress = document.getElementById('upload-progress');
+    const fill = document.getElementById('progress-fill');
+    const text = document.getElementById('progress-text');
+
+    progress.classList.remove('hidden');
+    fill.style.width = '10%';
+    text.textContent = 'Uploading...';
 
     const formData = new FormData();
     formData.append('file', file);
 
-    const btn = document.querySelector('.upload-area');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<h3>⏳ Uploading & Processing...</h3><p>This may take a minute for OCR</p>';
-
     try {
-        const res = await fetch(`${API_BASE}/chatbots/${botId}/upload`, {
+        // Simulate progress
+        let progressValue = 10;
+        const progressInterval = setInterval(() => {
+            progressValue = Math.min(progressValue + 5, 90);
+            fill.style.width = progressValue + '%';
+            text.textContent = progressValue < 50 ? 'Uploading...' : 'Processing PDF...';
+        }, 500);
+
+        const response = await fetch(`${API_BASE}/chatbots/${courseId}/upload`, {
             method: 'POST',
             body: formData
         });
 
-        if (res.ok) {
-            alert("Document uploaded successfully!");
-            loadDocuments();
+        clearInterval(progressInterval);
+
+        if (response.ok) {
+            fill.style.width = '100%';
+            text.textContent = 'Complete!';
+            setTimeout(() => {
+                progress.classList.add('hidden');
+                fill.style.width = '0%';
+                loadDocuments();
+            }, 1500);
         } else {
-            alert("Upload failed");
+            throw new Error('Upload failed');
         }
-    } catch (e) {
-        alert("Error uploading: " + e);
-    } finally {
-        btn.innerHTML = originalText;
+    } catch (error) {
+        console.error('Upload error:', error);
+        text.textContent = 'Upload failed. Please try again.';
     }
 }
 
-// --- Testing Panel ---
-function handleTestEnter(e) {
-    if (e.key === 'Enter') sendTestMessage();
-}
-
-async function sendTestMessage() {
-    const input = document.getElementById('test-input');
-    const text = input.value.trim();
-    const botId = document.getElementById('testing-bot-select').value;
-
-    if (!text || !botId) return;
-
-    // Add user message
-    const history = document.getElementById('test-chat-history');
-    history.innerHTML += `
-        <div class="message user-message">
-            <div class="bubble">${text}</div>
-        </div>
-    `;
-    input.value = '';
-    history.scrollTop = history.scrollHeight;
-
-    // Show loading
-    const loadingId = 'loading-' + Date.now();
-    history.innerHTML += `
-        <div class="message bot-message" id="${loadingId}">
-            <div class="avatar">AI</div>
-            <div class="bubble">Thinking...</div>
-        </div>
-    `;
-
-    const formData = new FormData();
-    formData.append('question', text);
-    formData.append('top_k', 5);
+async function loadDocuments() {
+    const courseId = document.getElementById('content-course-select').value;
+    if (!courseId) return;
 
     try {
-        const res = await fetch(`${API_BASE}/chatbots/${botId}/chat`, {
+        const response = await fetch(`${API_BASE}/chatbots/${courseId}/documents`);
+        const documents = await response.json();
+
+        const list = document.getElementById('documents-list');
+        if (documents.length === 0) {
+            list.innerHTML = '<div class="empty-state-small"><p>No documents uploaded yet</p></div>';
+            return;
+        }
+
+        list.innerHTML = documents.map(doc => `
+            <div class="doc-item">
+                <span>📄 ${doc.filename}</span>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">${doc.chunks} chunks</span>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Failed to load documents:', error);
+    }
+}
+
+// Question Generator
+let generatedQuestions = [];
+
+async function generateQuestions() {
+    const courseId = document.getElementById('questions-course').value;
+    const topic = document.getElementById('questions-topic').value;
+    const count = document.getElementById('questions-count').value;
+    const difficulty = document.getElementById('questions-difficulty').value;
+
+    if (!courseId) {
+        alert('Please select a course');
+        return;
+    }
+
+    const types = [];
+    if (document.getElementById('q-mcq').checked) types.push('mcq');
+    if (document.getElementById('q-tf').checked) types.push('true_false');
+    if (document.getElementById('q-short').checked) types.push('short_answer');
+    if (document.getElementById('q-long').checked) types.push('long_answer');
+
+    const output = document.getElementById('questions-output');
+    output.innerHTML = '<div class="empty-state-small"><p>Generating questions... ⏳</p></div>';
+
+    try {
+        const response = await fetch(`${API_BASE}/chatbots/${courseId}/chat`, {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Generate ${count} ${difficulty} difficulty questions ${topic ? `about "${topic}"` : 'from the course content'}. 
+                Include these types: ${types.join(', ')}.
+                Format each question clearly with the question number, type, question text, and for MCQ include options (A, B, C, D) with the correct answer marked.`
+            })
         });
-        const data = await res.json();
 
-        // Remove loading
-        document.getElementById(loadingId).remove();
+        const data = await response.json();
 
-        // Add bot response
-        history.innerHTML += `
-            <div class="message bot-message">
-                <div class="avatar">AI</div>
-                <div class="bubble">${data.answer.replace(/\n/g, '<br>')}</div>
+        output.innerHTML = `
+            <div class="question-item">
+                <div class="question-text">${data.response.replace(/\n/g, '<br>')}</div>
             </div>
         `;
 
-        // Update debug info
-        const debug = document.getElementById('retrieval-debug');
-        let debugHtml = '<h4>Retrieval Debug Info</h4>';
-        data.sources.forEach((src, i) => {
-            debugHtml += `
-                <div style="margin-bottom:0.5rem; border-bottom:1px solid #333; padding-bottom:0.5rem">
-                    <strong>#${i + 1} (Score: ${src.hybrid_score.toFixed(3)})</strong><br>
-                    <span style="color:#aaa">Page ${src.page}</span><br>
-                    <em>${src.text.substring(0, 100)}...</em>
-                </div>
-            `;
-        });
-        debug.innerHTML = debugHtml;
+        generatedQuestions = data.response;
+        document.getElementById('questions-actions').classList.remove('hidden');
 
-    } catch (e) {
-        document.getElementById(loadingId).innerHTML = `<div class="bubble" style="color:red">Error: ${e}</div>`;
-    }
-    history.scrollTop = history.scrollHeight;
-}
-
-// --- Monitoring Panel ---
-async function loadHistory() {
-    const botId = document.getElementById('monitoring-bot-select').value;
-    if (!botId) return;
-
-    const container = document.getElementById('history-container');
-    container.innerHTML = 'Loading...';
-
-    try {
-        const res = await fetch(`${API_BASE}/chatbots/${botId}/history`);
-        const data = await res.json();
-
-        document.getElementById('stat-total').innerText = data.history.length;
-
-        container.innerHTML = '';
-        data.history.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            div.innerHTML = `
-                <div class="history-q">Q: ${item.question}</div>
-                <div class="history-a">A: ${item.answer}</div>
-                <div class="feedback-actions">
-                    <button class="btn-correct" onclick="submitCorrection('${item.id}', '${item.question.replace(/'/g, "\\'")}')">📝 Submit Correction</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-
-    } catch (e) {
-        container.innerHTML = 'Error loading history';
+    } catch (error) {
+        console.error('Failed to generate questions:', error);
+        output.innerHTML = '<div class="empty-state-small"><p>Failed to generate questions. Try again.</p></div>';
     }
 }
 
-async function submitCorrection(convId, question) {
-    const newAnswer = prompt(`Enter correct answer for: "${question}"`);
-    if (!newAnswer) return;
+function copyQuestions() {
+    navigator.clipboard.writeText(generatedQuestions);
+    alert('Questions copied to clipboard!');
+}
 
-    const formData = new FormData();
-    formData.append('conversation_id', convId);
-    formData.append('corrected_answer', newAnswer);
+function downloadQuestions() {
+    const blob = new Blob([generatedQuestions], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'questions.txt';
+    a.click();
+}
+
+// Flashcard Generator
+async function generateFlashcards() {
+    const courseId = document.getElementById('flashcards-course').value;
+    const topic = document.getElementById('flashcards-topic').value;
+    const count = document.getElementById('flashcards-count').value;
+
+    if (!courseId) {
+        alert('Please select a course');
+        return;
+    }
+
+    const preview = document.getElementById('flashcards-preview');
+    preview.innerHTML = '<div class="empty-state-small"><p>Generating flashcards... ⏳</p></div>';
 
     try {
-        await fetch(`${API_BASE}/feedback/submit`, {
+        const response = await fetch(`${API_BASE}/chatbots/${courseId}/chat`, {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Create ${count} flashcards ${topic ? `about "${topic}"` : 'from the course content'}.
+                Format: For each flashcard, write "FRONT:" followed by the question/term, then "BACK:" followed by the answer/definition.
+                Make them clear and educational.`
+            })
         });
-        alert("Correction submitted! The model will learn from this.");
-        loadHistory();
-    } catch (e) {
-        alert("Error submitting feedback");
+
+        const data = await response.json();
+
+        // Parse flashcards from response
+        const cards = parseFlashcards(data.response);
+
+        if (cards.length > 0) {
+            preview.innerHTML = cards.map((card, i) => `
+                <div class="flashcard" onclick="flipCard(this)">
+                    <div class="flashcard-front">📝 ${card.front}</div>
+                    <div class="flashcard-back" style="display: none;">💡 ${card.back}</div>
+                </div>
+            `).join('');
+        } else {
+            preview.innerHTML = `
+                <div class="question-item" style="grid-column: span 2;">
+                    <div class="question-text">${data.response.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
+        }
+
+    } catch (error) {
+        console.error('Failed to generate flashcards:', error);
+        preview.innerHTML = '<div class="empty-state-small"><p>Failed to generate flashcards. Try again.</p></div>';
     }
 }
 
-// Init
-loadChatbots('training-bot-select'); // Pre-load for first tab if needed
+function parseFlashcards(text) {
+    const cards = [];
+    const regex = /FRONT:\s*(.*?)(?=BACK:)/gis;
+    const backRegex = /BACK:\s*(.*?)(?=FRONT:|$)/gis;
+
+    const fronts = [...text.matchAll(regex)];
+    const backs = [...text.matchAll(backRegex)];
+
+    for (let i = 0; i < Math.min(fronts.length, backs.length); i++) {
+        cards.push({
+            front: fronts[i][1].trim(),
+            back: backs[i][1].trim()
+        });
+    }
+
+    return cards;
+}
+
+function flipCard(card) {
+    const front = card.querySelector('.flashcard-front');
+    const back = card.querySelector('.flashcard-back');
+
+    if (front.style.display !== 'none') {
+        front.style.display = 'none';
+        back.style.display = 'block';
+    } else {
+        front.style.display = 'block';
+        back.style.display = 'none';
+    }
+}
+
+// Simulator
+function enableSimulator() {
+    document.getElementById('simulator-input').disabled = false;
+    document.getElementById('simulator-send').disabled = false;
+
+    const messages = document.getElementById('simulator-messages');
+    messages.innerHTML = `
+        <div class="message bot-message">
+            <div class="message-avatar">AI</div>
+            <div class="message-bubble">
+                <p>Ready to test! Ask me anything.</p>
+            </div>
+        </div>
+    `;
+}
+
+async function sendSimulatorMessage() {
+    const input = document.getElementById('simulator-input');
+    const message = input.value.trim();
+    const courseId = document.getElementById('simulator-course').value;
+
+    if (!message || !courseId) return;
+
+    input.value = '';
+
+    const messages = document.getElementById('simulator-messages');
+    messages.innerHTML += `
+        <div class="message user-message">
+            <div class="message-avatar">You</div>
+            <div class="message-bubble"><p>${message}</p></div>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`${API_BASE}/chatbots/${courseId}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+
+        messages.innerHTML += `
+            <div class="message bot-message">
+                <div class="message-avatar">AI</div>
+                <div class="message-bubble"><p>${data.response.replace(/\n/g, '<br>')}</p></div>
+            </div>
+        `;
+
+        messages.scrollTop = messages.scrollHeight;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Make functions globally available
+window.createCourse = createCourse;
+window.deleteCourse = deleteCourse;
+window.selectCourse = (id) => { selectedCourseId = id; };
+window.generateQuestions = generateQuestions;
+window.copyQuestions = copyQuestions;
+window.downloadQuestions = downloadQuestions;
+window.generateFlashcards = generateFlashcards;
+window.flipCard = flipCard;
+window.sendSimulatorMessage = sendSimulatorMessage;

@@ -4,230 +4,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAG-LMS Instructor Dashboard</title>
+    <title>Instructor Dashboard | RAG-LMS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/instructor.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar -->
         <nav class="sidebar">
-            <div class="logo">
-                <div class="logo-icon">R</div>
-                <span>RAG-LMS</span>
+            <div class="sidebar-header">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+                    <span>RAG-LMS</span>
+                </a>
             </div>
 
-            <ul class="nav-links">
-                <li class="active" data-panel="creation">
-                    <span class="icon">📘</span> Courses
-                </li>
-                <li data-panel="training">
-                    <span class="icon">📚</span> Content
-                </li>
-                <li data-panel="students">
-                    <span class="icon">👨‍🎓</span> Students
-                </li>
-                <li data-panel="testing">
-                    <span class="icon">🧪</span> Simulator
-                </li>
-                <li data-panel="monitoring">
-                    <span class="icon">📊</span> Analytics
-                </li>
-            </ul>
+            <div class="nav-section">
+                <span class="nav-label">Manage</span>
+                <ul class="nav-links">
+                    <li class="active" data-panel="courses">
+                        <i data-lucide="book-open"></i>
+                        <span>Courses</span>
+                    </li>
+                    <li data-panel="content">
+                        <i data-lucide="upload"></i>
+                        <span>Content</span>
+                    </li>
+                </ul>
+            </div>
 
-            <div class="user-profile">
-                <div class="avatar">I</div>
-                <div class="info">
-                    <span class="name">Instructor</span>
-                    <span class="role">Admin</span>
+            <div class="nav-section">
+                <span class="nav-label">Create</span>
+                <ul class="nav-links">
+                    <li data-panel="questions">
+                        <i data-lucide="help-circle"></i>
+                        <span>Questions</span>
+                    </li>
+                    <li data-panel="flashcards">
+                        <i data-lucide="layers"></i>
+                        <span>Flashcards</span>
+                    </li>
+                    <li data-panel="quizzes">
+                        <i data-lucide="clipboard-check"></i>
+                        <span>Quizzes</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Analyze</span>
+                <ul class="nav-links">
+                    <li data-panel="simulator">
+                        <i data-lucide="flask-conical"></i>
+                        <span>Simulator</span>
+                    </li>
+                    <li data-panel="analytics">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Analytics</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar avatar-instructor"><i data-lucide="user"></i></div>
+                    <div class="user-info">
+                        <span class="user-name">Instructor</span>
+                        <span class="user-role badge badge-instructor">Teacher</span>
+                    </div>
                 </div>
+                <a href="index.html" class="btn-logout"><i data-lucide="arrow-left"></i> Back</a>
             </div>
         </nav>
 
-        <!-- Main Content Area -->
+        <!-- Main Content -->
         <main class="main-content">
-
-            <!-- 1. Courses Panel (Orange) -->
-            <section id="creation-panel" class="panel active">
+            <!-- ========== COURSES PANEL ========== -->
+            <section id="courses-panel" class="panel active">
                 <header class="panel-header">
-                    <h1>Course Management</h1>
-                    <p>Create and configure AI tutors for your subjects.</p>
+                    <div class="header-content">
+                        <h1><i data-lucide="book-open" class="header-icon"></i> Course Management</h1>
+                        <p>Create and configure AI tutors for your subjects</p>
+                    </div>
                 </header>
 
-                <div class="card-grid">
-                    <div class="card form-card">
-                        <div class="form-group">
-                            <label>Course Name</label>
-                            <input type="text" id="bot-name" placeholder="e.g., Grade 10 Science">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Greeting Message</label>
-                            <textarea id="bot-greeting" placeholder="Hello! I'm here to help you with..."></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>External Knowledge Ratio <span id="ratio-value">50%</span></label>
-                            <div class="slider-container">
-                                <span>Strict</span>
-                                <input type="range" id="bot-ratio" min="0" max="1" step="0.1" value="0.5">
-                                <span>Creative</span>
+                <div class="panel-body">
+                    <div class="card-grid">
+                        <div class="card form-card">
+                            <h3 class="card-title"><i data-lucide="plus-circle"></i> Create New Course</h3>
+                            <div class="form-group">
+                                <label>Course Name</label>
+                                <input type="text" id="course-name" class="input" placeholder="e.g., Grade 10 Science">
                             </div>
-                            <p class="hint">Controls how much the AI relies on outside knowledge vs. your documents.</p>
+                            <div class="form-group">
+                                <label>Greeting Message</label>
+                                <textarea id="course-greeting" class="textarea" rows="3"
+                                    placeholder="Hello! I'm here to help you with..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Knowledge Ratio <span id="ratio-value" class="ratio-value">50%</span></label>
+                                <div class="slider-container">
+                                    <span class="slider-label">Strict</span>
+                                    <input type="range" id="course-ratio" min="0" max="1" step="0.1" value="0.5">
+                                    <span class="slider-label">Creative</span>
+                                </div>
+                                <p class="hint">Controls AI creativity vs document adherence</p>
+                            </div>
+                            <button class="btn btn-primary w-full" onclick="createCourse()">
+                                <i data-lucide="sparkles"></i> Create Course Bot
+                            </button>
                         </div>
 
-                        <button class="btn-primary" onclick="createChatbot()">Create Course Bot</button>
+                        <div class="card">
+                            <h3 class="card-title"><i data-lucide="library"></i> Your Courses</h3>
+                            <div id="courses-list" class="courses-list">
+                                <!-- Courses will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== CONTENT PANEL ========== -->
+            <section id="content-panel" class="panel">
+                <header class="panel-header">
+                    <div class="header-content">
+                        <h1><i data-lucide="upload" class="header-icon"></i> Content Upload</h1>
+                        <p>Upload PDFs to train your AI tutor</p>
+                    </div>
+                    <div class="header-actions">
+                        <select id="content-course-select" class="select">
+                            <option value="" disabled selected>Select Course...</option>
+                        </select>
+                    </div>
+                </header>
+
+                <div class="panel-body">
+                    <div class="upload-zone" id="upload-zone">
+                        <div class="upload-icon"><i data-lucide="file-up"></i></div>
+                        <h3>Upload PDF Documents</h3>
+                        <p>Drag & drop or <span class="highlight">browse</span></p>
+                        <input type="file" id="file-input" accept=".pdf" hidden>
                     </div>
 
-                    <div class="card preview-card">
-                        <h3>Live Preview</h3>
-                        <div class="chat-preview">
+                    <div id="upload-progress" class="upload-progress hidden">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <p id="progress-text">Processing...</p>
+                    </div>
+
+                    <div class="documents-list" id="documents-list">
+                        <!-- Documents will be listed here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== QUESTION GENERATOR PANEL ========== -->
+            <section id="questions-panel" class="panel">
+                <header class="panel-header">
+                    <div class="header-content">
+                        <h1><i data-lucide="help-circle" class="header-icon"></i> Question Generator</h1>
+                        <p>AI-powered question generation from your course content</p>
+                    </div>
+                </header>
+
+                <div class="panel-body">
+                    <div class="card-grid">
+                        <div class="card form-card">
+                            <h3 class="card-title"><i data-lucide="wand-2"></i> Generate Questions</h3>
+                            <div class="form-group">
+                                <label>Select Course</label>
+                                <select id="questions-course" class="select">
+                                    <option value="" disabled selected>Choose a course...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Topic/Chapter (Optional)</label>
+                                <input type="text" id="questions-topic" class="input"
+                                    placeholder="e.g., Photosynthesis">
+                            </div>
+                            <div class="form-group">
+                                <label>Question Types</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="q-mcq" checked> Multiple Choice
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="q-tf" checked> True/False
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="q-short" checked> Short Answer
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="q-long"> Long Answer
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Questions</label>
+                                <input type="number" id="questions-count" class="input" value="5" min="1" max="20">
+                            </div>
+                            <div class="form-group">
+                                <label>Difficulty</label>
+                                <select id="questions-difficulty" class="select">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary w-full" onclick="generateQuestions()">
+                                <i data-lucide="zap"></i> Generate Questions
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title"><i data-lucide="file-text"></i> Generated Questions</h3>
+                            <div id="questions-output" class="questions-output">
+                                <div class="empty-state-small">
+                                    <i data-lucide="sparkles" style="width: 32px; height: 32px; opacity: 0.3;"></i>
+                                    <p>Your generated questions will appear here</p>
+                                </div>
+                            </div>
+                            <div class="card-actions hidden" id="questions-actions">
+                                <button class="btn btn-secondary" onclick="copyQuestions()"><i data-lucide="copy"></i>
+                                    Copy</button>
+                                <button class="btn btn-secondary" onclick="downloadQuestions()"><i
+                                        data-lucide="download"></i> Download</button>
+                                <button class="btn btn-primary" onclick="saveToQuiz()"><i data-lucide="plus"></i> Add to
+                                    Quiz</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== FLASHCARD CREATOR PANEL ========== -->
+            <section id="flashcards-panel" class="panel">
+                <header class="panel-header">
+                    <div class="header-content">
+                        <h1><i data-lucide="layers" class="header-icon"></i> Flashcard Creator</h1>
+                        <p>Create study flashcards for your students</p>
+                    </div>
+                </header>
+
+                <div class="panel-body">
+                    <div class="card-grid">
+                        <div class="card form-card">
+                            <h3 class="card-title"><i data-lucide="wand-2"></i> Generate Flashcards</h3>
+                            <div class="form-group">
+                                <label>Select Course</label>
+                                <select id="flashcards-course" class="select">
+                                    <option value="" disabled selected>Choose a course...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Topic/Chapter</label>
+                                <input type="text" id="flashcards-topic" class="input" placeholder="e.g., Cell Biology">
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Cards</label>
+                                <input type="number" id="flashcards-count" class="input" value="10" min="5" max="50">
+                            </div>
+                            <button class="btn btn-primary w-full" onclick="generateFlashcards()">
+                                <i data-lucide="zap"></i> Generate Flashcards
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title"><i data-lucide="eye"></i> Preview Flashcards</h3>
+                            <div id="flashcards-preview" class="flashcards-preview">
+                                <div class="empty-state-small">
+                                    <i data-lucide="layers" style="width: 32px; height: 32px; opacity: 0.3;"></i>
+                                    <p>Generated flashcards will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== QUIZZES PANEL ========== -->
+            <section id="quizzes-panel" class="panel">
+                <header class="panel-header">
+                    <div class="header-content">
+                        <h1><i data-lucide="clipboard-check" class="header-icon"></i> Quiz Builder</h1>
+                        <p>Create interactive quizzes for students</p>
+                    </div>
+                </header>
+
+                <div class="panel-body">
+                    <div class="empty-state">
+                        <i data-lucide="clipboard-check" class="empty-icon-svg"></i>
+                        <h2>Quiz Builder Coming Soon</h2>
+                        <p>Create quizzes from your generated questions</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== SIMULATOR PANEL ========== -->
+            <section id="simulator-panel" class="panel">
+                <header class="panel-header">
+                    <div class="header-content">
+                        <h1><i data-lucide="flask-conical" class="header-icon"></i> Student Simulator</h1>
+                        <p>Test your AI tutor as a student</p>
+                    </div>
+                    <div class="header-actions">
+                        <select id="simulator-course" class="select">
+                            <option value="" disabled selected>Select Course...</option>
+                        </select>
+                    </div>
+                </header>
+
+                <div class="panel-body">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="simulator-messages">
                             <div class="message bot-message">
-                                <div class="avatar">AI</div>
-                                <div class="bubble" id="preview-greeting">Hello! I'm here to help you with...</div>
+                                <div class="message-avatar"><i data-lucide="bot"></i></div>
+                                <div class="message-bubble">
+                                    <p>Select a course to start testing</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="simulator-input" class="input" placeholder="Ask a question..."
+                                disabled>
+                            <button class="btn btn-primary" onclick="sendSimulatorMessage()" disabled
+                                id="simulator-send">
+                                <i data-lucide="send"></i> Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== ANALYTICS PANEL ========== -->
+            <section id="analytics-panel" class="panel">
+                <header class="panel-header">
+                    <div class="header-content">
+                        <h1><i data-lucide="bar-chart-3" class="header-icon"></i> Analytics Dashboard</h1>
+                        <p>Monitor usage and performance</p>
+                    </div>
+                </header>
+
+                <div class="panel-body">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i data-lucide="message-circle"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-conversations">0</span>
+                                <span class="stat-label">Total Chats</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i data-lucide="file-text"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-documents">0</span>
+                                <span class="stat-label">Documents</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i data-lucide="puzzle"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-chunks">0</span>
+                                <span class="stat-label">Knowledge Chunks</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i data-lucide="thumbs-up"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-feedback">0%</span>
+                                <span class="stat-label">Positive Feedback</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
-
-            <!-- 2. Content Panel (Teal) -->
-            <section id="training-panel" class="panel">
-                <header class="panel-header">
-                    <h1>Course Content</h1>
-                    <p>Upload textbooks and materials for your courses.</p>
-                </header>
-
-                <div class="chatbot-selector">
-                    <label>Select Course:</label>
-                    <select id="training-bot-select" onchange="loadDocuments()"></select>
-                </div>
-
-                <div class="upload-area" id="drop-zone">
-                    <div class="icon">📂</div>
-                    <h3>Drag & Drop PDF Files</h3>
-                    <p>or <span class="highlight" onclick="document.getElementById('file-upload').click()">browse
-                            files</span></p>
-                    <input type="file" id="file-upload" accept=".pdf" hidden onchange="handleFileUpload(this.files)">
-                </div>
-
-                <div class="documents-list">
-                    <h3>Uploaded Documents</h3>
-                    <div id="doc-list-container">
-                        <!-- Doc items will go here -->
-                        <div class="empty-state">No documents uploaded yet.</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. Students Panel (New) -->
-            <section id="students-panel" class="panel">
-                <header class="panel-header">
-                    <h1>Student Management</h1>
-                    <p>Manage enrolled students and view their progress.</p>
-                </header>
-
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>Enrolled Students</h3>
-                        <div class="table-container">
-                            <table style="width:100%; text-align:left; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="border-bottom: 1px solid #eee;">
-                                        <th style="padding:10px;">Name</th>
-                                        <th style="padding:10px;">ID</th>
-                                        <th style="padding:10px;">Status</th>
-                                        <th style="padding:10px;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td style="padding:10px;">John Doe</td>
-                                        <td style="padding:10px;">STU001</td>
-                                        <td style="padding:10px;"><span style="color:green">Active</span></td>
-                                        <td style="padding:10px;"><button class="btn-small">View</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding:10px;">Jane Smith</td>
-                                        <td style="padding:10px;">STU002</td>
-                                        <td style="padding:10px;"><span style="color:green">Active</span></td>
-                                        <td style="padding:10px;"><button class="btn-small">View</button></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 4. Simulator Panel (Light Blue) -->
-            <section id="testing-panel" class="panel">
-                <header class="panel-header">
-                    <h1>Student Simulator</h1>
-                    <p>Test the course bot as a student would see it.</p>
-                </header>
-
-                <div class="chatbot-selector">
-                    <label>Select Course:</label>
-                    <select id="testing-bot-select"></select>
-                </div>
-
-                <div class="chat-interface">
-                    <div class="chat-history" id="test-chat-history">
-                        <div class="message bot-message">
-                            <div class="avatar">AI</div>
-                            <div class="bubble">Ready to test! Ask me anything from the uploaded documents.</div>
-                        </div>
-                    </div>
-                    <div class="chat-input-area">
-                        <input type="text" id="test-input" placeholder="Type a question..."
-                            onkeypress="handleTestEnter(event)">
-                        <button class="btn-send" onclick="sendTestMessage()">➤</button>
-                    </div>
-                </div>
-
-                <div class="retrieval-info" id="retrieval-debug">
-                    <h4>Retrieval Debug Info</h4>
-                    <div class="debug-content">Run a query to see retrieved chunks here...</div>
-                </div>
-            </section>
-
-            <!-- 5. Analytics Panel (Purple) -->
-            <section id="monitoring-panel" class="panel">
-                <header class="panel-header">
-                    <h1>Performance Analytics</h1>
-                    <p>Review student interactions and improve course content.</p>
-                </header>
-
-                <div class="chatbot-selector">
-                    <label>Select Course:</label>
-                    <select id="monitoring-bot-select" onchange="loadHistory()"></select>
-                </div>
-
-                <div class="stats-row">
-                    <div class="stat-card">
-                        <h3>Total Queries</h3>
-                        <div class="value" id="stat-total">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Avg. Confidence</h3>
-                        <div class="value" id="stat-conf">--</div>
-                    </div>
-                </div>
-
-                <div class="history-list" id="history-container">
-                    <!-- History items -->
-                </div>
-            </section>
-
         </main>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer"
+        style="position: fixed; bottom: 0; left: 260px; right: 0; background: var(--bg-card); z-index: 50;">
+        <p>© 2024 <a href="index.html">RAG-LMS</a> • Built by <span class="author">Prashanna Chauhan Kshetri</span></p>
+    </footer>
+
     <script src="js/instructor.js"></script>
+    <script>lucide.createIcons();</script>
 </body>
 
 </html>
