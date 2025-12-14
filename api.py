@@ -6,12 +6,13 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import logging
 import json
 import shutil
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from dotenv import load_dotenv
 import numpy as np
 
@@ -102,6 +103,92 @@ def health():
         "embedding_model": "all-MiniLM-L6-v2",
         "embedding_dim": EMBEDDING_DIM
     }
+
+# --- Authentication Endpoints ---
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/auth/login")
+async def login(request: LoginRequest, response: JSONResponse):
+    """Login endpoint"""
+    user = db.verify_user(request.username, request.password)
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Create session token (simple implementation)
+    import secrets
+    session_token = secrets.token_urlsafe(32)
+    
+    # In production, store session in Redis or database
+    # For now, we'll use a simple in-memory dict
+    if not hasattr(app.state, 'sessions'):
+        app.state.sessions = {}
+    
+    app.state.sessions[session_token] = {
+        'user_id': user['id'],
+        'username': user['username'],
+        'role': user['role'],
+        'full_name': user['full_name']
+    }
+    
+    response = JSONResponse({
+        "message": "Login successful",
+        "user": {
+            "id": user['id'],
+            "username": user['username'],
+            "role": user['role'],
+            "full_name": user['full_name'],
+            "email": user['email']
+        },
+        "session_token": session_token
+    })
+    
+    # Set cookie
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        max_age=86400,  # 24 hours
+        samesite="lax"
+    )
+    
+    return response
+
+@app.post("/auth/logout")
+async def logout(response: JSONResponse):
+    """Logout endpoint"""
+    response = JSONResponse({"message": "Logged out successfully"})
+    response.delete_cookie("session_token")
+    return response
+
+@app.get("/auth/session")
+async def get_session(session_token: str = None):
+    """Get current session info"""
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    if not hasattr(app.state, 'sessions') or session_token not in app.state.sessions:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    
+    return app.state.sessions[session_token]
+
+# --- Admin Endpoints ---
+
+@app.get("/admin/users")
+async def list_users():
+    """List all users (Admin only)"""
+    try:
+        conn = db.get_db_connection()
+        users = conn.execute("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY created_at DESC").fetchall()
+        conn.close()
+        
+        return {"users": [dict(u) for u in users]}
+    except Exception as e:
+        logger.error(f"Failed to list users: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- Chatbot Management Endpoints ---
 
@@ -215,16 +302,22 @@ async def list_documents_endpoint(chatbot_id: str):
 
 # --- Chat & Retrieval ---
 
+class ChatRequest(BaseModel):
+    message: str
+    top_k: int = 10
+
 @app.post("/chatbots/{chatbot_id}/chat")
 async def chat_endpoint(
     chatbot_id: str,
-    question: str = Form(...),
-    top_k: int = Form(10)
+    request: ChatRequest
 ):
     """Chat with a specific chatbot using hybrid retrieval"""
     chatbot = db.get_chatbot(chatbot_id)
     if not chatbot:
         raise HTTPException(status_code=404, detail="Chatbot not found")
+    
+    question = request.message
+    top_k = request.top_k
     
     # Embed question
     try:
@@ -274,7 +367,7 @@ async def chat_endpoint(
     
     return {
         "conversation_id": conv_id,
-        "answer": answer,
+        "response": answer,
         "sources": hits
     }
 
@@ -389,7 +482,11 @@ def _call_groq_llm_original(system_prompt: str, user_prompt: str) -> str:
 
 @app.get("/")
 def index():
-    return FileResponse("static/index.html")
+    return FileResponse("static/login.html")
+
+@app.get("/login.html")
+def login_page():
+    return FileResponse("static/login.html")
 
 @app.get("/admin.html")
 def admin():
@@ -411,6 +508,415 @@ def serve_css(filename: str):
 @app.get("/js/{filename}")
 def serve_js(filename: str):
     return FileResponse(f"static/js/{filename}")
+
+# --- Quiz Management Endpoints (Instructor Only) ---
+
+class GenerateQuestionsRequest(BaseModel):
+    chatbot_id: str
+    topic: str = ""
+    count: int = 5
+    difficulty: str = "medium"
+    types: List[str] = ["mcq", "true_false", "short_answer", "long_answer"]
+
+@app.post("/instructor/generate-questions")
+async def generate_questions_endpoint(request: GenerateQuestionsRequest):
+    """Generate questions using AI (Instructor only)"""
+    chatbot = db.get_chatbot(request.chatbot_id)
+    if not chatbot:
+        raise HTTPException(status_code=404, detail="Chatbot not found")
+    
+    # Build prompt that respects ALL question types
+    types_str = ", ".join(request.types)
+    prompt = f"""Generate exactly {request.count} {request.difficulty} difficulty questions {f'about "{request.topic}"' if request.topic else 'from the course content'}.
+
+IMPORTANT: You MUST include ALL of these question types: {types_str}
+Distribute the questions evenly across all types.
+
+Format each question as follows:
+
+For MCQ:
+Q1. [Question text]
+Type: MCQ
+A) [Option A]
+B) [Option B]
+C) [Option C]
+D) [Option D]
+Correct Answer: [A/B/C/D]
+
+For True/False:
+Q2. [Question text]
+Type: TRUE_FALSE
+Correct Answer: [True/False]
+
+For Short Answer:
+Q3. [Question text]
+Type: SHORT_ANSWER
+Correct Answer: [Brief answer]
+
+For Long Answer:
+Q4. [Question text]
+Type: LONG_ANSWER
+Correct Answer: [Detailed answer]
+
+Make sure to include questions from ALL specified types."""
+
+    try:
+        # Use chat endpoint to generate
+        q_emb = EMBED_MODEL.encode([prompt], convert_to_numpy=True).astype("float32")[0]
+        
+        hits = hybrid_query(
+            request.chatbot_id,
+            prompt,
+            q_emb,
+            top_k=10,
+            bm25_weight=0.3,
+            faiss_weight=0.7
+        )
+        
+        context_docs = []
+        for h in hits:
+            context_docs.append({
+                "source": h.get("source", "unknown"),
+                "text": h.get("text", ""),
+                "page": h.get("page", "?"),
+                "heading": h.get("heading", "")
+            })
+        
+        system_prompt, user_prompt = build_system_user_prompt(context_docs, prompt)
+        response = call_groq_llm(system_prompt, user_prompt)
+        
+        return {"questions": response}
+    except Exception as e:
+        logger.error(f"Question generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class CreateQuizRequest(BaseModel):
+    chatbot_id: str
+    title: str
+    description: str = ""
+    questions: List[Dict[str, Any]]
+
+@app.post("/instructor/quizzes/create")
+async def create_quiz_endpoint(request: CreateQuizRequest):
+    """Create a new quiz with questions (Instructor only)"""
+    import uuid
+    quiz_id = str(uuid.uuid4())
+    
+    try:
+        db.create_quiz(quiz_id, request.chatbot_id, request.title, request.description)
+        
+        for idx, q in enumerate(request.questions):
+            question_id = str(uuid.uuid4())
+            db.add_question(
+                question_id,
+                quiz_id,
+                q["question_text"],
+                q["question_type"],
+                q["correct_answer"],
+                q.get("options"),
+                q.get("points", 1),
+                idx
+            )
+        
+        return {"message": "Quiz created", "quiz_id": quiz_id}
+    except Exception as e:
+        logger.error(f"Quiz creation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/instructor/quizzes/{chatbot_id}")
+async def list_instructor_quizzes(chatbot_id: str):
+    """List all quizzes for a chatbot (Instructor only)"""
+    quizzes = db.list_quizzes(chatbot_id, published_only=False)
+    
+    # Add question count to each quiz
+    for quiz in quizzes:
+        questions = db.get_quiz_questions(quiz["id"])
+        quiz["question_count"] = len(questions)
+    
+    return {"quizzes": quizzes}
+
+@app.get("/instructor/quizzes/{quiz_id}/details")
+async def get_quiz_details(quiz_id: str):
+    """Get quiz with all questions (Instructor only)"""
+    quiz = db.get_quiz(quiz_id)
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    questions = db.get_quiz_questions(quiz_id)
+    quiz["questions"] = questions
+    
+    return quiz
+
+@app.post("/instructor/quizzes/{quiz_id}/publish")
+async def publish_quiz_endpoint(quiz_id: str):
+    """Publish a quiz (Instructor only)"""
+    db.publish_quiz(quiz_id)
+    return {"message": "Quiz published"}
+
+@app.post("/instructor/quizzes/{quiz_id}/unpublish")
+async def unpublish_quiz_endpoint(quiz_id: str):
+    """Unpublish a quiz (Instructor only)"""
+    db.unpublish_quiz(quiz_id)
+    return {"message": "Quiz unpublished"}
+
+@app.delete("/instructor/quizzes/{quiz_id}")
+async def delete_quiz_endpoint(quiz_id: str):
+    """Delete a quiz (Instructor only)"""
+    db.delete_quiz(quiz_id)
+    return {"message": "Quiz deleted"}
+
+@app.delete("/instructor/questions/{question_id}")
+async def delete_question_endpoint(question_id: str):
+    """Delete a question (Instructor only)"""
+    db.delete_question(question_id)
+    return {"message": "Question deleted"}
+
+# --- Student Quiz Endpoints ---
+
+@app.get("/student/quizzes/{chatbot_id}")
+async def list_student_quizzes(chatbot_id: str):
+    """List published quizzes for students"""
+    quizzes = db.list_quizzes(chatbot_id, published_only=True)
+    
+    # Add question count but hide answers
+    for quiz in quizzes:
+        questions = db.get_quiz_questions(quiz["id"])
+        quiz["question_count"] = len(questions)
+    
+    return {"quizzes": quizzes}
+
+@app.get("/student/quizzes/{quiz_id}/take")
+async def get_quiz_for_student(quiz_id: str):
+    """Get quiz for taking (Student only, no answers)"""
+    quiz = db.get_quiz(quiz_id)
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    if not quiz["is_published"]:
+        raise HTTPException(status_code=403, detail="Quiz not published")
+    
+    questions = db.get_quiz_questions(quiz_id)
+    
+    # Remove correct answers for students
+    for q in questions:
+        q.pop("correct_answer", None)
+    
+    quiz["questions"] = questions
+    return quiz
+
+class SubmitQuizRequest(BaseModel):
+    quiz_id: str
+    student_id: str
+    answers: Dict[str, str]  # {question_id: answer}
+
+@app.post("/student/quizzes/submit")
+async def submit_quiz_endpoint(request: SubmitQuizRequest):
+    """Submit quiz answers and get score"""
+    import uuid
+    
+    quiz = db.get_quiz(request.quiz_id)
+    if not quiz or not quiz["is_published"]:
+        raise HTTPException(status_code=404, detail="Quiz not found or not published")
+    
+    questions = db.get_quiz_questions(request.quiz_id)
+    
+    # Calculate score
+    total_points = sum(q["points"] for q in questions)
+    earned_points = 0
+    
+    for q in questions:
+        student_answer = request.answers.get(q["id"], "").strip().lower()
+        correct_answer = q["correct_answer"].strip().lower()
+        
+        if q["question_type"] == "mcq":
+            if student_answer == correct_answer:
+                earned_points += q["points"]
+        elif q["question_type"] == "true_false":
+            if student_answer == correct_answer:
+                earned_points += q["points"]
+        else:
+            # For short/long answer, simple string match (can be improved)
+            if student_answer == correct_answer:
+                earned_points += q["points"]
+    
+    score = (earned_points / total_points * 100) if total_points > 0 else 0
+    
+    # Save submission
+    submission_id = str(uuid.uuid4())
+    db.submit_quiz(submission_id, request.quiz_id, request.student_id, request.answers, score)
+    
+    return {
+        "submission_id": submission_id,
+        "score": score,
+        "earned_points": earned_points,
+        "total_points": total_points
+    }
+
+@app.get("/instructor/quizzes/{quiz_id}/submissions")
+async def get_quiz_submissions_endpoint(quiz_id: str):
+    """Get all submissions for a quiz (Instructor only)"""
+    submissions = db.get_quiz_submissions(quiz_id)
+    return {"submissions": submissions}
+
+# --- Flashcard Endpoints ---
+
+class GenerateFlashcardsRequest(BaseModel):
+    chatbot_id: str
+    topic: str = ""
+    count: int = 10
+
+@app.post("/instructor/flashcards/generate")
+async def generate_flashcards_endpoint(request: GenerateFlashcardsRequest):
+    """Generate flashcards using AI (Instructor only)"""
+    chatbot = db.get_chatbot(request.chatbot_id)
+    if not chatbot:
+        raise HTTPException(status_code=404, detail="Chatbot not found")
+    
+    prompt = f"""Create {request.count} flashcards {f'about "{request.topic}"' if request.topic else 'from the course content'}.
+Format: For each flashcard, write "FRONT:" followed by the question/term, then "BACK:" followed by the answer/definition.
+Make them clear and educational."""
+
+    try:
+        q_emb = EMBED_MODEL.encode([prompt], convert_to_numpy=True).astype("float32")[0]
+        hits = hybrid_query(request.chatbot_id, prompt, q_emb, top_k=10)
+        
+        context_docs = [{"source": h.get("source", ""), "text": h.get("text", ""), "page": h.get("page", "?")} for h in hits]
+        system_prompt, user_prompt = build_system_user_prompt(context_docs, prompt)
+        response = call_groq_llm(system_prompt, user_prompt)
+        
+        return {"flashcards": response}
+    except Exception as e:
+        logger.error(f"Flashcard generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class SaveFlashcardsRequest(BaseModel):
+    chatbot_id: str
+    flashcards: List[Dict[str, str]]  # [{front: "", back: ""}]
+
+@app.post("/instructor/flashcards/save")
+async def save_flashcards_endpoint(request: SaveFlashcardsRequest):
+    """Save flashcards (Instructor only)"""
+    import uuid
+    
+    flashcard_ids = []
+    for card in request.flashcards:
+        flashcard_id = str(uuid.uuid4())
+        db.create_flashcard(flashcard_id, request.chatbot_id, card["front"], card["back"])
+        flashcard_ids.append(flashcard_id)
+    
+    return {"message": f"{len(flashcard_ids)} flashcards saved", "ids": flashcard_ids}
+
+@app.get("/instructor/flashcards/{chatbot_id}")
+async def list_instructor_flashcards(chatbot_id: str):
+    """List all flashcards (Instructor only)"""
+    flashcards = db.list_flashcards(chatbot_id, published_only=False)
+    return {"flashcards": flashcards}
+
+@app.post("/instructor/flashcards/{flashcard_id}/publish")
+async def publish_flashcard_endpoint(flashcard_id: str):
+    """Publish a flashcard (Instructor only)"""
+    db.publish_flashcard(flashcard_id)
+    return {"message": "Flashcard published"}
+
+@app.delete("/instructor/flashcards/{flashcard_id}")
+async def delete_flashcard_endpoint(flashcard_id: str):
+    """Delete a flashcard (Instructor only)"""
+    db.delete_flashcard(flashcard_id)
+    return {"message": "Flashcard deleted"}
+
+@app.get("/student/flashcards/{chatbot_id}")
+async def list_student_flashcards(chatbot_id: str):
+    """List published flashcards (Student only)"""
+    flashcards = db.list_flashcards(chatbot_id, published_only=True)
+    return {"flashcards": flashcards}
+
+# --- Lesson Plan Endpoints ---
+
+class GenerateLessonPlanRequest(BaseModel):
+    chatbot_id: str
+    topic: str
+    duration: str = "45 minutes"
+
+@app.post("/instructor/lesson-plans/generate")
+async def generate_lesson_plan_endpoint(request: GenerateLessonPlanRequest):
+    """Generate a lesson plan (Instructor only)"""
+    chatbot = db.get_chatbot(request.chatbot_id)
+    if not chatbot:
+        raise HTTPException(status_code=404, detail="Chatbot not found")
+    
+    prompt = f"""Create a detailed lesson plan for teaching "{request.topic}" in {request.duration}.
+
+Include:
+1. Learning Objectives (3-5 clear objectives)
+2. Introduction (how to start the lesson)
+3. Main Content (key concepts to teach with explanations)
+4. Teaching Examples (2-3 practical examples)
+5. Student Activities (interactive exercises)
+6. Assessment Methods (how to check understanding)
+7. Conclusion (summary and homework)
+
+Make it practical and engaging for teachers."""
+
+    try:
+        q_emb = EMBED_MODEL.encode([prompt], convert_to_numpy=True).astype("float32")[0]
+        hits = hybrid_query(request.chatbot_id, prompt, q_emb, top_k=15)
+        
+        context_docs = [{"source": h.get("source", ""), "text": h.get("text", ""), "page": h.get("page", "?")} for h in hits]
+        system_prompt, user_prompt = build_system_user_prompt(context_docs, prompt)
+        response = call_groq_llm(system_prompt, user_prompt)
+        
+        return {"lesson_plan": response}
+    except Exception as e:
+        logger.error(f"Lesson plan generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class SaveLessonPlanRequest(BaseModel):
+    chatbot_id: str
+    title: str
+    topic: str
+    content: str
+    objectives: List[str] = []
+    examples: List[str] = []
+    activities: List[str] = []
+
+@app.post("/instructor/lesson-plans/save")
+async def save_lesson_plan_endpoint(request: SaveLessonPlanRequest):
+    """Save a lesson plan (Instructor only)"""
+    import uuid
+    plan_id = str(uuid.uuid4())
+    
+    db.create_lesson_plan(
+        plan_id,
+        request.chatbot_id,
+        request.title,
+        request.topic,
+        request.content,
+        request.objectives,
+        request.examples,
+        request.activities
+    )
+    
+    return {"message": "Lesson plan saved", "plan_id": plan_id}
+
+@app.get("/instructor/lesson-plans/{chatbot_id}")
+async def list_lesson_plans_endpoint(chatbot_id: str):
+    """List all lesson plans (Instructor only)"""
+    plans = db.list_lesson_plans(chatbot_id)
+    return {"lesson_plans": plans}
+
+@app.get("/instructor/lesson-plans/{plan_id}/details")
+async def get_lesson_plan_endpoint(plan_id: str):
+    """Get lesson plan details (Instructor only)"""
+    plan = db.get_lesson_plan(plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Lesson plan not found")
+    return plan
+
+@app.delete("/instructor/lesson-plans/{plan_id}")
+async def delete_lesson_plan_endpoint(plan_id: str):
+    """Delete a lesson plan (Instructor only)"""
+    db.delete_lesson_plan(plan_id)
+    return {"message": "Lesson plan deleted"}
 
 if __name__ == "__main__":
     import uvicorn

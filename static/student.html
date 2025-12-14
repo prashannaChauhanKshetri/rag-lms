@@ -65,7 +65,7 @@
                         <span class="user-role badge badge-student">Learner</span>
                     </div>
                 </div>
-                <a href="index.html" class="btn-logout"><i data-lucide="arrow-left"></i> Back</a>
+                <button onclick="logout()" class="btn-logout"><i data-lucide="log-out"></i> Logout</button>
             </div>
         </nav>
 
@@ -118,19 +118,19 @@
 
             <!-- Flashcards Panel -->
             <section id="flashcards-panel" class="panel">
-                <div class="empty-state">
-                    <i data-lucide="layers" class="empty-icon-svg"></i>
-                    <h2>Flashcards Coming Soon</h2>
-                    <p>Your instructor will create flashcards for you to study.</p>
+                <div id="flashcards-grid" class="flashcards-grid">
+                    <div class="empty-state-small">
+                        <p>Select a course to view flashcards</p>
+                    </div>
                 </div>
             </section>
 
             <!-- Quizzes Panel -->
             <section id="quizzes-panel" class="panel">
-                <div class="empty-state">
-                    <i data-lucide="clipboard-check" class="empty-icon-svg"></i>
-                    <h2>Quizzes Coming Soon</h2>
-                    <p>Take quizzes to test your knowledge.</p>
+                <div id="quizzes-list" class="quizzes-grid">
+                    <div class="empty-state-small">
+                        <p>Select a course to view quizzes</p>
+                    </div>
                 </div>
             </section>
 

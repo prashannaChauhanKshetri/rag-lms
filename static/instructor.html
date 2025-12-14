@@ -79,7 +79,7 @@
                         <span class="user-role badge badge-instructor">Teacher</span>
                     </div>
                 </div>
-                <a href="index.html" class="btn-logout"><i data-lucide="arrow-left"></i> Back</a>
+                <button onclick="logout()" class="btn-logout"><i data-lucide="log-out"></i> Logout</button>
             </div>
         </nav>
 
@@ -294,16 +294,21 @@
             <section id="quizzes-panel" class="panel">
                 <header class="panel-header">
                     <div class="header-content">
-                        <h1><i data-lucide="clipboard-check" class="header-icon"></i> Quiz Builder</h1>
-                        <p>Create interactive quizzes for students</p>
+                        <h1><i data-lucide="clipboard-check" class="header-icon"></i> Quiz Management</h1>
+                        <p>Create, edit, and publish quizzes for students</p>
+                    </div>
+                    <div class="header-actions">
+                        <select id="quiz-course-select" class="select">
+                            <option value="" disabled selected>Select Course...</option>
+                        </select>
                     </div>
                 </header>
 
                 <div class="panel-body">
-                    <div class="empty-state">
-                        <i data-lucide="clipboard-check" class="empty-icon-svg"></i>
-                        <h2>Quiz Builder Coming Soon</h2>
-                        <p>Create quizzes from your generated questions</p>
+                    <div id="quizzes-list" class="quizzes-grid">
+                        <div class="empty-state-small">
+                            <p>Select a course to view quizzes</p>
+                        </div>
                     </div>
                 </div>
             </section>

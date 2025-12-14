@@ -1,46 +1,14 @@
-// Enhanced Instructor Dashboard JavaScript with Authentication
+// Instructor Dashboard JavaScript
 const API_BASE = '';
 let selectedCourseId = null;
-let currentUser = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuthentication();
     setupNavigation();
     setupUploadZone();
     loadCourses();
     setupSlider();
 });
-
-// Authentication Check
-function checkAuthentication() {
-    const userStr = localStorage.getItem('user');
-    const sessionToken = localStorage.getItem('session_token');
-
-    if (!userStr || !sessionToken) {
-        window.location.href = '/login.html';
-        return;
-    }
-
-    currentUser = JSON.parse(userStr);
-
-    // Check if user is instructor or admin
-    if (currentUser.role !== 'instructor' && currentUser.role !== 'admin') {
-        alert('Access denied. Instructor privileges required.');
-        window.location.href = '/login.html';
-        return;
-    }
-
-    // Update UI with user info
-    document.querySelector('.user-name').textContent = currentUser.full_name || currentUser.username;
-}
-
-// Logout
-function logout() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('session_token');
-    window.location.href = '/login.html';
-}
 
 // Navigation
 function setupNavigation() {
@@ -58,15 +26,6 @@ function setupNavigation() {
 function switchPanel(panelId) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById(`${panelId}-panel`).classList.add('active');
-
-    // Load data when switching to certain panels
-    if (panelId === 'quizzes') {
-        loadQuizzes();
-    } else if (panelId === 'flashcards') {
-        loadFlashcards();
-    } else if (panelId === 'lesson-plans') {
-        loadLessonPlans();
-    }
 }
 
 // Slider
@@ -88,6 +47,7 @@ async function loadCourses() {
         const data = await response.json();
         const courses = data.chatbots || data || [];
 
+        // Update course lists
         updateCoursesList(courses);
         updateCourseSelects(courses);
     } catch (error) {
@@ -124,9 +84,7 @@ function updateCourseSelects(courses) {
         'content-course-select',
         'questions-course',
         'flashcards-course',
-        'simulator-course',
-        'quiz-course-select',
-        'lesson-plan-course'
+        'simulator-course'
     ];
 
     selects.forEach(selectId => {
@@ -145,7 +103,6 @@ function updateCourseSelects(courses) {
             selectedCourseId = select.value;
             if (selectId === 'content-course-select') loadDocuments();
             if (selectId === 'simulator-course') enableSimulator();
-            if (selectId === 'quiz-course-select') loadQuizzes();
         });
     });
 }
@@ -243,6 +200,7 @@ async function handleFileUpload(file) {
     formData.append('file', file);
 
     try {
+        // Simulate progress
         let progressValue = 10;
         const progressInterval = setInterval(() => {
             progressValue = Math.min(progressValue + 5, 90);
@@ -280,8 +238,7 @@ async function loadDocuments() {
 
     try {
         const response = await fetch(`${API_BASE}/chatbots/${courseId}/documents`);
-        const data = await response.json();
-        const documents = data.documents || [];
+        const documents = await response.json();
 
         const list = document.getElementById('documents-list');
         if (documents.length === 0) {
@@ -292,7 +249,7 @@ async function loadDocuments() {
         list.innerHTML = documents.map(doc => `
             <div class="doc-item">
                 <span>📄 ${doc.filename}</span>
-                <span style="color: var(--text-muted); font-size: 0.85rem;">${doc.chunk_count} chunks</span>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">${doc.chunks} chunks</span>
             </div>
         `).join('');
     } catch (error) {
@@ -300,7 +257,7 @@ async function loadDocuments() {
     }
 }
 
-// Question Generator (ENHANCED)
+// Question Generator
 let generatedQuestions = [];
 
 async function generateQuestions() {
@@ -320,24 +277,17 @@ async function generateQuestions() {
     if (document.getElementById('q-short').checked) types.push('short_answer');
     if (document.getElementById('q-long').checked) types.push('long_answer');
 
-    if (types.length === 0) {
-        alert('Please select at least one question type');
-        return;
-    }
-
     const output = document.getElementById('questions-output');
     output.innerHTML = '<div class="empty-state-small"><p>Generating questions... ⏳</p></div>';
 
     try {
-        const response = await fetch(`${API_BASE}/instructor/generate-questions`, {
+        const response = await fetch(`${API_BASE}/chatbots/${courseId}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                chatbot_id: courseId,
-                topic: topic,
-                count: parseInt(count),
-                difficulty: difficulty,
-                types: types
+                message: `Generate ${count} ${difficulty} difficulty questions ${topic ? `about "${topic}"` : 'from the course content'}. 
+                Include these types: ${types.join(', ')}.
+                Format each question clearly with the question number, type, question text, and for MCQ include options (A, B, C, D) with the correct answer marked.`
             })
         });
 
@@ -345,11 +295,11 @@ async function generateQuestions() {
 
         output.innerHTML = `
             <div class="question-item">
-                <div class="question-text">${data.questions.replace(/\n/g, '<br>')}</div>
+                <div class="question-text">${data.response.replace(/\n/g, '<br>')}</div>
             </div>
         `;
 
-        generatedQuestions = data.questions;
+        generatedQuestions = data.response;
         document.getElementById('questions-actions').classList.remove('hidden');
 
     } catch (error) {
@@ -372,7 +322,7 @@ function downloadQuestions() {
     a.click();
 }
 
-// Flashcard Generator (ENHANCED)
+// Flashcard Generator
 async function generateFlashcards() {
     const courseId = document.getElementById('flashcards-course').value;
     const topic = document.getElementById('flashcards-topic').value;
@@ -387,18 +337,20 @@ async function generateFlashcards() {
     preview.innerHTML = '<div class="empty-state-small"><p>Generating flashcards... ⏳</p></div>';
 
     try {
-        const response = await fetch(`${API_BASE}/instructor/flashcards/generate`, {
+        const response = await fetch(`${API_BASE}/chatbots/${courseId}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                chatbot_id: courseId,
-                topic: topic,
-                count: parseInt(count)
+                message: `Create ${count} flashcards ${topic ? `about "${topic}"` : 'from the course content'}.
+                Format: For each flashcard, write "FRONT:" followed by the question/term, then "BACK:" followed by the answer/definition.
+                Make them clear and educational.`
             })
         });
 
         const data = await response.json();
-        const cards = parseFlashcards(data.flashcards);
+
+        // Parse flashcards from response
+        const cards = parseFlashcards(data.response);
 
         if (cards.length > 0) {
             preview.innerHTML = cards.map((card, i) => `
@@ -407,30 +359,10 @@ async function generateFlashcards() {
                     <div class="flashcard-back" style="display: none;">💡 ${card.back}</div>
                 </div>
             `).join('');
-
-            // Store for saving
-            window.generatedFlashcards = cards;
-
-            // Show save button
-            const actionsDiv = document.getElementById('flashcard-actions');
-            if (actionsDiv) {
-                actionsDiv.classList.remove('hidden');
-            } else {
-                // Create actions div if it doesn't exist
-                const actionsHTML = `
-                    <div id="flashcard-actions" class="card-actions" style="margin-top: 1rem;">
-                        <button class="btn btn-primary" onclick="saveFlashcards()">
-                            <i data-lucide="save"></i> Save Flashcards
-                        </button>
-                    </div>
-                `;
-                preview.insertAdjacentHTML('afterend', actionsHTML);
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-            }
         } else {
             preview.innerHTML = `
                 <div class="question-item" style="grid-column: span 2;">
-                    <div class="question-text">${data.flashcards.replace(/\n/g, '<br>')}</div>
+                    <div class="question-text">${data.response.replace(/\n/g, '<br>')}</div>
                 </div>
             `;
         }
@@ -469,82 +401,6 @@ function flipCard(card) {
     } else {
         front.style.display = 'block';
         back.style.display = 'none';
-    }
-}
-
-// Quiz Management (NEW)
-async function loadQuizzes() {
-    const courseId = selectedCourseId || document.getElementById('quiz-course-select')?.value;
-    if (!courseId) return;
-
-    try {
-        const response = await fetch(`${API_BASE}/instructor/quizzes/${courseId}`);
-        const data = await response.json();
-        displayQuizzes(data.quizzes || []);
-    } catch (error) {
-        console.error('Failed to load quizzes:', error);
-    }
-}
-
-function displayQuizzes(quizzes) {
-    const container = document.getElementById('quizzes-list');
-    if (!container) return;
-
-    if (quizzes.length === 0) {
-        container.innerHTML = '<div class="empty-state-small"><p>No quizzes yet. Create one!</p></div>';
-        return;
-    }
-
-    container.innerHTML = quizzes.map(quiz => `
-        <div class="quiz-card">
-            <h4>${quiz.title}</h4>
-            <p>${quiz.description || 'No description'}</p>
-            <div class="quiz-meta">
-                <span>${quiz.question_count || 0} questions</span>
-                <span class="badge ${quiz.is_published ? 'badge-success' : 'badge-secondary'}">
-                    ${quiz.is_published ? 'Published' : 'Draft'}
-                </span>
-            </div>
-            <div class="quiz-actions">
-                <button class="btn btn-sm btn-secondary" onclick="editQuiz('${quiz.id}')">Edit</button>
-                ${quiz.is_published ?
-            `<button class="btn btn-sm btn-secondary" onclick="unpublishQuiz('${quiz.id}')">Unpublish</button>` :
-            `<button class="btn btn-sm btn-primary" onclick="publishQuiz('${quiz.id}')">Publish</button>`
-        }
-                <button class="btn btn-sm btn-danger" onclick="deleteQuiz('${quiz.id}')">Delete</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function publishQuiz(quizId) {
-    try {
-        await fetch(`${API_BASE}/instructor/quizzes/${quizId}/publish`, { method: 'POST' });
-        loadQuizzes();
-        alert('Quiz published successfully!');
-    } catch (error) {
-        console.error('Failed to publish quiz:', error);
-    }
-}
-
-async function unpublishQuiz(quizId) {
-    try {
-        await fetch(`${API_BASE}/instructor/quizzes/${quizId}/unpublish`, { method: 'POST' });
-        loadQuizzes();
-        alert('Quiz unpublished');
-    } catch (error) {
-        console.error('Failed to unpublish quiz:', error);
-    }
-}
-
-async function deleteQuiz(quizId) {
-    if (!confirm('Are you sure you want to delete this quiz?')) return;
-
-    try {
-        await fetch(`${API_BASE}/instructor/quizzes/${quizId}`, { method: 'DELETE' });
-        loadQuizzes();
-    } catch (error) {
-        console.error('Failed to delete quiz:', error);
     }
 }
 
@@ -611,13 +467,5 @@ window.generateQuestions = generateQuestions;
 window.copyQuestions = copyQuestions;
 window.downloadQuestions = downloadQuestions;
 window.generateFlashcards = generateFlashcards;
-window.saveFlashcards = saveFlashcards;
-window.loadSavedFlashcards = loadSavedFlashcards;
-window.publishFlashcard = publishFlashcard;
-window.deleteFlashcard = deleteFlashcard;
 window.flipCard = flipCard;
 window.sendSimulatorMessage = sendSimulatorMessage;
-window.publishQuiz = publishQuiz;
-window.unpublishQuiz = unpublishQuiz;
-window.deleteQuiz = deleteQuiz;
-window.logout = logout;

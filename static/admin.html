@@ -71,7 +71,7 @@
                         <span class="user-role badge badge-admin">Admin</span>
                     </div>
                 </div>
-                <a href="index.html" class="btn-logout"><i data-lucide="arrow-left"></i> Back</a>
+                <button onclick="logout()" class="btn-logout"><i data-lucide="log-out"></i> Logout</button>
             </div>
         </nav>
 
@@ -210,10 +210,44 @@
                 </header>
 
                 <div class="panel-body">
-                    <div class="empty-state">
-                        <i data-lucide="users" class="empty-icon-svg"></i>
-                        <h2>User Management</h2>
-                        <p>User authentication coming soon. Currently running without login.</p>
+                    <div class="stats-grid" style="margin-bottom: 2rem;">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-admin"><i data-lucide="shield"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="total-admins">0</span>
+                                <span class="stat-label">Admins</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-instructor"><i data-lucide="user-check"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="total-instructors">0</span>
+                                <span class="stat-label">Instructors</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-student"><i data-lucide="users"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="total-students">0</span>
+                                <span class="stat-label">Students</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
