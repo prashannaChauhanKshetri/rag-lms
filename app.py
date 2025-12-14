@@ -20,7 +20,7 @@ import chainlit as cl
 try:
     from langchain_community.document_loaders import PyPDFLoader
     from langchain_community.vectorstores import FAISS
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain.text_splitting import RecursiveCharacterTextSplitter
     from langchain.schema import Document
     from langchain_huggingface import HuggingFaceEmbeddings
 except Exception as e:
