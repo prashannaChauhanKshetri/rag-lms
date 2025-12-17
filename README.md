@@ -14,21 +14,21 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 ### Role-Based Interface
 | Role | Features |
 |------|----------|
-| **Admin** | System overview, course management, analytics |
-| **Instructor** | Create courses, upload PDFs, generate questions & flashcards, test AI |
-| **Student** | Chat with AI tutors, study flashcards, take quizzes |
+| **Admin** | System overview, user management, analytics, session tracking |
+| **Instructor** | Create chat bots, upload PDFs, generate questions & flashcards, test AI |
+| **Student** | Chat with AI tutors, study flashcards, take quizzes, view results |
 
 ### AI & RAG Capabilities
 - **Hybrid Retrieval**: BM25 (keyword) + FAISS (semantic) search
 - **Fast OCR**: Parallel Tesseract processing for scanned documents
 - **Structure Detection**: TOC extraction via Docling for chapter-aware chunking
 - **Page Citations**: Answers include source page references
+- **Feedback Loop**: Instructors can correct answers to improve future performance
 
 ### Modern UI Design
-- Premium dark theme with custom color palette:
-  - Cream `#e8d8c9` | Blue-gray `#4b607f` | Orange `#f3701e`
-- Lucide SVG icons
-- Responsive layout with glassmorphism effects
+- Premium user experience with glassmorphism effects
+- Custom color palette: Cream `#e8d8c9` | Blue-gray `#4b607f` | Orange `#f3701e`
+- Interactive dashboards with Chart.js visualizations
 
 ## 🛠️ Tech Stack
 
@@ -39,7 +39,7 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 | **OCR** | Tesseract (parallel processing) |
 | **Embeddings** | Sentence Transformers (all-MiniLM-L6-v2) |
 | **Vector Store** | FAISS + BM25 Hybrid |
-| **Database** | SQLite |
+| **Database** | SQLite (users, conversations, quizzes) |
 | **Frontend** | Vanilla HTML/CSS/JS, Lucide Icons |
 
 ## 📋 Prerequisites
@@ -73,25 +73,32 @@ python api.py
 ```
 
 Access the application:
-- **Landing Page**: http://127.0.0.1:8000
+- **Landing Page (Login)**: http://127.0.0.1:8000
 - **Admin**: http://127.0.0.1:8000/admin.html
 - **Instructor**: http://127.0.0.1:8000/instructor.html
 - **Student**: http://127.0.0.1:8000/student.html
 - **API Docs**: http://127.0.0.1:8000/docs
 
+**Demo Credentials**:
+- Admin: `admin` / `admin123`
+- Instructor: `instructor` / `instructor123`
+- Student: `student` / `student123`
+
 ## 📁 Project Structure
 
 ```
 rag-lms/
-├── api.py              # FastAPI backend
+├── api.py              # FastAPI backend (Main Entry Point)
 ├── database.py         # SQLite operations
 ├── utils.py            # PDF processing & OCR
 ├── vectorstore.py      # FAISS + BM25 hybrid search
-├── retrieval.py        # Retrieval logic
-├── app.py              # Chainlit interface (alternative)
 ├── requirements.txt
+├── rag_lms.db          # SQLite Database
+├── fin_ed_docs/        # Uploaded documents storage
+├── vectorstores/       # Vector index storage
 ├── static/
 │   ├── index.html      # Landing page
+│   ├── login.html      # Login page
 │   ├── admin.html      # Admin dashboard
 │   ├── instructor.html # Instructor dashboard
 │   ├── student.html    # Student portal
@@ -103,33 +110,30 @@ rag-lms/
 ## 📚 Usage
 
 ### Instructor Workflow
-1. Create a course in **Courses** panel
-2. Upload PDFs in **Content** panel
-3. Generate questions in **Questions** panel
-4. Create flashcards in **Flashcards** panel
-5. Test AI responses in **Simulator**
+1. **Manage Chatbots**: Create specialized chatbots for different courses/topics.
+2. **Knowledge Base**: Upload PDF textbooks/materials.
+3. **Tools**: Generate quizzes and flashcards automatically from content.
+4. **Simulator**: Test chatbot responses and provide corrections (RLHF-lite).
 
 ### Student Workflow
-1. Select a course from dropdown
-2. Chat with AI tutor
-3. View source citations
+1. **Study**: Select a course chatbot to ask questions.
+2. **Practice**: Take assigned quizzes and view scores.
+3. **Review**: Flip through flashcards for active recall.
 
 ## 🗺️ Roadmap
 
-- [x] Core RAG pipeline
-- [x] Fast parallel OCR
+- [x] Core RAG pipeline with Hybrid Search
+- [x] Fast parallel OCR for scanned PDFs
 - [x] Role-based UI (Admin/Instructor/Student)
-- [x] Question Generator
-- [x] Flashcard Creator
-- [ ] Quiz Builder (structured)
-- [ ] User Authentication
-- [ ] Learning Analytics
-
-
+- [x] Question & Flashcard Generator
+- [x] Complete Quiz System (Creation, Taking, Grading)
+- [x] User Authentication & Session Management
+- [x] Learning Analytics (Admin Dashboard)
+- [ ] Multi-Modal Support (Images in Chat)
 
 ## 👤 Author
 
 **Prashanna Chauhan Kshetri**
 
 ---
-**Version**: 1.0.0 | **Last Updated**: December 2024
+**Version**: 1.1.0 | **Last Updated**: December 2024
