@@ -48,20 +48,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logging.error(f"Failed to load embedding model: {e}")
     
-    # Warm up the local LLM on startup
-    # COMMENTED OUT FOR SPEED TESTING - Using Groq instead
-    # try:
-    #     import ollama
-    #     logging.info("Warming up local Phi-3-Mini model...")
-    #     # Send a dummy request to load model into memory
-    #     ollama.chat(
-    #         model='phi3:mini',
-    #         messages=[{'role': 'user', 'content': 'hi'}],
-    #         options={'keep_alive': -1}
-    #     )
-    #     logging.info("✓ Phi-3-Mini loaded and ready")
-    # except Exception as e:
-    #     logging.warning(f"Could not warm up Phi-3-Mini: {e}")
     
     yield
     
@@ -408,54 +394,14 @@ async def submit_feedback_endpoint(
 
 # --- Helpers ---
 
-def call_local_qwen(system_prompt: str, user_prompt: str) -> str:
-    """Call Local Qwen3-VL-4B via Ollama"""
-    try:
-        # Combine prompts for the model
-        full_prompt = f"{system_prompt}\n\n{user_prompt}"
-        
-        response = ollama.chat(
-            model='qwen3-vl:4b',
-            messages=[{'role': 'user', 'content': full_prompt}]
-        )
-        return response['message']['content']
-    except Exception as e:
-        logger.error(f"Ollama API error: {e}")
-        return f"Error: {str(e)}"
-
 def call_groq_llm(system_prompt: str, user_prompt: str) -> str:
     """
     Hybrid Setup:
     - OCR: Local Qwen3-VL-4B (in utils.py)
     - Chat: Cloud Groq (Fast & Free)
     """
-    # # --- LOCAL MODE (Phi-3-Mini) - ENABLED ---
-    # return call_local_phi3(system_prompt, user_prompt)
-
-    # --- CLOUD MODE (Groq) - COMMENTED OUT ---
+    # --- CLOUD MODE (Groq) ---
     return _call_groq_llm_original(system_prompt, user_prompt)
-
-def call_local_phi3(system_prompt: str, user_prompt: str) -> str:
-    """Helper for Local Phi-3-Mini (Experimental)"""
-    import time
-    start_time = time.time()
-    try:
-        logger.info("Sending request to local Phi-3-Mini...")
-        response = ollama.chat(
-            model='phi3:mini',
-            messages=[
-                {'role': 'system', 'content': system_prompt},
-                {'role': 'user', 'content': user_prompt}
-            ],
-            options={'keep_alive': -1}
-        )
-        end_time = time.time()
-        duration = end_time - start_time
-        logger.info(f"Phi-3-Mini response generated in {duration:.2f} seconds")
-        return response['message']['content']
-    except Exception as e:
-        logger.error(f"Phi-3-Mini error: {e}")
-        return f"Error: {str(e)}"
 
 def _call_groq_llm_original(system_prompt: str, user_prompt: str) -> str:
     """Original Groq API Call (Backup)"""
