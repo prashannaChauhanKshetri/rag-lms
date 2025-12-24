@@ -505,9 +505,9 @@ Type: LONG_ANSWER
 Correct Answer: [Detailed answer]
 
 Make sure to include questions from ALL specified types."""
+    prompt += "\nReturn ONLY valid JSON. The format must be a list of objects under the key 'questions'. Example: {\"questions\": [{\"question_text\": \"...\", \"question_type\": \"mcq\", \"options\": [\"A\", \"B\"], \"correct_answer\": \"...\"}]}"
 
     try:
-        # Use chat endpoint to generate
         q_emb = EMBED_MODEL.encode([prompt], convert_to_numpy=True).astype("float32")[0]
         
         hits = hybrid_query(
@@ -529,9 +529,26 @@ Make sure to include questions from ALL specified types."""
             })
         
         system_prompt, user_prompt = build_system_user_prompt(context_docs, prompt)
-        response = call_groq_llm(system_prompt, user_prompt)
+        response_text = call_groq_llm(system_prompt, user_prompt)
         
-        return {"questions": response}
+        # Parse JSON
+        import re
+        import json
+        
+        try:
+            # Try to find JSON block
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                response_json = json.loads(json_match.group(0))
+                questions = response_json.get("questions", [])
+            else:
+                # Fallback purely for debugging, though we asked for JSON
+                questions = []
+        except:
+            questions = []
+            logger.error(f"Failed to parse JSON: {response_text}")
+
+        return {"questions": questions, "raw_text": response_text}
     except Exception as e:
         logger.error(f"Question generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -748,9 +765,10 @@ async def save_flashcards_endpoint(request: SaveFlashcardsRequest):
     for card in request.flashcards:
         flashcard_id = str(uuid.uuid4())
         db.create_flashcard(flashcard_id, request.chatbot_id, card["front"], card["back"])
+        db.publish_flashcard(flashcard_id)
         flashcard_ids.append(flashcard_id)
     
-    return {"message": f"{len(flashcard_ids)} flashcards saved", "ids": flashcard_ids}
+    return {"message": f"{len(flashcard_ids)} flashcards saved and published", "ids": flashcard_ids}
 
 @app.get("/instructor/flashcards/{chatbot_id}")
 async def list_instructor_flashcards(chatbot_id: str):

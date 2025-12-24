@@ -342,15 +342,40 @@ async function generateQuestions() {
         });
 
         const data = await response.json();
+        const questions = data.questions || [];
 
-        output.innerHTML = `
+        if (!Array.isArray(questions) || questions.length === 0) {
+            // Fallback if API returned raw text or error
+            output.innerHTML = `<div class="question-item"><div class="question-text">${(data.raw_text || "No questions generated").replace(/\n/g, '<br>')}</div></div>`;
+            generatedQuestions = []; // Can't save easily
+            document.getElementById('questions-actions').classList.add('hidden');
+            return;
+        }
+
+        generatedQuestions = questions;
+
+        // Render detailed questions
+        output.innerHTML = questions.map((q, idx) => `
             <div class="question-item">
-                <div class="question-text">${data.questions.replace(/\n/g, '<br>')}</div>
+                <h5>${idx + 1}. ${q.question_text}</h5>
+                <span class="badge badge-secondary" style="font-size: 0.7rem; margin-bottom: 0.5rem;">${q.question_type}</span>
+                ${q.options ? `<div style="margin-left: 1rem; color: var(--text-secondary);">Options: ${q.options.join(', ')}</div>` : ''}
+                <div style="margin-top: 0.5rem; color: var(--primary-color);"><strong>Answer:</strong> ${q.correct_answer}</div>
             </div>
-        `;
+        `).join('');
 
-        generatedQuestions = data.questions;
-        document.getElementById('questions-actions').classList.remove('hidden');
+        // Show actions
+        const actionsDiv = document.getElementById('questions-actions');
+        actionsDiv.classList.remove('hidden');
+
+        // Add Save Button if not present
+        if (!document.getElementById('btn-save-quiz')) {
+            actionsDiv.innerHTML = `
+                <button class="btn btn-secondary" onclick="copyQuestions()">Copy</button>
+                <button class="btn btn-secondary" onclick="downloadQuestions()">Download</button>
+                <button id="btn-save-quiz" class="btn btn-primary" onclick="saveGeneratedQuiz()">Save as Quiz</button>
+             `;
+        }
 
     } catch (error) {
         console.error('Failed to generate questions:', error);
@@ -358,13 +383,55 @@ async function generateQuestions() {
     }
 }
 
+async function saveGeneratedQuiz() {
+    if (!generatedQuestions || generatedQuestions.length === 0) {
+        alert("No questions to save!");
+        return;
+    }
+
+    const title = prompt("Enter a title for this Quiz:");
+    if (!title) return;
+
+    const description = prompt("Enter a description (optional):") || "";
+    const courseId = document.getElementById('questions-course').value;
+
+    try {
+        const response = await fetch(`${API_BASE}/instructor/quizzes/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chatbot_id: courseId,
+                title: title,
+                description: description,
+                questions: generatedQuestions
+            })
+        });
+
+        if (response.ok) {
+            alert("Quiz created/saved successfully! It is currently a draft.");
+            loadQuizzes(); // Refresh list to see it
+        } else {
+            throw new Error("Failed to create quiz");
+        }
+    } catch (e) {
+        console.error("Error saving quiz:", e);
+        alert("Error saving quiz: " + e.message);
+    }
+}
+
 function copyQuestions() {
-    navigator.clipboard.writeText(generatedQuestions);
+    const text = generatedQuestions.map(q =>
+        `Q: ${q.question_text}\nA: ${q.correct_answer}`
+    ).join('\n\n');
+    navigator.clipboard.writeText(text);
     alert('Questions copied to clipboard!');
 }
 
 function downloadQuestions() {
-    const blob = new Blob([generatedQuestions], { type: 'text/plain' });
+    const text = generatedQuestions.map(q =>
+        `Q: ${q.question_text}\nA: ${q.correct_answer}`
+    ).join('\n\n');
+    const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -469,6 +536,64 @@ function flipCard(card) {
     } else {
         front.style.display = 'block';
         back.style.display = 'none';
+    }
+}
+
+async function saveFlashcards() {
+    const courseId = document.getElementById('flashcards-course').value;
+    const cards = window.generatedFlashcards;
+
+    if (!courseId || !cards || cards.length === 0) {
+        alert('No flashcards to save');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/instructor/flashcards/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chatbot_id: courseId,
+                flashcards: cards
+            })
+        });
+
+        if (response.ok) {
+            alert('Flashcards saved successfully!');
+            document.getElementById('flashcard-actions').classList.add('hidden');
+            loadSavedFlashcards(); // Refresh list
+        } else {
+            throw new Error('Failed to save');
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        alert('Failed to save flashcards');
+    }
+}
+
+async function loadFlashcards() {
+    // Wrapper to load based on context, primarily for the panel switch
+    const courseId = document.getElementById('flashcards-course')?.value || selectedCourseId;
+    if (courseId) {
+        loadSavedFlashcards();
+    }
+}
+
+async function loadSavedFlashcards() {
+    const courseId = document.getElementById('flashcards-course').value;
+    if (!courseId) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/student/flashcards/${courseId}`);
+        const data = await response.json();
+
+        // Render saved flashcards (bottom section)
+        // Note: You might want to add a specific container in HTML for 'Saved Flashcards' 
+        // For now, we'll log them or append if a container exists
+        console.log("Loaded saved cards:", data.flashcards);
+
+    } catch (error) {
+        console.error('Failed to load saved flashcards:', error);
     }
 }
 
@@ -620,4 +745,74 @@ window.sendSimulatorMessage = sendSimulatorMessage;
 window.publishQuiz = publishQuiz;
 window.unpublishQuiz = unpublishQuiz;
 window.deleteQuiz = deleteQuiz;
+
+// Lesson Plan Generator
+let generatedLessonPlan = "";
+
+async function generateLessonPlan() {
+    const courseId = document.getElementById('lesson-plan-course').value;
+    const topic = document.getElementById('lesson-plan-topic').value;
+    const duration = document.getElementById('lesson-plan-duration').value;
+
+    if (!courseId) {
+        alert('Please select a course');
+        return;
+    }
+
+    if (!topic) {
+        alert('Please enter a topic');
+        return;
+    }
+
+    const output = document.getElementById('lesson-plan-output');
+    output.innerHTML = '<div class="empty-state-small"><p>Generating lesson plan... ⏳</p></div>';
+
+    try {
+        const response = await fetch(`${API_BASE}/instructor/lesson-plans/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chatbot_id: courseId,
+                topic: topic,
+                duration: duration
+            })
+        });
+
+        const data = await response.json();
+
+        // Format the output
+        const formattedPlan = data.lesson_plan.replace(/\n/g, '<br>');
+
+        output.innerHTML = `
+            <div class="question-item">
+                <div class="question-text" style="font-size: 0.95rem; line-height: 1.6;">${formattedPlan}</div>
+            </div>
+        `;
+
+        generatedLessonPlan = data.lesson_plan;
+        document.getElementById('lesson-plan-actions').classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Failed to generate lesson plan:', error);
+        output.innerHTML = '<div class="empty-state-small"><p>Failed to generate lesson plan. Try again.</p></div>';
+    }
+}
+
+function copyLessonPlan() {
+    navigator.clipboard.writeText(generatedLessonPlan);
+    alert('Lesson plan copied to clipboard!');
+}
+
+function downloadLessonPlan() {
+    const blob = new Blob([generatedLessonPlan], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lesson_plan.txt';
+    a.click();
+}
+
 window.logout = logout;
+window.generateLessonPlan = generateLessonPlan;
+window.copyLessonPlan = copyLessonPlan;
+window.downloadLessonPlan = downloadLessonPlan;

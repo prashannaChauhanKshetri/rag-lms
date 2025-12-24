@@ -42,6 +42,10 @@
             <div class="nav-section">
                 <span class="nav-label">Create</span>
                 <ul class="nav-links">
+                    <li data-panel="lesson-plans">
+                        <i data-lucide="book-open-check"></i>
+                        <span>Lesson Plans</span>
+                    </li>
                     <li data-panel="questions">
                         <i data-lucide="help-circle"></i>
                         <span>Questions</span>
@@ -162,6 +166,63 @@
 
                     <div class="documents-list" id="documents-list">
                         <!-- Documents will be listed here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== LESSON PLAN GENERATOR PANEL ========== -->
+            <section id="lesson-plans-panel" class="panel">
+                <header class="panel-header">
+                    <div class="header-content">
+                        <h1><i data-lucide="book-open-check" class="header-icon"></i> Lesson Plan Generator</h1>
+                        <p>Create detailed lesson plans using AI</p>
+                    </div>
+                </header>
+
+                <div class="panel-body">
+                    <div class="card-grid">
+                        <div class="card form-card">
+                            <h3 class="card-title"><i data-lucide="wand-2"></i> Generate Plan</h3>
+                            <div class="form-group">
+                                <label>Select Course</label>
+                                <select id="lesson-plan-course" class="select">
+                                    <option value="" disabled selected>Choose a course...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Topic</label>
+                                <input type="text" id="lesson-plan-topic" class="input"
+                                    placeholder="e.g., Introduction to Python">
+                            </div>
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <select id="lesson-plan-duration" class="select">
+                                    <option value="30 minutes">30 Minutes</option>
+                                    <option value="45 minutes" selected>45 Minutes</option>
+                                    <option value="60 minutes">60 Minutes</option>
+                                    <option value="90 minutes">90 Minutes</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary w-full" onclick="generateLessonPlan()">
+                                <i data-lucide="zap"></i> Generate Lesson Plan
+                            </button>
+                        </div>
+
+                        <div class="card" style="grid-column: span 1;">
+                            <h3 class="card-title"><i data-lucide="file-text"></i> Generated Plan</h3>
+                            <div id="lesson-plan-output" class="questions-output">
+                                <div class="empty-state-small">
+                                    <i data-lucide="book-open" style="width: 32px; height: 32px; opacity: 0.3;"></i>
+                                    <p>Your lesson plan will appear here</p>
+                                </div>
+                            </div>
+                            <div class="card-actions hidden" id="lesson-plan-actions">
+                                <button class="btn btn-secondary" onclick="copyLessonPlan()"><i data-lucide="copy"></i>
+                                    Copy</button>
+                                <button class="btn btn-secondary" onclick="downloadLessonPlan()"><i
+                                        data-lucide="download"></i> Download</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -397,7 +458,7 @@
     <!-- Footer -->
     <footer class="footer"
         style="position: fixed; bottom: 0; left: 260px; right: 0; background: var(--bg-card); z-index: 50;">
-        <p>© 2024 <a href="index.html">RAG-LMS</a> • Built by <span class="author">Prashanna Chauhan Kshetri</span></p>
+        <p>© 2025 <a href="index.html">RAG-LMS</a> • Built by <span class="author">Prashanna Chauhan Kshetri</span></p>
     </footer>
 
     <script src="js/instructor.js"></script>
