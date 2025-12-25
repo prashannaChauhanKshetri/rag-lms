@@ -460,9 +460,9 @@ def serve_js(filename: str):
 class GenerateQuestionsRequest(BaseModel):
     chatbot_id: str
     topic: str = ""
-    count: int = 5
+    count: int = 6
     difficulty: str = "medium"
-    types: List[str] = ["mcq", "true_false", "short_answer", "long_answer"]
+    types: List[str] = ["mcq", "true_false", "very_short_answer", "short_answer", "long_answer"]
 
 @app.post("/instructor/generate-questions")
 async def generate_questions_endpoint(request: GenerateQuestionsRequest):
@@ -473,39 +473,79 @@ async def generate_questions_endpoint(request: GenerateQuestionsRequest):
     
     # Build prompt that respects ALL question types
     types_str = ", ".join(request.types)
-    prompt = f"""Generate exactly {request.count} {request.difficulty} difficulty questions {f'about "{request.topic}"' if request.topic else 'from the course content'}.
+    per_type_count = request.count // len(request.types)
+    extra = request.count % len(request.types)
 
-IMPORTANT: You MUST include ALL of these question types: {types_str}
-Distribute the questions evenly across all types.
+    prompt = f"""
+You are an assessment designer. Generate quiz questions in STRICT JSON format only.
 
-Format each question as follows:
+Task:
+- Generate exactly {request.count} {request.difficulty} difficulty questions
+  {f'about "{request.topic}"' if request.topic else "from the course content provided in the context"}.
+- Use ALL of these question types: {types_str}.
+- Distribute questions as evenly as possible across these types.
+  For example, with {request.count} questions and {len(request.types)} types,
+  each type should get about {per_type_count} questions, and the remaining {extra} questions
+  can be assigned to any of the types.
 
-For MCQ:
-Q1. [Question text]
-Type: MCQ
-A) [Option A]
-B) [Option B]
-C) [Option C]
-D) [Option D]
-Correct Answer: [A/B/C/D]
+Question types and their meaning:
 
-For True/False:
-Q2. [Question text]
-Type: TRUE_FALSE
-Correct Answer: [True/False]
+1) "mcq"
+- Single-best-answer multiple choice question.
+- Exactly 4 options.
+- JSON fields:
+  - "question_text": string
+  - "question_type": "mcq"
+  - "options": array of 4 strings, in order ["A", "B", "C", "D"]
+  - "correct_answer": one of "A", "B", "C", or "D"
 
-For Short Answer:
-Q3. [Question text]
-Type: SHORT_ANSWER
-Correct Answer: [Brief answer]
+2) "true_false"
+- Statement that is either true or false.
+- JSON fields:
+  - "question_text": string
+  - "question_type": "true_false"
+  - "correct_answer": "True" or "False"
 
-For Long Answer:
-Q4. [Question text]
-Type: LONG_ANSWER
-Correct Answer: [Detailed answer]
+3) "very_short_answer"
+- Answer is a single word or a very short phrase.
+- JSON fields:
+  - "question_text": string
+  - "question_type": "very_short_answer"
+  - "correct_answer": short string (1-2 words/1 sentence)
 
-Make sure to include questions from ALL specified types."""
-    prompt += "\nReturn ONLY valid JSON. The format must be a list of objects under the key 'questions'. Example: {\"questions\": [{\"question_text\": \"...\", \"question_type\": \"mcq\", \"options\": [\"A\", \"B\"], \"correct_answer\": \"...\"}]}"
+4) "short_answer"
+- Answer is a few sentences explaining a concept briefly.
+- JSON fields:
+  - "question_text": string
+  - "question_type": "short_answer"
+  - "correct_answer": concise explanation (2–4 sentences)
+
+5) "long_answer"
+- Answer is a detailed explanation or essay-style response.
+- JSON fields:
+  - "question_text": string
+  - "question_type": "long_answer"
+  - "correct_answer": detailed explanation (multiple sentences or a short paragraph)
+
+OUTPUT FORMAT (VERY IMPORTANT):
+- Return ONLY valid JSON.
+- Do NOT include any prose, comments, markdown, or backticks.
+- The top-level object MUST be:
+  {{
+    "questions": [
+      {{
+        "question_text": "...",
+        "question_type": "...",
+        "options": [...],        // only for "mcq"
+        "correct_answer": "..."
+      }},
+      ...
+    ]
+  }}
+
+- The "questions" array must contain exactly {request.count} items.
+- Each item MUST follow the schema for its "question_type".
+"""
 
     try:
         q_emb = EMBED_MODEL.encode([prompt], convert_to_numpy=True).astype("float32")[0]

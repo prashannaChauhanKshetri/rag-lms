@@ -317,6 +317,7 @@ async function generateQuestions() {
     const types = [];
     if (document.getElementById('q-mcq').checked) types.push('mcq');
     if (document.getElementById('q-tf').checked) types.push('true_false');
+    if (document.getElementById('q-veryshort').checked) types.push('very_short_answer');
     if (document.getElementById('q-short').checked) types.push('short_answer');
     if (document.getElementById('q-long').checked) types.push('long_answer');
 
