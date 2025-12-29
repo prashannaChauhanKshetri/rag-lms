@@ -20,10 +20,16 @@ import numpy as np
 load_dotenv()
 
 # Import local modules
-import database as db
+# PostgreSQL Migration - Use new database modules
+import database_postgres as db
+import vectorstore_postgres as vs
+
+# Original imports commented out for reference
+# import database as db
+# import vectorstore as vs
 from utils import process_pdf, build_system_user_prompt
 import ollama # Added for local chat
-from vectorstore import (
+from vectorstore_postgres import (
     add_documents, 
     hybrid_query, 
     delete_chatbot, 
@@ -32,27 +38,30 @@ from vectorstore import (
     EMBEDDING_DIM
 )
 
-# Global variables
-EMBED_MODEL = None
+# Global variable for backward compatibility, but we prefer app.state
+_EMBED_MODEL = None
+
+def get_embed_model():
+    global _EMBED_MODEL
+    if _EMBED_MODEL is None:
+        from sentence_transformers import SentenceTransformer
+        logger.info("Lazy loading SentenceTransformer (all-MiniLM-L6-v2)...")
+        _EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+    return _EMBED_MODEL
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load model on startup
-    global EMBED_MODEL
     try:
-        from sentence_transformers import SentenceTransformer
-        logging.info("Loading SentenceTransformer model (jina-embeddings-v2-small-en)...")
-        # Using all-MiniLM-L6-v2 for now as per user request, but code supports 512 dim
-        EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
-        logging.info("✓ SentenceTransformer loaded successfully")
+        app.state.embed_model = get_embed_model()
+        logging.info("✓ SentenceTransformer loaded successfully into app.state")
     except Exception as e:
         logging.error(f"Failed to load embedding model: {e}")
-    
     
     yield
     
     # Clean up on shutdown
-    EMBED_MODEL = None
+    app.state.embed_model = None
 
     # Try to unload models on shutdown (optional)
     # try:
@@ -164,14 +173,18 @@ async def get_session(session_token: str = None):
 # --- Admin Endpoints ---
 
 @app.get("/admin/users")
-async def list_users():
+async def list_users(session_token: str = None):
     """List all users (Admin only)"""
-    try:
-        conn = db.get_db_connection()
-        users = conn.execute("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY created_at DESC").fetchall()
-        conn.close()
+    if not session_token or not hasattr(app.state, 'sessions') or session_token not in app.state.sessions:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    session = app.state.sessions[session_token]
+    if session['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin access required")
         
-        return {"users": [dict(u) for u in users]}
+    try:
+        users = db.list_users()
+        return {"users": users}
     except Exception as e:
         logger.error(f"Failed to list users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -230,9 +243,10 @@ async def upload_document(chatbot_id: str, file: UploadFile = File(...)):
     contents = await file.read()
     
     # Save file
+    safe_filename = os.path.basename(file.filename)
     chatbot_dir = os.path.join(PDF_DIR, chatbot_id)
     os.makedirs(chatbot_dir, exist_ok=True)
-    path = os.path.join(chatbot_dir, file.filename)
+    path = os.path.join(chatbot_dir, safe_filename)
     
     with open(path, "wb") as f:
         f.write(contents)
@@ -262,7 +276,7 @@ async def upload_document(chatbot_id: str, file: UploadFile = File(...)):
         })
     
     try:
-        emb = EMBED_MODEL.encode(texts, show_progress_bar=False, convert_to_numpy=True)
+        emb = get_embed_model().encode(texts, show_progress_bar=False, convert_to_numpy=True)
         emb = np.asarray(emb).astype("float32")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Embedding error: {e}")
@@ -307,7 +321,7 @@ async def chat_endpoint(
     
     # Embed question
     try:
-        q_emb = EMBED_MODEL.encode([question], convert_to_numpy=True).astype("float32")[0]
+        q_emb = get_embed_model().encode([question], convert_to_numpy=True).astype("float32")[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Embedding error: {e}")
     
@@ -372,9 +386,7 @@ async def submit_feedback_endpoint(
 ):
     """Submit instructor feedback/correction"""
     # Get conversation details
-    conn = db.get_db_connection()
-    conv = conn.execute("SELECT * FROM conversations WHERE id = ?", (conversation_id,)).fetchone()
-    conn.close()
+    conv = db.get_conversation(conversation_id)
     
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -384,7 +396,7 @@ async def submit_feedback_endpoint(
     
     # Update RAG with correction
     try:
-        emb = EMBED_MODEL.encode([corrected_answer], convert_to_numpy=True).astype("float32")[0]
+        emb = get_embed_model().encode([corrected_answer], convert_to_numpy=True).astype("float32")[0]
         add_feedback_document(conv["chatbot_id"], conv["question"], corrected_answer, emb)
     except Exception as e:
         logger.error(f"Failed to ingest feedback: {e}")
@@ -548,7 +560,7 @@ OUTPUT FORMAT (VERY IMPORTANT):
 """
 
     try:
-        q_emb = EMBED_MODEL.encode([prompt], convert_to_numpy=True).astype("float32")[0]
+        q_emb = get_embed_model().encode([prompt], convert_to_numpy=True).astype("float32")[0]
         
         hits = hybrid_query(
             request.chatbot_id,
@@ -780,7 +792,7 @@ Format: For each flashcard, write "FRONT:" followed by the question/term, then "
 Make them clear and educational."""
 
     try:
-        q_emb = EMBED_MODEL.encode([prompt], convert_to_numpy=True).astype("float32")[0]
+        q_emb = get_embed_model().encode([prompt], convert_to_numpy=True).astype("float32")[0]
         hits = hybrid_query(request.chatbot_id, prompt, q_emb, top_k=10)
         
         context_docs = [{"source": h.get("source", ""), "text": h.get("text", ""), "page": h.get("page", "?")} for h in hits]
@@ -862,7 +874,7 @@ Include:
 Make it practical and engaging for teachers."""
 
     try:
-        q_emb = EMBED_MODEL.encode([prompt], convert_to_numpy=True).astype("float32")[0]
+        q_emb = get_embed_model().encode([prompt], convert_to_numpy=True).astype("float32")[0]
         hits = hybrid_query(request.chatbot_id, prompt, q_emb, top_k=15)
         
         context_docs = [{"source": h.get("source", ""), "text": h.get("text", ""), "page": h.get("page", "?")} for h in hits]
