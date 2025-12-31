@@ -348,11 +348,13 @@ async function generateQuestions() {
         // Secondary attempt: If questions is empty, try to parse raw_text directly in frontend
         if (!Array.isArray(questions) || questions.length === 0) {
             try {
-                // Find potential JSON in raw_text
                 const raw = data.raw_text || "";
-                const jsonMatch = raw.match(/(\{.*\})/s) || raw.match(/(\[.*\])/s);
-                if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[1]);
+                const firstBrace = raw.indexOf('{');
+                const lastBrace = raw.lastIndexOf('}');
+
+                if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                    const jsonStr = raw.substring(firstBrace, lastBrace + 1);
+                    const parsed = JSON.parse(jsonStr.replace(/,(\s*[\]\}])/g, "$1")); // Clean trailing commas
                     questions = Array.isArray(parsed) ? parsed : (parsed.questions || []);
                 }
             } catch (e) {
@@ -363,8 +365,14 @@ async function generateQuestions() {
         if (!Array.isArray(questions) || questions.length === 0) {
             // Fallback if API returned raw text or error
             const displaySafeText = (data.raw_text || "No questions generated").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            output.innerHTML = `<div class="question-item"><div class="question-text">${displaySafeText.replace(/\n/g, '<br>')}</div></div>`;
-            generatedQuestions = []; // Can't save easily
+            output.innerHTML = `
+                <div class="question-item" style="border-left: 4px solid var(--warning-color);">
+                    <div class="question-text">
+                        <p style="color: var(--warning-color); font-weight: bold; margin-bottom: 0.5rem;">⚠️ Automatic formatting failed. Displaying raw output:</p>
+                        ${displaySafeText.replace(/\n/g, '<br>')}
+                    </div>
+                </div>`;
+            generatedQuestions = [];
             document.getElementById('questions-actions').classList.add('hidden');
             return;
         }
@@ -383,15 +391,8 @@ async function generateQuestions() {
 
         // Show actions
         const actionsDiv = document.getElementById('questions-actions');
-        actionsDiv.classList.remove('hidden');
-
-        // Add Save Button if not present
-        if (!document.getElementById('btn-save-quiz')) {
-            actionsDiv.innerHTML = `
-                <button class="btn btn-secondary" onclick="copyQuestions()">Copy</button>
-                <button class="btn btn-secondary" onclick="downloadQuestions()">Download</button>
-                <button id="btn-save-quiz" class="btn btn-primary" onclick="saveGeneratedQuiz()">Save as Quiz</button>
-             `;
+        if (actionsDiv) {
+            actionsDiv.classList.remove('hidden');
         }
 
     } catch (error) {
@@ -400,7 +401,7 @@ async function generateQuestions() {
     }
 }
 
-async function saveGeneratedQuiz() {
+async function saveToQuiz() {
     if (!generatedQuestions || generatedQuestions.length === 0) {
         alert("No questions to save!");
         return;
@@ -482,9 +483,9 @@ async function generateFlashcards() {
         });
 
         const data = await response.json();
-        const cards = parseFlashcards(data.flashcards);
+        const cards = data.flashcards;
 
-        if (cards.length > 0) {
+        if (Array.isArray(cards) && cards.length > 0) {
             preview.innerHTML = cards.map((card, i) => `
                 <div class="flashcard" onclick="flipCard(this)">
                     <div class="flashcard-front">📝 ${card.front}</div>
@@ -525,23 +526,7 @@ async function generateFlashcards() {
     }
 }
 
-function parseFlashcards(text) {
-    const cards = [];
-    const regex = /FRONT:\s*(.*?)(?=BACK:)/gis;
-    const backRegex = /BACK:\s*(.*?)(?=FRONT:|$)/gis;
-
-    const fronts = [...text.matchAll(regex)];
-    const backs = [...text.matchAll(backRegex)];
-
-    for (let i = 0; i < Math.min(fronts.length, backs.length); i++) {
-        cards.push({
-            front: fronts[i][1].trim(),
-            back: backs[i][1].trim()
-        });
-    }
-
-    return cards;
-}
+// Stale parser removed - logic moved to generation functions
 
 function flipCard(card) {
     const front = card.querySelector('.flashcard-front');
@@ -611,6 +596,25 @@ async function loadSavedFlashcards() {
 
     } catch (error) {
         console.error('Failed to load saved flashcards:', error);
+    }
+}
+
+async function publishFlashcard(flashcardId) {
+    try {
+        await fetch(`${API_BASE}/instructor/flashcards/${flashcardId}/publish`, { method: 'POST' });
+        loadFlashcards();
+    } catch (error) {
+        console.error('Failed to publish flashcard:', error);
+    }
+}
+
+async function deleteFlashcard(flashcardId) {
+    if (!confirm('Delete this flashcard?')) return;
+    try {
+        await fetch(`${API_BASE}/instructor/flashcards/${flashcardId}`, { method: 'DELETE' });
+        loadFlashcards();
+    } catch (error) {
+        console.error('Failed to delete flashcard:', error);
     }
 }
 
@@ -752,6 +756,7 @@ window.selectCourse = (id) => { selectedCourseId = id; };
 window.generateQuestions = generateQuestions;
 window.copyQuestions = copyQuestions;
 window.downloadQuestions = downloadQuestions;
+window.saveToQuiz = saveToQuiz;
 window.generateFlashcards = generateFlashcards;
 window.saveFlashcards = saveFlashcards;
 window.loadSavedFlashcards = loadSavedFlashcards;
@@ -796,6 +801,8 @@ async function generateLessonPlan() {
         });
 
         const data = await response.json();
+
+        if (!data.lesson_plan) throw new Error("No lesson plan content received");
 
         // Format the output
         const formattedPlan = data.lesson_plan.replace(/\n/g, '<br>');
