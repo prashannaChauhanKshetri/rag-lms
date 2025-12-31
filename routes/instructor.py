@@ -150,8 +150,10 @@ OUTPUT FORMAT (VERY IMPORTANT):
 """
 
     try:
-        q_emb = get_embed_model().encode([prompt], convert_to_numpy=True).astype("float32")[0]
-        hits = vs.hybrid_query(request.chatbot_id, prompt, q_emb, top_k=10)
+        # SEARCH BY TOPIC/CONTENT - Not the whole instructions prompt
+        search_query = request.topic if request.topic else "key concepts and definitions"
+        q_emb = get_embed_model().encode([search_query], convert_to_numpy=True).astype("float32")[0]
+        hits = vs.hybrid_query(request.chatbot_id, search_query, q_emb, top_k=15)
         
         context_docs = [{"source": h.get("source", ""), "text": h.get("text", ""), "page": h.get("page", "?")} for h in hits]
         system_prompt, user_prompt = build_system_user_prompt(context_docs, prompt)
@@ -160,42 +162,55 @@ OUTPUT FORMAT (VERY IMPORTANT):
         # Parse JSON
         import re
         import json
+        import logging
         
+        logger = logging.getLogger("instructor-router")
         questions = []
+        
         try:
-            # Try to find a JSON block manually first (robust regex)
-            # Find the first '[' and last ']' if we're looking for an array, 
-            # or the first '{' and last '}' for the whole object.
-            # The previous r'\{.*\}' with DOTALL is greedy and usually works,
-            # but let's handle potential markdown backticks better.
+            # 1. Clean the text of obvious markdown junk
+            text = response_text.strip()
             
-            clean_text = response_text.strip()
-            # Remove markdown code blocks if present
-            if clean_text.startswith("```"):
-                clean_text = re.sub(r'^```(?:json)?\n', '', clean_text)
-                clean_text = re.sub(r'\n```$', '', clean_text)
+            # Find the FIRST '{' and the LAST '}' to extract the main JSON block
+            # This is more robust than re.sub which might fail with text around it
+            start_index = text.find('{')
+            end_index = text.rfind('}')
             
-            json_match = re.search(r'(\{.*\})', clean_text, re.DOTALL)
-            if json_match:
+            if start_index != -1 and end_index != -1 and end_index > start_index:
+                json_candidate = text[start_index:end_index+1]
+                
+                # Cleanup common AI JSON artifacts (trailing commas)
+                json_candidate = re.sub(r',(\s*[\]\}])', r'\1', json_candidate)
+                
                 try:
-                    response_json = json.loads(json_match.group(1))
-                    questions = response_json.get("questions", [])
-                except json.JSONDecodeError:
-                    # If direct parse fails, try to clean up more
-                    # Sometimes LLMs add comments or trailing commas
+                    parsed = json.loads(json_candidate)
+                    if isinstance(parsed, dict) and "questions" in parsed:
+                        questions = parsed["questions"]
+                    elif isinstance(parsed, list):
+                        questions = parsed
+                except json.JSONDecodeError as je:
+                    logger.warning(f"Initial JSON parse failed: {je}. Trying secondary cleanup.")
+                    # Try to remove any remaining non-JSON chars like comments or trailing prose
+                    # (This is a simplified attempt)
                     pass
             
-            # If still empty, try to find the array directly
+            # 2. Final Fallback: If still empty, try to find individual question objects
             if not questions:
-                array_match = re.search(r'(\[.*\])', clean_text, re.DOTALL)
-                if array_match:
+                # Matches { "question_text": "...", ... } style blocks
+                segments = re.findall(r'(\{[^{}]*"question_text"[^{}]*\})', text)
+                for seg in segments:
                     try:
-                        questions = json.loads(array_match.group(1))
+                        q_obj = json.loads(seg)
+                        if "question_text" in q_obj:
+                            questions.append(q_obj)
                     except:
-                        pass
+                        continue
+                        
+            if not questions:
+                logger.error(f"Failed to extract any questions from response: {response_text[:200]}...")
+
         except Exception as e:
-            logger.error(f"JSON Extraction Error: {e}")
-            questions = []
+            logger.error(f"Question parsing exception: {e}")
 
         return {"questions": questions, "raw_text": response_text}
     except Exception as e:
@@ -206,12 +221,36 @@ async def create_quiz_endpoint(request: CreateQuizRequest):
     """Create a new quiz with questions"""
     quiz_id = str(uuid.uuid4())
     try:
+        # Define allowed types in the DB
+        ALLOWED_TYPES = {'mcq', 'true_false', 'short_answer', 'long_answer'}
+        
         db.create_quiz(quiz_id, request.chatbot_id, request.title, request.description)
         for idx, q in enumerate(request.questions):
             question_id = str(uuid.uuid4())
-            db.add_question(question_id, quiz_id, q["question_text"], q["question_type"], q["correct_answer"], q.get("options"), q.get("points", 1), idx)
+            
+            # Map very_short_answer to short_answer to match DB constraint
+            q_type = q["question_type"]
+            if q_type == "very_short_answer":
+                q_type = "short_answer"
+            
+            # Ensure it fits the CHECK constraint
+            if q_type not in ALLOWED_TYPES:
+                q_type = "short_answer"
+                
+            db.add_question(
+                question_id, 
+                quiz_id, 
+                q["question_text"], 
+                q_type, 
+                q["correct_answer"], 
+                q.get("options"), 
+                q.get("points", 1), 
+                idx
+            )
         return {"message": "Quiz created", "quiz_id": quiz_id}
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/quizzes/{chatbot_id}")
@@ -274,8 +313,10 @@ Format: For each flashcard, write "FRONT:" followed by the question/term, then "
 Make them clear and educational."""
 
     try:
-        q_emb = get_embed_model().encode([prompt], convert_to_numpy=True).astype("float32")[0]
-        hits = vs.hybrid_query(request.chatbot_id, prompt, q_emb, top_k=10)
+        # SEARCH BY TOPIC
+        search_query = request.topic if request.topic else "important terms and definitions"
+        q_emb = get_embed_model().encode([search_query], convert_to_numpy=True).astype("float32")[0]
+        hits = vs.hybrid_query(request.chatbot_id, search_query, q_emb, top_k=15)
         
         context_docs = [{"source": h.get("source", ""), "text": h.get("text", ""), "page": h.get("page", "?")} for h in hits]
         system_prompt, user_prompt = build_system_user_prompt(context_docs, prompt)
@@ -324,33 +365,45 @@ async def delete_flashcard_endpoint(flashcard_id: str):
 
 @router.post("/lesson-plans/generate")
 async def generate_lesson_plan_endpoint(request: GenerateLessonPlanRequest):
-    """Generate a lesson plan"""
+    """Generate a lesson plan using ONLY the provided textbook context"""
     chatbot = db.get_chatbot(request.chatbot_id)
     if not chatbot:
         raise HTTPException(status_code=404, detail="Chatbot not found")
     
-    prompt = f"""Create a detailed lesson plan for teaching "{request.topic}" in {request.duration}.
-... (Prompt content truncated for brevity, same as original api.py) ...
-"""
-    # Full prompt for accuracy
-    prompt = f"""Create a detailed lesson plan for teaching "{request.topic}" in {request.duration}.
+    # STRICTOR PROMPT
+    prompt = f"""You are an expert teacher assistant. 
+TASK: Create a detailed lesson plan for teaching "{request.topic}" in {request.duration} using ONLY the provided context.
+
+STRICT RULES:
+1. If the topic "{request.topic}" is NOT discussed in the provided textbook excerpts, you MUST say: "I'm sorry, but I couldn't find information about '{request.topic}' in this textbook. Please choose a topic that is present in the course material."
+2. DO NOT use your internal knowledge to teach things not in the book (e.g. do not teach Python if it's a Science book).
+3. CITATION: Every concept, objective, or activity MUST include a page reference from the context (e.g., [See Page 45] or "Ref: Page 12").
 
 Include:
-1. Learning Objectives (3-5 clear objectives)
-2. Introduction (how to start the lesson)
-3. Main Content (key concepts to teach with explanations)
-4. Teaching Examples (2-3 practical examples)
-5. Student Activities (interactive exercises)
-6. Assessment Methods (how to check understanding)
-7. Conclusion (summary and homework)
-
-Make it practical and engaging for teachers."""
+- Learning Objectives (with page references)
+- Introduction
+- Main Content (Detailed points with page references)
+- Student Activities
+- Assessment (based on textbook content)
+"""
 
     try:
-        q_emb = get_embed_model().encode([prompt], convert_to_numpy=True).astype("float32")[0]
-        hits = vs.hybrid_query(request.chatbot_id, prompt, q_emb, top_k=15)
+        # SEARCH BY TOPIC
+        search_query = request.topic
+        q_emb = get_embed_model().encode([search_query], convert_to_numpy=True).astype("float32")[0]
+        hits = vs.hybrid_query(request.chatbot_id, search_query, q_emb, top_k=20)
+        
+        if not hits:
+            return {"lesson_plan": f"I couldn't find any documents or content related to '{request.topic}' in this course."}
+
         context_docs = [{"source": h.get("source", ""), "text": h.get("text", ""), "page": h.get("page", "?")} for h in hits]
-        system_prompt, user_prompt = build_system_user_prompt(context_docs, prompt)
+        
+        # We'll build a custom system prompt for this to be extra strict
+        system_prompt = "You are a pedagogical assistant that strictly follows provided textbook material. You NEVER hallucinate content outside the context."
+        
+        # Use our existing builder but we can override the system prompt for better grounding
+        _, user_prompt = build_system_user_prompt(context_docs, prompt)
+        
         response = call_groq_llm(system_prompt, user_prompt)
         return {"lesson_plan": response}
     except Exception as e:
