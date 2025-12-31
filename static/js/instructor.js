@@ -343,11 +343,27 @@ async function generateQuestions() {
         });
 
         const data = await response.json();
-        const questions = data.questions || [];
+        let questions = data.questions || [];
+
+        // Secondary attempt: If questions is empty, try to parse raw_text directly in frontend
+        if (!Array.isArray(questions) || questions.length === 0) {
+            try {
+                // Find potential JSON in raw_text
+                const raw = data.raw_text || "";
+                const jsonMatch = raw.match(/(\{.*\})/s) || raw.match(/(\[.*\])/s);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[1]);
+                    questions = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+                }
+            } catch (e) {
+                console.warn("Client-side JSON recovery failed:", e);
+            }
+        }
 
         if (!Array.isArray(questions) || questions.length === 0) {
             // Fallback if API returned raw text or error
-            output.innerHTML = `<div class="question-item"><div class="question-text">${(data.raw_text || "No questions generated").replace(/\n/g, '<br>')}</div></div>`;
+            const displaySafeText = (data.raw_text || "No questions generated").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            output.innerHTML = `<div class="question-item"><div class="question-text">${displaySafeText.replace(/\n/g, '<br>')}</div></div>`;
             generatedQuestions = []; // Can't save easily
             document.getElementById('questions-actions').classList.add('hidden');
             return;

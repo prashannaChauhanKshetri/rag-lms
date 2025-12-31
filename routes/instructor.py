@@ -158,14 +158,43 @@ OUTPUT FORMAT (VERY IMPORTANT):
         response_text = call_groq_llm(system_prompt, user_prompt)
         
         # Parse JSON
+        import re
+        import json
+        
+        questions = []
         try:
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            # Try to find a JSON block manually first (robust regex)
+            # Find the first '[' and last ']' if we're looking for an array, 
+            # or the first '{' and last '}' for the whole object.
+            # The previous r'\{.*\}' with DOTALL is greedy and usually works,
+            # but let's handle potential markdown backticks better.
+            
+            clean_text = response_text.strip()
+            # Remove markdown code blocks if present
+            if clean_text.startswith("```"):
+                clean_text = re.sub(r'^```(?:json)?\n', '', clean_text)
+                clean_text = re.sub(r'\n```$', '', clean_text)
+            
+            json_match = re.search(r'(\{.*\})', clean_text, re.DOTALL)
             if json_match:
-                response_json = json.loads(json_match.group(0))
-                questions = response_json.get("questions", [])
-            else:
-                questions = []
-        except:
+                try:
+                    response_json = json.loads(json_match.group(1))
+                    questions = response_json.get("questions", [])
+                except json.JSONDecodeError:
+                    # If direct parse fails, try to clean up more
+                    # Sometimes LLMs add comments or trailing commas
+                    pass
+            
+            # If still empty, try to find the array directly
+            if not questions:
+                array_match = re.search(r'(\[.*\])', clean_text, re.DOTALL)
+                if array_match:
+                    try:
+                        questions = json.loads(array_match.group(1))
+                    except:
+                        pass
+        except Exception as e:
+            logger.error(f"JSON Extraction Error: {e}")
             questions = []
 
         return {"questions": questions, "raw_text": response_text}
