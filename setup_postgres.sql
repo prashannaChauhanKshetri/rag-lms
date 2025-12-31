@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS questions (
     id TEXT PRIMARY KEY,
     quiz_id TEXT NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
     question_text TEXT NOT NULL,
-    question_type TEXT NOT NULL CHECK (question_type IN ('mcq', 'true_false', 'short_answer', 'long_answer')),
+    question_type TEXT NOT NULL CHECK (question_type IN ('mcq', 'true_false', 'very_short_answer', 'short_answer', 'long_answer')),
     options JSONB,  -- Changed from TEXT to JSONB
     correct_answer TEXT NOT NULL,
     points INTEGER DEFAULT 1,
