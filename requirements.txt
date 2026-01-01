@@ -21,3 +21,8 @@ ollama
 # PostgreSQL dependencies
 psycopg2-binary>=2.9.9
 pgvector>=0.2.4
+
+# JWT Authentication
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
