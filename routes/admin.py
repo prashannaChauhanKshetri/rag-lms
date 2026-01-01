@@ -1,20 +1,15 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends
 import database_postgres as db
+import utils_auth
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
+# Protect all admin routes
+router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[Depends(utils_auth.get_current_user)])
 
 @router.get("/users")
-async def list_users(request: Request, session_token: str = None):
+async def list_users():
     """List all users (Admin only)"""
-    if not session_token:
-        session_token = request.cookies.get("session_token")
-        
-    if not session_token or not hasattr(request.app.state, 'sessions') or session_token not in request.app.state.sessions:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    session = request.app.state.sessions[session_token]
-    if session['role'] != 'admin':
-        raise HTTPException(status_code=403, detail="Admin access required")
+    # Authentication and authorization (admin role check) are now handled by the router dependency `utils_auth.get_current_user`.
+    # If the dependency passes, the user is authenticated and has the necessary admin role.
         
     try:
         users = db.list_users()

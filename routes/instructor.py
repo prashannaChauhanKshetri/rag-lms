@@ -2,15 +2,16 @@ import uuid
 import re
 import json
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Depends
 from pydantic import BaseModel
 import database_postgres as db
 import vectorstore_postgres as vs
 from utils import build_system_user_prompt
+import utils_auth
 from models import get_embed_model
 from routes.chat import call_groq_llm
 
-router = APIRouter(prefix="/instructor", tags=["Instructor"])
+router = APIRouter(prefix="/instructor", tags=["Instructor"], dependencies=[Depends(utils_auth.get_current_user)])
 
 # --- Models ---
 

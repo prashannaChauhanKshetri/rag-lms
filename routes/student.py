@@ -1,10 +1,11 @@
 from typing import List, Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import database_postgres as db
 import uuid
+import utils_auth
 
-router = APIRouter(prefix="/student", tags=["Student"])
+router = APIRouter(prefix="/student", tags=["Student"], dependencies=[Depends(utils_auth.get_current_user)])
 
 class SubmitQuizRequest(BaseModel):
     quiz_id: str
