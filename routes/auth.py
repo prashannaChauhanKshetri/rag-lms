@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Body, Response, Request, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-import secrets
 import database_postgres as db
+import utils_auth
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -11,26 +11,23 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/login")
-async def login(request: Request, login_data: LoginRequest, response: JSONResponse):
-    """Login endpoint"""
-    user = db.verify_user(login_data.username, login_data.password)
+async def login(response: Response, login_data: LoginRequest):
+    """Login endpoint with JWT"""
+    # 1. Fetch user from DB
+    user = db.get_user_by_username(login_data.username)
     
-    if not user:
+    # 2. Verify credentials
+    if not user or not utils_auth.verify_password(login_data.password, user['password_hash']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Create session token
-    session_token = secrets.token_urlsafe(32)
-    
-    # Access app state from request
-    if not hasattr(request.app.state, 'sessions'):
-        request.app.state.sessions = {}
-    
-    request.app.state.sessions[session_token] = {
-        'user_id': user['id'],
-        'username': user['username'],
-        'role': user['role'],
-        'full_name': user['full_name']
+    # 3. Create JWT Token
+    token_data = {
+        "sub": user['id'],
+        "username": user['username'],
+        "role": user['role'],
+        "full_name": user['full_name']
     }
+    access_token = utils_auth.create_access_token(data=token_data)
     
     res_data = {
         "message": "Login successful",
@@ -41,18 +38,14 @@ async def login(request: Request, login_data: LoginRequest, response: JSONRespon
             "full_name": user['full_name'],
             "email": user['email']
         },
-        "session_token": session_token
+        "access_token": access_token
     }
     
-    # Note: JSONResponse might be tricky here because we want to set a cookie
-    # We can return the data and set the cookie in the response object
-    # But the student's code used response: JSONResponse as a parameter (which is unusual for FastAPI)
-    # Usually it's response: Response
-    
+    # 4. Set Cookie
     result = JSONResponse(content=res_data)
     result.set_cookie(
-        key="session_token",
-        value=session_token,
+        key="access_token",
+        value=access_token,
         httponly=True,
         max_age=86400,  # 24 hours
         samesite="lax"
@@ -64,20 +57,26 @@ async def login(request: Request, login_data: LoginRequest, response: JSONRespon
 async def logout():
     """Logout endpoint"""
     response = JSONResponse({"message": "Logged out successfully"})
-    response.delete_cookie("session_token")
+    response.delete_cookie("access_token")
     return response
 
 @router.get("/session")
-async def get_session(request: Request, session_token: str = None):
-    """Get current session info"""
-    if not session_token:
-        # Check cookies if not in query param
-        session_token = request.cookies.get("session_token")
-        
-    if not session_token:
+async def get_session(request: Request):
+    """Get current session info from JWT"""
+    # Check for token in cookie
+    token = request.cookies.get("access_token")
+    if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    if not hasattr(request.app.state, 'sessions') or session_token not in request.app.state.sessions:
+    # Decode token
+    user_data = utils_auth.decode_access_token(token)
+    if not user_data:
         raise HTTPException(status_code=401, detail="Invalid session")
     
-    return request.app.state.sessions[session_token]
+    # Return user info (mapping 'sub' back to 'user_id' for frontend compatibility)
+    return {
+        "user_id": user_data.get("sub"),
+        "username": user_data.get("username"),
+        "role": user_data.get("role"),
+        "full_name": user_data.get("full_name")
+    }
