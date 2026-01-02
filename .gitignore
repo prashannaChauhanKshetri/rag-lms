@@ -56,3 +56,11 @@ ENHANCEMENTS_COMPLETE.md
 QUICK_START.md
 ROLE_SYSTEM_IMPLEMENTATION.md
 SYSTEM_COMPLETE.md
+
+# React Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
