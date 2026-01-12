@@ -436,3 +436,96 @@ async def delete_lesson_plan_endpoint(plan_id: str):
     """Delete a lesson plan"""
     db.delete_lesson_plan(plan_id)
     return {"message": "Lesson plan deleted"}
+
+# --- Assignment Endpoints ---
+
+class CreateAssignmentRequest(BaseModel):
+    chatbot_id: str
+    title: str
+    description: str = ""
+    due_date: str  # ISO Format YYYY-MM-DD
+
+@router.post("/assignments/create")
+async def create_assignment_endpoint(request: CreateAssignmentRequest):
+    """Create a new assignment"""
+    assignment_id = str(uuid.uuid4())
+    try:
+        from datetime import datetime
+        # Parse simple date string
+        dt = datetime.fromisoformat(request.due_date.replace("Z", "+00:00"))
+        db.create_assignment(assignment_id, request.chatbot_id, request.title, request.description, dt)
+        return {"message": "Assignment created", "assignment_id": assignment_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/assignments/{chatbot_id}")
+async def list_assignments_endpoint(chatbot_id: str):
+    """List assignments"""
+    assigns = db.list_assignments(chatbot_id)
+    return {"assignments": assigns}
+
+@router.post("/assignments/{assignment_id}/publish")
+async def publish_assignment_endpoint(assignment_id: str):
+    """Publish assignment"""
+    db.publish_assignment(assignment_id)
+    return {"message": "Assignment published"}
+
+@router.delete("/assignments/{assignment_id}")
+async def delete_assignment_endpoint(assignment_id: str):
+    """Delete assignment"""
+    db.delete_assignment(assignment_id)
+    return {"message": "Assignment deleted"}
+
+# --- Analytics Endpoints ---
+
+@router.get("/analytics/course/{chatbot_id}")
+async def get_course_analytics(chatbot_id: str):
+    """Get analytics for a course"""
+    # 1. Get Quizzes
+    quizzes = db.list_quizzes(chatbot_id)
+    total_quizzes = len(quizzes)
+    
+    # 2. Get Submissions
+    total_submissions = 0
+    total_score = 0
+    all_scores = []
+    
+    for q in quizzes:
+        subs = db.get_quiz_submissions(q['id'])
+        total_submissions += len(subs)
+        for s in subs:
+            total_score += s['score']  # Assuming score is 0-100 or 0-1
+            all_scores.append(s['score'])
+            
+    avg_score = (total_score / total_submissions) if total_submissions > 0 else 0
+    
+    # 3. Simple Participation (Mock for now, or based on unique student_ids)
+    
+    return {
+        "total_quizzes": total_quizzes,
+        "total_submissions": total_submissions,
+        "average_score": avg_score,
+        "scores_distribution": all_scores
+    }
+
+# --- Assignment Grading Endpoints ---
+
+class GradeSubmissionRequest(BaseModel):
+    submission_id: str
+    grade: float
+    feedback: str = ""
+
+@router.get("/assignments/{assignment_id}/submissions")
+async def get_assignment_submissions(assignment_id: str):
+    """Get all submissions for an assignment"""
+    submissions = db.get_assignment_submissions(assignment_id)
+    return {"submissions": submissions}
+
+@router.post("/assignments/grade")
+async def grade_submission_endpoint(request: GradeSubmissionRequest):
+    """Grade a student submission"""
+    try:
+        db.grade_assignment_submission(request.submission_id, request.grade, request.feedback)
+        return {"message": "Submission graded successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

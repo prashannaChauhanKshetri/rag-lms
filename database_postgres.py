@@ -533,8 +533,114 @@ def delete_lesson_plan(plan_id: str):
         with conn.cursor() as cur:
             cur.execute("DELETE FROM lesson_plans WHERE id = %s", (plan_id,))
 
+# --- Assignment Operations ---
+
+def create_assignment(assignment_id: str, chatbot_id: str, title: str, description: str, due_date: datetime):
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO assignments (id, chatbot_id, title, description, due_date, status) 
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (assignment_id, chatbot_id, title, description, due_date, 'draft')
+            )
+
+def list_assignments(chatbot_id: str) -> List[Dict]:
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT * FROM assignments WHERE chatbot_id = %s ORDER BY created_at DESC", 
+                (chatbot_id,)
+            )
+            assigns = cur.fetchall()
+    return [dict(a) for a in assigns]
+
+def publish_assignment(assignment_id: str):
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE assignments SET status = 'published' WHERE id = %s",
+                (assignment_id,)
+            )
+
+def delete_assignment(assignment_id: str):
+    """Delete an assignment"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM assignments WHERE id = %s", (assignment_id,))
+
+# --- Assignment Submission Functions ---
+
+def create_assignment_submission_table():
+    """Create assignment submissions table if it doesn't exist"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS assignment_submissions (
+                    id TEXT PRIMARY KEY,
+                    assignment_id TEXT NOT NULL,
+                    student_id TEXT NOT NULL,
+                    student_name TEXT,
+                    file_path TEXT,
+                    file_name TEXT,
+                    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    grade FLOAT,
+                    feedback TEXT
+                );
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_assignment_submissions_assignment 
+                ON assignment_submissions(assignment_id);
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student 
+                ON assignment_submissions(student_id);
+            """)
+
+def submit_assignment(submission_id: str, assignment_id: str, student_id: str, 
+                     student_name: str, file_path: str, file_name: str):
+    """Submit an assignment"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO assignment_submissions 
+                (id, assignment_id, student_id, student_name, file_path, file_name)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (submission_id, assignment_id, student_id, student_name, file_path, file_name))
+
+def get_assignment_submissions(assignment_id: str):
+    """Get all submissions for an assignment"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT * FROM assignment_submissions 
+                WHERE assignment_id = %s 
+                ORDER BY submitted_at DESC
+            """, (assignment_id,))
+            return cur.fetchall()
+
+def get_student_submission(assignment_id: str, student_id: str):
+    """Check if student has already submitted"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT * FROM assignment_submissions 
+                WHERE assignment_id = %s AND student_id = %s
+            """, (assignment_id, student_id))
+            return cur.fetchone()
+
+def grade_assignment_submission(submission_id: str, grade: float, feedback: str):
+    """Grade a submission"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE assignment_submissions 
+                SET grade = %s, feedback = %s
+                WHERE id = %s
+            """, (grade, feedback, submission_id))
+
 # Initialize on import
 try:
     init_db()
+    create_assignment_submission_table()
 except Exception as e:
     logger.warning(f"Database initialization skipped: {e}")

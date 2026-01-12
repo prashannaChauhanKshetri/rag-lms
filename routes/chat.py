@@ -25,7 +25,13 @@ async def chat_endpoint(
         raise HTTPException(status_code=404, detail="Chatbot not found")
     
     question = request.message
-    top_k = request.top_k
+    base_top_k = request.top_k
+    
+    # Smarter Search: Detect if user is asking for "questions" or "exercises"
+    is_exercise_query = any(k in question.lower() for k in ["question", "exercise", "problem", "solve", "quiz"])
+    
+    # Dynamic top_k: Fetch more context if looking for lists of questions
+    final_top_k = base_top_k + 10 if is_exercise_query else base_top_k
     
     # Embed question
     try:
@@ -33,16 +39,27 @@ async def chat_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Embedding error: {e}")
     
-    # Hybrid Retrieval
+    # Hybrid Retrieval with dynamic weights
+    # If asking for exercises, boost keyword search (BM25) as headers often contain "Exercise"
+    bm25_w = 0.5 if is_exercise_query else 0.3
+    faiss_w = 0.5 if is_exercise_query else 0.7
+    
     hits = vs.hybrid_query(
         chatbot_id, 
         question, 
         q_emb, 
-        top_k=top_k,
-        bm25_weight=0.3,
-        faiss_weight=0.7
+        top_k=final_top_k,
+        bm25_weight=bm25_w,
+        faiss_weight=faiss_w
     )
     
+    if not hits:
+        # Fallback: Relaxed search if strict one failed
+        hits = vs.hybrid_query(
+            chatbot_id, question, q_emb, top_k=final_top_k, 
+            bm25_weight=0.1, faiss_weight=0.9 # Rely mostly on semantic vector search
+        )
+        
     if not hits:
         return {"answer": "I couldn't find any relevant information in the documents.", "sources": []}
     
