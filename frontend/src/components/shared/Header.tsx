@@ -3,11 +3,10 @@ import { Bell, Search } from 'lucide-react';
 interface HeaderProps {
     userName: string;
     userRole: string;
-    userEmail: string;
     institutionName: string;
 }
 
-export function Header({ userName, userRole, userEmail, institutionName }: HeaderProps) {
+export function Header({ userName, userRole, institutionName }: HeaderProps) {
     return (
         <header className="h-20 bg-white border-b border-gray-100 px-8 flex items-center justify-between sticky top-0 z-10">
             <div className="flex items-center gap-4">
