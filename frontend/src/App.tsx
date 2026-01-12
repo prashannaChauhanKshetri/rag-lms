@@ -4,6 +4,8 @@ import { Sidebar } from './components/shared/Sidebar';
 import { MobileNav } from './components/shared/MobileNav';
 import { Header } from './components/shared/Header';
 import { StudentHome } from './components/student/StudentHome';
+import { MyCourses } from './components/student/MyCourses';
+import { ChatInterface } from './components/student/ChatInterface';
 import {
   Home as HomeIcon,
   BookOpen,
@@ -12,8 +14,18 @@ import {
   CheckSquare,
   Calendar,
   Brain,
-  CreditCard
+  CreditCard,
+  LayoutDashboard,
+  HelpCircle
 } from 'lucide-react';
+import { InstructorHome } from './components/instructor/InstructorHome';
+import { CourseManager } from './components/instructor/CourseManager';
+import { QuizCreator } from './components/instructor/QuizCreator';
+import { LessonPlanner } from './components/instructor/LessonPlanner';
+import { FlashcardCreator } from './components/instructor/FlashcardCreator';
+import { AssignmentManager } from './components/instructor/AssignmentManager';
+import { AnalyticsDashboard } from './components/instructor/AnalyticsDashboard';
+import { StudentAssignments } from './components/student/StudentAssignments';
 
 interface User {
   id: string;
@@ -38,16 +50,23 @@ const studentTabs = [
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('home');
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const handleLoginSuccess = (userData: User) => {
     setUser(userData);
-    console.log('Login successful:', userData);
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('access_token');
+  };
+
+  const [selectedCourseId, setSelectedCourseId] = useState<string | undefined>(undefined);
+
+  const handleNavigate = (tabId: string, courseId?: string) => {
+    setActiveTab(tabId);
+    if (courseId) {
+      setSelectedCourseId(courseId);
+    }
   };
 
   const renderContent = () => {
@@ -66,14 +85,19 @@ function App() {
             <Header
               userName={user.full_name}
               userRole={user.role}
-              userEmail={user.email}
               institutionName={user.institution || "Gyana University"}
             />
 
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
-              {activeTab === 'home' && <StudentHome onNavigate={setActiveTab} />}
-              {activeTab === 'courses' && <div className="p-8 text-center text-gray-500">My Courses Component Coming Soon...</div>}
-              {activeTab === 'chat' && <div className="p-8 text-center text-gray-500">AI Assistant Component Coming Soon...</div>}
+              {activeTab === 'home' && <StudentHome onNavigate={handleNavigate} />}
+              {activeTab === 'courses' && <MyCourses onNavigate={handleNavigate} />}
+              {activeTab === 'chat' && (
+                <ChatInterface
+                  courseId={selectedCourseId}
+                  onNavigate={handleNavigate}
+                />
+              )}
+              {activeTab === 'assignments' && <StudentAssignments />}
               {/* Add other components here */}
             </div>
           </main>
@@ -83,6 +107,43 @@ function App() {
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
+        </div>
+      );
+    }
+
+
+    if (user.role === 'instructor') {
+      return (
+        <div className="flex h-screen bg-gray-50 overflow-hidden">
+          <Sidebar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabs={[
+              { id: 'home', label: 'Home', icon: HomeIcon },
+              { id: 'courses', label: 'Course Manager', icon: BookOpen },
+              { id: 'quizzes', label: 'Quiz Creator', icon: HelpCircle },
+              { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
+              { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard },
+              { id: 'assignments', label: 'Assignments', icon: FileText },
+              { id: 'analytics', label: 'Analytics', icon: CheckSquare }, // Using CheckSquare as placeholder for Analytics icon if Activity isn't imported
+            ]}
+          />
+          <main className="flex-1 flex flex-col h-screen overflow-hidden">
+            <Header
+              userName={user.full_name}
+              userRole={user.role}
+              institutionName={user.institution || "Gyana University"}
+            />
+            <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+              {activeTab === 'home' && <InstructorHome user={user} onNavigate={handleNavigate} />}
+              {activeTab === 'courses' && <CourseManager />}
+              {activeTab === 'quizzes' && <QuizCreator />}
+              {activeTab === 'flashcards' && <FlashcardCreator />}
+              {activeTab === 'lesson-plans' && <LessonPlanner />}
+              {activeTab === 'assignments' && <AssignmentManager />}
+              {activeTab === 'analytics' && <AnalyticsDashboard />}
+            </div>
+          </main>
         </div>
       );
     }

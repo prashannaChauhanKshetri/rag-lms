@@ -6,7 +6,14 @@ import { cn } from '../lib/utils';
 const LOGO_PATH = "/logo.jpg";
 
 interface LoginProps {
-    onLoginSuccess: (userData: any) => void;
+    onLoginSuccess: (userData: {
+        id: string;
+        username: string;
+        full_name: string;
+        email: string;
+        role: 'student' | 'instructor' | 'admin';
+        institution?: string;
+    }) => void;
 }
 
 type UserRole = 'student' | 'instructor' | 'admin';
@@ -95,8 +102,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             }
 
             onLoginSuccess({ ...data.user, institution: selectedInstitution });
-        } catch (err: any) {
-            setError(err.message || 'An error occurred during login');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred during login');
         } finally {
             setIsLoading(false);
         }
