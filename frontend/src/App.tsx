@@ -22,7 +22,7 @@ import { InstructorHome } from './components/instructor/InstructorHome';
 import { CourseManager } from './components/instructor/CourseManager';
 import { QuizCreator } from './components/instructor/QuizCreator';
 import { LessonPlanner } from './components/instructor/LessonPlanner';
-import { FlashcardCreator } from './components/instructor/FlashcardCreator';
+import { FlashcardManager } from './components/instructor/FlashcardManager';
 import { AssignmentManager } from './components/instructor/AssignmentManager';
 import { AnalyticsDashboard } from './components/instructor/AnalyticsDashboard';
 import { StudentAssignments } from './components/student/StudentAssignments';
@@ -138,7 +138,7 @@ function App() {
               {activeTab === 'home' && <InstructorHome user={user} onNavigate={handleNavigate} />}
               {activeTab === 'courses' && <CourseManager />}
               {activeTab === 'quizzes' && <QuizCreator />}
-              {activeTab === 'flashcards' && <FlashcardCreator />}
+              {activeTab === 'flashcards' && <FlashcardManager />}
               {activeTab === 'lesson-plans' && <LessonPlanner />}
               {activeTab === 'assignments' && <AssignmentManager />}
               {activeTab === 'analytics' && <AnalyticsDashboard />}

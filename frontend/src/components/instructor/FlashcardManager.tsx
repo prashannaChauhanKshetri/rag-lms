@@ -18,7 +18,7 @@ interface Flashcard {
     back: string;
 }
 
-export function FlashcardCreator() {
+export function FlashcardManager() {
     const [courses, setCourses] = useState<Chatbot[]>([]);
 
     // State
