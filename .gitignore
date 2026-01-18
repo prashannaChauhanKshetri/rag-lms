@@ -30,8 +30,10 @@ Thumbs.db
 
 # Project Data (don't commit these)
 vectorstores/
-fin_ed_docs/*.pdf
+fin_ed_docs/
 !fin_ed_docs/.gitkeep
+uploads/
+frontend/.vite/
 *.pkl
 *.index
 rag_lms.db
