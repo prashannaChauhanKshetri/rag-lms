@@ -26,6 +26,8 @@ import { FlashcardManager } from './components/instructor/FlashcardManager';
 import { AssignmentManager } from './components/instructor/AssignmentManager';
 import { AnalyticsDashboard } from './components/instructor/AnalyticsDashboard';
 import { StudentAssignments } from './components/student/StudentAssignments';
+import { StudentFlashcards } from './components/student/StudentFlashcards';
+import { StudentQuizzes } from './components/student/StudentQuizzes';
 
 interface User {
   id: string;
@@ -98,6 +100,8 @@ function App() {
                 />
               )}
               {activeTab === 'assignments' && <StudentAssignments />}
+              {activeTab === 'flashcards' && <StudentFlashcards />}
+              {activeTab === 'quiz' && <StudentQuizzes />}
               {/* Add other components here */}
             </div>
           </main>
