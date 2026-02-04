@@ -99,17 +99,32 @@ def extract_toc(doc: fitz.Document) -> Dict[int, str]:
         
 #     return toc_map
 
-# def get_chapter_for_page(page_num: int, toc_map: Dict[int, str]) -> str:
-#     """Find the chapter for a given page number"""
-#     current_chapter = "Unknown"
-#     max_page = -1
-    
-#     for start_page, title in toc_map.items():
-#         if start_page <= page_num and start_page > max_page:
-#             max_page = start_page
-#             current_chapter = title
-            
-#     return current_chapter
+def get_chapter_for_page(page_num: int, toc_map: Dict[int, str]) -> str:
+    """Find the chapter/unit title that applies to `page_num` using `toc_map`.
+
+    Behavior:
+    - `toc_map` is expected as {start_page: title, ...} where keys may be int or str.
+    - Returns the title for the largest `start_page` that is <= `page_num`.
+    - Returns "Unknown" if `toc_map` is empty or no matching start_page is found.
+    """
+    if not toc_map:
+        return "Unknown"
+
+    current_chapter = "Unknown"
+    max_page = -1
+
+    for start_page, title in toc_map.items():
+        try:
+            sp = int(start_page)
+        except Exception:
+            # Skip malformed keys
+            continue
+
+        if sp <= page_num and sp > max_page:
+            max_page = sp
+            current_chapter = title
+
+    return current_chapter
 
 import pytesseract
 from concurrent.futures import ThreadPoolExecutor
