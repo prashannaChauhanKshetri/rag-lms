@@ -8,6 +8,7 @@ import psycopg2.extras
 import json
 import logging
 import os
+import uuid
 from datetime import datetime
 from typing import List, Dict, Optional, Any
 from contextlib import contextmanager
@@ -637,6 +638,475 @@ def grade_assignment_submission(submission_id: str, grade: float, feedback: str)
                 SET grade = %s, feedback = %s
                 WHERE id = %s
             """, (grade, feedback, submission_id))
+
+# --- CLASSES (Course Management) ---
+
+def create_class(class_id: str, chatbot_id: str, name: str, teacher_id: str, description: Optional[str] = None, grade_level: Optional[str] = None):
+    """Create a new class"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO classes (id, chatbot_id, name, teacher_id, description, grade_level)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (class_id, chatbot_id, name, teacher_id, description, grade_level)
+            )
+
+def get_class(class_id: str) -> Optional[Dict]:
+    """Get class by ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM classes WHERE id = %s", (class_id,))
+            cls = cur.fetchone()
+    return dict(cls) if cls else None
+
+def list_classes_for_teacher(teacher_id: str) -> List[Dict]:
+    """List all classes taught by a teacher"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT * FROM classes WHERE teacher_id = %s ORDER BY created_at DESC",
+                (teacher_id,)
+            )
+            classes = cur.fetchall()
+    return [dict(c) for c in classes]
+
+def list_classes_for_chatbot(chatbot_id: str) -> List[Dict]:
+    """List all classes for a chatbot"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT * FROM classes WHERE chatbot_id = %s ORDER BY created_at DESC",
+                (chatbot_id,)
+            )
+            classes = cur.fetchall()
+    return [dict(c) for c in classes]
+
+def update_class(class_id: str, name: Optional[str] = None, description: Optional[str] = None, grade_level: Optional[str] = None):
+    """Update class details"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            updates = []
+            params = []
+            if name is not None:
+                updates.append("name = %s")
+                params.append(name)
+            if description is not None:
+                updates.append("description = %s")
+                params.append(description)
+            if grade_level is not None:
+                updates.append("grade_level = %s")
+                params.append(grade_level)
+            
+            if updates:
+                params.append(class_id)
+                cur.execute(f"UPDATE classes SET {', '.join(updates)} WHERE id = %s", params)
+
+def delete_class(class_id: str):
+    """Delete a class and all associated sections"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM classes WHERE id = %s", (class_id,))
+
+# --- SECTIONS (Course Management) ---
+
+def create_section(section_id: str, chatbot_id: str, name: str, teacher_id: str, class_id: Optional[str] = None, schedule: Optional[Dict] = None):
+    """Create a new section for a course"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO sections (id, class_id, chatbot_id, name, teacher_id, schedule)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (section_id, class_id, chatbot_id, name, teacher_id, psycopg2.extras.Json(schedule or {}))
+            )
+
+def get_section(section_id: str) -> Optional[Dict]:
+    """Get section by ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM sections WHERE id = %s", (section_id,))
+            section = cur.fetchone()
+    return dict(section) if section else None
+
+def list_sections_for_chatbot(chatbot_id: str) -> List[Dict]:
+    """List all sections for a chatbot"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT * FROM sections WHERE chatbot_id = %s ORDER BY created_at DESC",
+                (chatbot_id,)
+            )
+            sections = cur.fetchall()
+    return [dict(s) for s in sections]
+
+def list_sections_for_teacher(teacher_id: str) -> List[Dict]:
+    """List all sections taught by a teacher"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT * FROM sections WHERE teacher_id = %s ORDER BY created_at DESC",
+                (teacher_id,)
+            )
+            sections = cur.fetchall()
+    return [dict(s) for s in sections]
+
+def get_sections_by_class(class_id: str) -> List[Dict]:
+    """Get all sections for a class"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT * FROM sections WHERE class_id = %s ORDER BY created_at DESC",
+                (class_id,)
+            )
+            sections = cur.fetchall()
+    return [dict(s) for s in sections]
+
+def update_section(section_id: str, name: str = None, schedule: Dict = None):
+    """Update section details"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            updates = []
+            params = []
+            if name is not None:
+                updates.append("name = %s")
+                params.append(name)
+            if schedule is not None:
+                updates.append("schedule = %s")
+                params.append(psycopg2.extras.Json(schedule))
+            if updates:
+                params.append(section_id)
+                query = f"UPDATE sections SET {', '.join(updates)} WHERE id = %s"
+                cur.execute(query, params)
+
+# --- ENROLLMENTS ---
+
+def enroll_student(enrollment_id: str, section_id: str, student_id: str):
+    """Enroll a student in a section"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO enrollments (id, section_id, student_id)
+                   VALUES (%s, %s, %s)""",
+                (enrollment_id, section_id, student_id)
+            )
+
+def list_enrollments(section_id: str) -> List[Dict]:
+    """List all enrollments for a section"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT e.*, u.username, u.full_name, u.email 
+                   FROM enrollments e
+                   JOIN users u ON e.student_id = u.id
+                   WHERE e.section_id = %s
+                   ORDER BY u.full_name""",
+                (section_id,)
+            )
+            enrollments = cur.fetchall()
+    return [dict(e) for e in enrollments]
+
+def list_student_sections(student_id: str) -> List[Dict]:
+    """List all sections a student is enrolled in"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT s.*, u.full_name as teacher_name
+                   FROM enrollments e
+                   JOIN sections s ON e.section_id = s.id
+                   JOIN users u ON s.teacher_id = u.id
+                   WHERE e.student_id = %s
+                   ORDER BY s.created_at DESC""",
+                (student_id,)
+            )
+            sections = cur.fetchall()
+    return [dict(s) for s in sections]
+
+def remove_enrollment(section_id: str, student_id: str):
+    """Remove a student from a section"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM enrollments WHERE section_id = %s AND student_id = %s",
+                (section_id, student_id)
+            )
+
+# --- ATTENDANCE ---
+
+def mark_attendance(attendance_id: str, section_id: str, student_id: str, date: str, status: str, marked_by: str, notes: str = None):
+    """Mark attendance for a student"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO attendance (id, section_id, student_id, date, status, marked_by, notes)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)
+                   ON CONFLICT (section_id, student_id, date) DO UPDATE
+                   SET status = %s, marked_by = %s, notes = %s""",
+                (attendance_id, section_id, student_id, date, status, marked_by, notes, status, marked_by, notes)
+            )
+
+def get_attendance(section_id: str, date: str) -> List[Dict]:
+    """Get attendance records for a section on a specific date"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT a.*, u.full_name, u.username
+                   FROM attendance a
+                   JOIN users u ON a.student_id = u.id
+                   WHERE a.section_id = %s AND a.date = %s
+                   ORDER BY u.full_name""",
+                (section_id, date)
+            )
+            records = cur.fetchall()
+    return [dict(r) for r in records]
+
+def get_student_attendance(section_id: str, student_id: str) -> List[Dict]:
+    """Get attendance history for a student in a section"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT * FROM attendance
+                   WHERE section_id = %s AND student_id = %s
+                   ORDER BY date DESC""",
+                (section_id, student_id)
+            )
+            records = cur.fetchall()
+    return [dict(r) for r in records]
+
+# --- ASSIGNMENTS ---
+
+def create_assignment(assignment_id: str, section_id: str, title: str, description: str = "", due_date: str = None, points: int = 0):
+    """Create an assignment"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO assignments (id, section_id, title, description, due_date, points)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (assignment_id, section_id, title, description, due_date, points)
+            )
+
+def get_assignment(assignment_id: str) -> Optional[Dict]:
+    """Get assignment by ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM assignments WHERE id = %s", (assignment_id,))
+            assignment = cur.fetchone()
+    return dict(assignment) if assignment else None
+
+def list_assignments(section_id: str, published_only: bool = False) -> List[Dict]:
+    """List assignments for a section"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            if published_only:
+                cur.execute(
+                    """SELECT * FROM assignments
+                       WHERE section_id = %s AND is_published = TRUE
+                       ORDER BY due_date ASC, created_at DESC""",
+                    (section_id,)
+                )
+            else:
+                cur.execute(
+                    """SELECT * FROM assignments
+                       WHERE section_id = %s
+                       ORDER BY due_date ASC, created_at DESC""",
+                    (section_id,)
+                )
+            assignments = cur.fetchall()
+    return [dict(a) for a in assignments]
+
+def publish_assignment(assignment_id: str):
+    """Publish an assignment"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE assignments SET is_published = TRUE WHERE id = %s",
+                (assignment_id,)
+            )
+
+def delete_assignment(assignment_id: str):
+    """Delete an assignment"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM assignments WHERE id = %s", (assignment_id,))
+
+# --- ASSIGNMENT SUBMISSIONS ---
+
+def submit_assignment(submission_id: str, assignment_id: str, student_id: str, text: str = "", file_path: str = None):
+    """Submit an assignment"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO assignment_submissions (id, assignment_id, student_id, text, file_path)
+                   VALUES (%s, %s, %s, %s, %s)
+                   ON CONFLICT (assignment_id, student_id) DO UPDATE
+                   SET text = %s, file_path = %s, submitted_at = CURRENT_TIMESTAMP""",
+                (submission_id, assignment_id, student_id, text, file_path, text, file_path)
+            )
+
+def get_submission(submission_id: str) -> Optional[Dict]:
+    """Get a submission by ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM assignment_submissions WHERE id = %s", (submission_id,))
+            submission = cur.fetchone()
+    return dict(submission) if submission else None
+
+def list_submissions(assignment_id: str) -> List[Dict]:
+    """List all submissions for an assignment"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT s.*, u.full_name, u.username
+                   FROM assignment_submissions s
+                   JOIN users u ON s.student_id = u.id
+                   WHERE s.assignment_id = %s
+                   ORDER BY s.submitted_at DESC""",
+                (assignment_id,)
+            )
+            submissions = cur.fetchall()
+    return [dict(s) for s in submissions]
+
+def grade_submission(submission_id: str, score: float, feedback: str = ""):
+    """Grade a submission"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE assignment_submissions SET score = %s, feedback = %s WHERE id = %s",
+                (score, feedback, submission_id)
+            )
+
+# --- RESOURCES ---
+
+def create_resource(resource_id: str, section_id: str, title: str, resource_type: str = "", url: str = None, file_path: str = None, metadata: Dict = None):
+    """Create a resource"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO resources (id, section_id, title, resource_type, url, file_path, metadata)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                (resource_id, section_id, title, resource_type, url, file_path, psycopg2.extras.Json(metadata or {}))
+            )
+
+def list_resources(section_id: str) -> List[Dict]:
+    """List all resources for a section"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT * FROM resources WHERE section_id = %s ORDER BY created_at DESC",
+                (section_id,)
+            )
+            resources = cur.fetchall()
+    return [dict(r) for r in resources]
+
+def delete_resource(resource_id: str):
+    """Delete a resource"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM resources WHERE id = %s", (resource_id,))
+
+# --- TEACHER PROFILES ---
+
+def create_teacher_profile(user_id: str, first_name: str = None, last_name: str = None, phone: str = None, 
+                          bio: str = None, qualifications: str = None, department: str = None):
+    """Create a teacher profile"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            profile_id = str(uuid.uuid4())
+            cur.execute(
+                """INSERT INTO teacher_profiles (id, user_id, first_name, last_name, phone, bio, qualifications, department)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                (profile_id, user_id, first_name, last_name, phone, bio, qualifications, department)
+            )
+
+def get_teacher_profile(user_id: str) -> Optional[Dict]:
+    """Get teacher profile by user ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM teacher_profiles WHERE user_id = %s", (user_id,))
+            profile = cur.fetchone()
+    return dict(profile) if profile else None
+
+def get_all_teachers() -> List[Dict]:
+    """Get all teacher profiles with user details"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT tp.*, u.email, u.full_name, u.username
+                FROM teacher_profiles tp
+                JOIN users u ON tp.user_id = u.id
+                ORDER BY tp.last_name, tp.first_name
+            """)
+            teachers = cur.fetchall()
+    return [dict(t) for t in teachers]
+
+def update_teacher_profile(user_id: str, **kwargs):
+    """Update teacher profile"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            updates = []
+            values = []
+            for key, val in kwargs.items():
+                if key in ['first_name', 'last_name', 'phone', 'bio', 'qualifications', 'office_location', 
+                          'office_hours', 'department', 'years_experience', 'profile_picture_url']:
+                    updates.append(f"{key} = %s")
+                    values.append(val)
+            if updates:
+                values.append(user_id)
+                query = f"UPDATE teacher_profiles SET {', '.join(updates)}, last_updated = CURRENT_TIMESTAMP WHERE user_id = %s"
+                cur.execute(query, values)
+
+def get_assignment_submission(submission_id: str) -> Optional[Dict]:
+    """Get assignment submission by ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM assignment_submissions WHERE id = %s", (submission_id,))
+            submission = cur.fetchone()
+    return dict(submission) if submission else None
+
+def create_assignment_submission(submission_id: str, assignment_id: str, student_id: str, 
+                                 file_path: str, file_name: str, notes: str = ""):
+    """Create assignment submission"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, file_name, notes)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (submission_id, assignment_id, student_id, file_path, file_name, notes)
+            )
+
+def get_student_enrollments(student_id: str) -> List[Dict]:
+    """Get all sections a student is enrolled in"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT e.*, s.name as section_name, c.name as class_name
+                FROM enrollments e
+                JOIN sections s ON e.section_id = s.id
+                JOIN classes c ON s.class_id = c.id
+                WHERE e.student_id = %s
+                ORDER BY s.created_at DESC
+            """, (student_id,))
+            enrollments = cur.fetchall()
+    return [dict(e) for e in enrollments]
+
+def get_assignment(assignment_id: str) -> Optional[Dict]:
+    """Get assignment by ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM assignments WHERE id = %s", (assignment_id,))
+            assignment = cur.fetchone()
+    return dict(assignment) if assignment else None
+
+def list_assignments_for_section(section_id: str) -> List[Dict]:
+    """List assignments for a specific section"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT a.* FROM assignments a
+                JOIN sections s ON a.chatbot_id = s.chatbot_id
+                WHERE s.id = %s
+                ORDER BY a.created_at DESC
+            """, (section_id,))
+            assignments = cur.fetchall()
+    return [dict(a) for a in assignments]
 
 # Initialize on import
 try:

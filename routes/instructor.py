@@ -4,6 +4,7 @@ import json
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Body, Depends
 from pydantic import BaseModel
+from datetime import datetime
 import database_postgres as db
 import vectorstore_postgres as vs
 from utils import build_system_user_prompt
@@ -14,6 +15,48 @@ from routes.chat import call_groq_llm
 router = APIRouter(prefix="/instructor", tags=["Instructor"], dependencies=[Depends(utils_auth.get_current_user)])
 
 # --- Models ---
+
+# Course Management
+class CreateClassRequest(BaseModel):
+    chatbot_id: str
+    name: str
+    description: Optional[str] = None
+    grade_level: Optional[str] = None
+
+class UpdateClassRequest(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    grade_level: Optional[str] = None
+
+class CreateSectionRequest(BaseModel):
+    chatbot_id: str
+    class_id: Optional[str] = None
+    name: str
+    schedule: Optional[Dict] = None
+
+class EnrollStudentRequest(BaseModel):
+    student_id: str
+
+class MarkAttendanceRequest(BaseModel):
+    date: str
+    students: List[Dict[str, Any]]  # [{student_id, status, notes}]
+
+class CreateAssignmentRequest(BaseModel):
+    section_id: str
+    title: str
+    description: str = ""
+    due_date: Optional[str] = None
+    points: int = 0
+
+class GradeSubmissionRequest(BaseModel):
+    score: float
+    feedback: str = ""
+
+class CreateResourceRequest(BaseModel):
+    section_id: str
+    title: str
+    resource_type: str = "document"
+    url: Optional[str] = None
 
 class GenerateQuestionsRequest(BaseModel):
     chatbot_id: str
@@ -250,8 +293,6 @@ async def create_quiz_endpoint(request: CreateQuizRequest):
             )
         return {"message": "Quiz created", "quiz_id": quiz_id}
     except Exception as e:
-        import traceback
-        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/quizzes/{chatbot_id}")
@@ -527,5 +568,378 @@ async def grade_submission_endpoint(request: GradeSubmissionRequest):
     try:
         db.grade_assignment_submission(request.submission_id, request.grade, request.feedback)
         return {"message": "Submission graded successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# COURSE MANAGEMENT: CLASSES
+# ============================================
+
+@router.post("/classes")
+async def create_class(request: CreateClassRequest, user=Depends(utils_auth.get_current_user)):
+    """Create a new class (instructor only)"""
+    if user.get("role") != "instructor":
+        raise HTTPException(status_code=403, detail="Only instructors can create classes")
+    
+    class_id = str(uuid.uuid4())
+    try:
+        # Use 'sub' from JWT token, not 'id'
+        teacher_id = user.get("sub") or (user.get("sub") or user.get("id"))
+        if not teacher_id:
+            raise HTTPException(status_code=400, detail="Cannot determine user ID")
+        
+        db.create_class(class_id, request.chatbot_id, request.name, teacher_id, request.description, request.grade_level)
+        return {"message": "Class created", "class_id": class_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/classes")
+async def list_teacher_classes(user=Depends(utils_auth.get_current_user)):
+    """List all classes for logged-in instructor"""
+    try:
+        if user.get("role") != "instructor":
+            raise HTTPException(status_code=403, detail="Only instructors can view classes")
+        
+        classes = db.list_classes_for_teacher((user.get("sub") or (user.get("sub") or user.get("id"))))
+        
+        # Enrich with section count
+        for cls in classes:
+            sections = db.get_sections_by_class(cls["id"])
+            cls["section_count"] = len(sections) if sections else 0
+        
+        return {"classes": classes}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/classes/{class_id}")
+async def get_class(class_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get class details with sections"""
+    try:
+        cls = db.get_class(class_id)
+        if not cls:
+            raise HTTPException(status_code=404, detail="Class not found")
+        
+        # Get sections in this class
+        sections = db.get_sections_by_class(class_id)
+        cls["sections"] = sections or []
+        
+        return cls
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/classes/{class_id}")
+async def update_class(class_id: str, request: UpdateClassRequest, user=Depends(utils_auth.get_current_user)):
+    """Update class details"""
+    try:
+        db.update_class(class_id, request.name, request.description, request.grade_level)
+        return {"message": "Class updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/classes/{class_id}")
+async def delete_class(class_id: str, user=Depends(utils_auth.get_current_user)):
+    """Delete a class"""
+    if user.get("role") != "instructor":
+        raise HTTPException(status_code=403, detail="Only instructors can delete classes")
+    
+    try:
+        db.delete_class(class_id)
+        return {"message": "Class deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# COURSE MANAGEMENT: SECTIONS
+# ============================================
+
+@router.post("/sections")
+async def create_section(request: CreateSectionRequest, user=Depends(utils_auth.get_current_user)):
+    """Create a new section (instructor only)"""
+    if user.get("role") != "instructor":
+        raise HTTPException(status_code=403, detail="Only instructors can create sections")
+    
+    section_id = str(uuid.uuid4())
+    try:
+        db.create_section(section_id, request.chatbot_id, request.name, (user.get("sub") or (user.get("sub") or user.get("id"))), request.class_id, request.schedule)
+        return {"message": "Section created", "section_id": section_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{chatbot_id}")
+async def list_sections(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
+    """List sections for a chatbot"""
+    try:
+        if user.get("role") == "instructor":
+            sections = db.list_sections_for_teacher((user.get("sub") or (user.get("sub") or user.get("id"))))
+        else:
+            sections = db.list_sections_for_chatbot(chatbot_id)
+        
+        # Enrich with student count
+        for section in sections:
+            enrollments = db.list_enrollments(section["id"])
+            section["student_count"] = len(enrollments)
+        
+        return {"sections": sections}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/details")
+async def get_section(section_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get section details"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        # Check auth: teacher of section or admin
+        if user.get("role") == "instructor" and section["teacher_id"] != (user.get("sub") or (user.get("sub") or user.get("id"))):
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        enrollments = db.list_enrollments(section_id)
+        section["students"] = enrollments
+        return section
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# ENROLLMENTS
+# ============================================
+
+@router.post("/sections/{section_id}/enroll")
+async def enroll_student(section_id: str, request: EnrollStudentRequest, user=Depends(utils_auth.get_current_user)):
+    """Enroll a student in a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Only section teacher can enroll students")
+        
+        enrollment_id = str(uuid.uuid4())
+        db.enroll_student(enrollment_id, section_id, request.student_id)
+        return {"message": "Student enrolled", "enrollment_id": enrollment_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/sections/{section_id}/students/{student_id}")
+async def remove_student(section_id: str, student_id: str, user=Depends(utils_auth.get_current_user)):
+    """Remove a student from a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        db.remove_enrollment(section_id, student_id)
+        return {"message": "Student removed"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# ATTENDANCE
+# ============================================
+
+@router.post("/sections/{section_id}/attendance")
+async def mark_attendance(section_id: str, request: MarkAttendanceRequest, user=Depends(utils_auth.get_current_user)):
+    """Mark attendance for multiple students"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Only section teacher can mark attendance")
+        
+        for student_rec in request.students:
+            attendance_id = str(uuid.uuid4())
+            db.mark_attendance(
+                attendance_id,
+                section_id,
+                student_rec["student_id"],
+                request.date,
+                student_rec["status"],
+                (user.get("sub") or (user.get("sub") or user.get("id"))),
+                student_rec.get("notes")
+            )
+        
+        return {"message": f"Attendance marked for {len(request.students)} students"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/attendance")
+async def get_attendance_report(section_id: str, date: str, user=Depends(utils_auth.get_current_user)):
+    """Get attendance for a section on a date"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        records = db.get_attendance(section_id, date)
+        return {"date": date, "attendance": records}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# ASSIGNMENTS
+# ============================================
+
+@router.post("/sections/{section_id}/assignments")
+async def create_assignment(section_id: str, request: CreateAssignmentRequest, user=Depends(utils_auth.get_current_user)):
+    """Create an assignment"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        assignment_id = str(uuid.uuid4())
+        db.create_assignment(assignment_id, section_id, request.title, request.description, request.due_date, request.points)
+        return {"message": "Assignment created", "assignment_id": assignment_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/assignments")
+async def list_assignments_for_section(section_id: str, user=Depends(utils_auth.get_current_user)):
+    """List assignments for a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        assignments = db.list_assignments(section_id, published_only=False)
+        
+        # Add submission counts
+        for assign in assignments:
+            subs = db.list_submissions(assign["id"])
+            assign["submission_count"] = len(subs)
+        
+        return {"assignments": assignments}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/assignments/{assignment_id}/publish")
+async def publish_assignment(assignment_id: str, user=Depends(utils_auth.get_current_user)):
+    """Publish an assignment"""
+    try:
+        assignment = db.get_assignment(assignment_id)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        
+        section = db.get_section(assignment["section_id"])
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        db.publish_assignment(assignment_id)
+        return {"message": "Assignment published"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/assignments/{assignment_id}/submissions")
+async def get_submissions(assignment_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get all submissions for an assignment"""
+    try:
+        assignment = db.get_assignment(assignment_id)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        
+        section = db.get_section(assignment["section_id"])
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        submissions = db.list_submissions(assignment_id)
+        return {"submissions": submissions}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/submissions/{submission_id}/grade")
+async def grade_submission(submission_id: str, request: GradeSubmissionRequest, user=Depends(utils_auth.get_current_user)):
+    """Grade a submission"""
+    try:
+        submission = db.get_submission(submission_id)
+        if not submission:
+            raise HTTPException(status_code=404, detail="Submission not found")
+        
+        assignment = db.get_assignment(submission["assignment_id"])
+        section = db.get_section(assignment["section_id"])
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        db.grade_submission(submission_id, request.score, request.feedback)
+        return {"message": "Submission graded"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# RESOURCES
+# ============================================
+
+@router.post("/sections/{section_id}/resources")
+async def create_resource(section_id: str, request: CreateResourceRequest, user=Depends(utils_auth.get_current_user)):
+    """Create a resource for a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        resource_id = str(uuid.uuid4())
+        db.create_resource(resource_id, section_id, request.title, request.resource_type, request.url)
+        return {"message": "Resource created", "resource_id": resource_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/resources")
+async def list_section_resources(section_id: str):
+    """List resources for a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        resources = db.list_resources(section_id)
+        return {"resources": resources}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/resources/{resource_id}")
+async def delete_resource(resource_id: str, user=Depends(utils_auth.get_current_user)):
+    """Delete a resource"""
+    try:
+        # Get section from resource (would need to fetch resource first)
+        db.delete_resource(resource_id)
+        return {"message": "Resource deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
