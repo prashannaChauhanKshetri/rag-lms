@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
 import { X, FileText, Calendar, Download } from 'lucide-react';
 
@@ -28,11 +28,7 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
     const [feedback, setFeedback] = useState('');
     const [isGrading, setIsGrading] = useState(false);
 
-    useEffect(() => {
-        fetchSubmissions();
-    }, [assignmentId]);
-
-    const fetchSubmissions = async () => {
+    const fetchSubmissions = useCallback(async () => {
         try {
             setIsLoading(true);
             const data = await api.get<{ submissions: Submission[] }>(
@@ -44,7 +40,11 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [assignmentId]);
+
+    useEffect(() => {
+        fetchSubmissions();
+    }, [fetchSubmissions]);
 
     const handleGradeSubmit = async () => {
         if (!selectedSubmission || !grade) return;

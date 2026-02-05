@@ -3,14 +3,18 @@ import { CourseManager } from './CourseManager';
 import { InstructorHome } from './InstructorHome';
 import { QuizCreator } from './QuizCreator';
 import { LessonPlanner } from './LessonPlanner';
+import AttendanceManager from './AttendanceManager';
+import SectionManager from './SectionManager';
 import {
     BookOpen,
     HelpCircle,
     CreditCard,
-    Home, // Added for Home tab
-    LayoutDashboard
+    Home,
+    LayoutDashboard,
+    Users,
+    Calendar
 } from 'lucide-react';
-import type { User } from '../../types'; // Import User type
+import type { User } from '../../types';
 
 /* 
   Instructor Dashboard Component 
@@ -27,10 +31,11 @@ export function InstructorDashboard({ user }: InstructorDashboardProps) {
 
     const tabs = [
         { id: 'home', label: 'Home', icon: Home },
+        { id: 'sections', label: 'Sections', icon: Users },
+        { id: 'attendance', label: 'Attendance', icon: Calendar },
         { id: 'courses', label: 'Course Manager', icon: BookOpen },
         { id: 'quizzes', label: 'Quiz Creator', icon: HelpCircle },
-        { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard }, // Using Layout icon for plans for now
-        // { id: 'flashcards', label: 'Flashcards', icon: CreditCard }, // Placeholder
+        { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard },
     ];
 
     // Navigation handler passed to Home
@@ -58,6 +63,8 @@ export function InstructorDashboard({ user }: InstructorDashboardProps) {
 
             <div className="flex-1 overflow-hidden">
                 {activeTab === 'home' && user && <InstructorHome user={user} onNavigate={handleNavigate} />}
+                {activeTab === 'sections' && <SectionManager />}
+                {activeTab === 'attendance' && <AttendanceManager sectionId="" />}
                 {activeTab === 'courses' && <CourseManager />}
                 {activeTab === 'quizzes' && <QuizCreator />}
                 {activeTab === 'lesson-plans' && <LessonPlanner />}
