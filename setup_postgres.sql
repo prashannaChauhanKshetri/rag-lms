@@ -212,6 +212,132 @@ CREATE INDEX idx_lesson_plans_chatbot ON lesson_plans(chatbot_id);
 CREATE INDEX idx_lesson_plans_created ON lesson_plans(created_at DESC);
 
 -- ============================================
+-- COURSE MANAGEMENT: CLASSES
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS classes (
+    id TEXT PRIMARY KEY,
+    chatbot_id TEXT NOT NULL REFERENCES chatbots(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT,
+    teacher_id TEXT NOT NULL REFERENCES users(id),
+    grade_level TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(chatbot_id, name, teacher_id)
+);
+
+CREATE INDEX idx_classes_chatbot ON classes(chatbot_id);
+CREATE INDEX idx_classes_teacher ON classes(teacher_id);
+CREATE INDEX idx_classes_created ON classes(created_at DESC);
+
+-- ============================================
+-- COURSE MANAGEMENT: SECTIONS & ENROLLMENT
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS sections (
+    id TEXT PRIMARY KEY,
+    class_id TEXT REFERENCES classes(id) ON DELETE CASCADE,
+    chatbot_id TEXT NOT NULL REFERENCES chatbots(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    teacher_id TEXT NOT NULL REFERENCES users(id),
+    schedule JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_sections_class ON sections(class_id);
+CREATE INDEX idx_sections_chatbot ON sections(chatbot_id);
+CREATE INDEX idx_sections_teacher ON sections(teacher_id);
+
+-- ============================================
+-- ENROLLMENTS
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS enrollments (
+    id TEXT PRIMARY KEY,
+    section_id TEXT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+    student_id TEXT NOT NULL REFERENCES users(id),
+    enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(section_id, student_id)
+);
+
+CREATE INDEX idx_enrollments_section ON enrollments(section_id);
+CREATE INDEX idx_enrollments_student ON enrollments(student_id);
+
+-- ============================================
+-- ATTENDANCE
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS attendance (
+    id TEXT PRIMARY KEY,
+    section_id TEXT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+    student_id TEXT NOT NULL REFERENCES users(id),
+    date DATE NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('present','absent','late','excused')),
+    marked_by TEXT NOT NULL REFERENCES users(id),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(section_id, student_id, date)
+);
+
+CREATE INDEX idx_attendance_section ON attendance(section_id);
+CREATE INDEX idx_attendance_student ON attendance(student_id);
+CREATE INDEX idx_attendance_date ON attendance(date DESC);
+
+-- ============================================
+-- ASSIGNMENTS
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS assignments (
+    id TEXT PRIMARY KEY,
+    section_id TEXT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    due_date TIMESTAMP,
+    points INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_published BOOLEAN DEFAULT FALSE
+);
+
+CREATE INDEX idx_assignments_section ON assignments(section_id);
+CREATE INDEX idx_assignments_published ON assignments(is_published);
+
+-- ============================================
+-- ASSIGNMENT SUBMISSIONS
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS assignment_submissions (
+    id TEXT PRIMARY KEY,
+    assignment_id TEXT NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+    student_id TEXT NOT NULL REFERENCES users(id),
+    file_path TEXT,
+    text TEXT,
+    score REAL,
+    feedback TEXT,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(assignment_id, student_id)
+);
+
+CREATE INDEX idx_submissions_assignment ON assignment_submissions(assignment_id);
+CREATE INDEX idx_submissions_student ON assignment_submissions(student_id);
+
+-- ============================================
+-- RESOURCES
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS resources (
+    id TEXT PRIMARY KEY,
+    section_id TEXT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    resource_type TEXT,
+    url TEXT,
+    file_path TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_resources_section ON resources(section_id);
+
+-- ============================================
 -- USEFUL FUNCTIONS
 -- ============================================
 
@@ -316,6 +442,31 @@ BEGIN
     LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- ============================================
+-- TEACHER PROFILES
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS teacher_profiles (
+    id TEXT PRIMARY KEY,
+    user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    first_name TEXT,
+    last_name TEXT,
+    phone TEXT,
+    bio TEXT,
+    qualifications TEXT,
+    specializations TEXT[],
+    office_location TEXT,
+    office_hours TEXT,
+    department TEXT,
+    years_experience INT,
+    profile_picture_url TEXT,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_teacher_user_id ON teacher_profiles(user_id);
+CREATE INDEX idx_teacher_name ON teacher_profiles(first_name, last_name);
 
 -- ============================================
 -- INITIALIZATION COMPLETE
