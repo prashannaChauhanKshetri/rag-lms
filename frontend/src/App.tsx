@@ -6,6 +6,7 @@ import { Header } from './components/shared/Header';
 import { StudentHome } from './components/student/StudentHome';
 import { MyCourses } from './components/student/MyCourses';
 import { ChatInterface } from './components/student/ChatInterface';
+import CourseOverview from './components/student/CourseOverview';
 import {
   Home as HomeIcon,
   BookOpen,
@@ -16,7 +17,9 @@ import {
   Brain,
   CreditCard,
   LayoutDashboard,
-  HelpCircle
+  HelpCircle,
+  Users,
+  Settings
 } from 'lucide-react';
 import { InstructorHome } from './components/instructor/InstructorHome';
 import { CourseManager } from './components/instructor/CourseManager';
@@ -25,9 +28,14 @@ import { LessonPlanner } from './components/instructor/LessonPlanner';
 import { FlashcardManager } from './components/instructor/FlashcardManager';
 import { AssignmentManager } from './components/instructor/AssignmentManager';
 import { AnalyticsDashboard } from './components/instructor/AnalyticsDashboard';
+import AttendanceManager from './components/instructor/AttendanceManager';
+import SectionManager from './components/instructor/SectionManager';
+import ClassManager from './components/instructor/ClassManager';
 import { StudentAssignments } from './components/student/StudentAssignments';
 import { StudentFlashcards } from './components/student/StudentFlashcards';
 import { StudentQuizzes } from './components/student/StudentQuizzes';
+import { StudentAssignmentManager } from './components/student/StudentAssignmentManager';
+import { AdminTeacherManager } from './components/admin/AdminTeacherManager';
 
 interface User {
   id: string;
@@ -41,10 +49,10 @@ interface User {
 const studentTabs = [
   { id: 'home', label: 'Home', icon: HomeIcon },
   { id: 'courses', label: 'My Courses', icon: BookOpen },
+  { id: 'course-overview', label: 'Course Details', icon: LayoutDashboard },
   { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
   { id: 'assignments', label: 'Assignments', icon: FileText },
-  { id: 'attendance', label: 'Attendance', icon: CheckSquare },
-  { id: 'timetable', label: 'Time-Table', icon: Calendar },
+  { id: 'assignment-manager', label: 'My Submissions', icon: CheckSquare },
   { id: 'quiz', label: 'Quizzes', icon: Brain },
   { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
 ];
@@ -93,6 +101,7 @@ function App() {
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
               {activeTab === 'home' && <StudentHome onNavigate={handleNavigate} />}
               {activeTab === 'courses' && <MyCourses onNavigate={handleNavigate} />}
+              {activeTab === 'course-overview' && <CourseOverview />}
               {activeTab === 'chat' && (
                 <ChatInterface
                   courseId={selectedCourseId}
@@ -100,6 +109,7 @@ function App() {
                 />
               )}
               {activeTab === 'assignments' && <StudentAssignments />}
+              {activeTab === 'assignment-manager' && <StudentAssignmentManager />}
               {activeTab === 'flashcards' && <StudentFlashcards />}
               {activeTab === 'quiz' && <StudentQuizzes />}
               {/* Add other components here */}
@@ -124,12 +134,15 @@ function App() {
             onTabChange={setActiveTab}
             tabs={[
               { id: 'home', label: 'Home', icon: HomeIcon },
-              { id: 'courses', label: 'Course Manager', icon: BookOpen },
+              { id: 'classes', label: 'Classes', icon: BookOpen },
+              { id: 'sections', label: 'Sections', icon: Users },
+              { id: 'attendance', label: 'Attendance', icon: Calendar },
+              { id: 'courses', label: 'Course Manager', icon: Brain },
               { id: 'quizzes', label: 'Quiz Creator', icon: HelpCircle },
               { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
               { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard },
               { id: 'assignments', label: 'Assignments', icon: FileText },
-              { id: 'analytics', label: 'Analytics', icon: CheckSquare }, // Using CheckSquare as placeholder for Analytics icon if Activity isn't imported
+              { id: 'analytics', label: 'Analytics', icon: CheckSquare },
             ]}
           />
           <main className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -140,12 +153,63 @@ function App() {
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8">
               {activeTab === 'home' && <InstructorHome user={user} onNavigate={handleNavigate} />}
+              {activeTab === 'classes' && <ClassManager />}
+              {activeTab === 'sections' && <SectionManager />}
+              {activeTab === 'attendance' && <AttendanceManager sectionId="" />}
               {activeTab === 'courses' && <CourseManager />}
               {activeTab === 'quizzes' && <QuizCreator />}
               {activeTab === 'flashcards' && <FlashcardManager />}
               {activeTab === 'lesson-plans' && <LessonPlanner />}
               {activeTab === 'assignments' && <AssignmentManager />}
               {activeTab === 'analytics' && <AnalyticsDashboard />}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // Admin Dashboard
+    if (user.role === 'admin') {
+      return (
+        <div className="flex h-screen bg-gray-50 overflow-hidden">
+          <Sidebar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabs={[
+              { id: 'home', label: 'Dashboard', icon: HomeIcon },
+              { id: 'teachers', label: 'Teachers', icon: Users },
+              { id: 'courses', label: 'Courses', icon: BookOpen },
+              { id: 'users', label: 'Users', icon: Users },
+              { id: 'settings', label: 'Settings', icon: Settings },
+            ]}
+          />
+          <main className="flex-1 flex flex-col h-screen overflow-hidden">
+            <Header
+              userName={user.full_name}
+              userRole={user.role}
+              institutionName={user.institution || "Gyana University"}
+            />
+            <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+              {activeTab === 'home' && (
+                <div className="text-center">
+                  <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
+                  <p className="text-gray-600">Welcome to the admin panel</p>
+                </div>
+              )}
+              {activeTab === 'teachers' && <AdminTeacherManager />}
+              {activeTab === 'courses' && <CourseManager />}
+              {activeTab === 'users' && (
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold">User Management</h1>
+                  <p className="text-gray-600">Coming soon...</p>
+                </div>
+              )}
+              {activeTab === 'settings' && (
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold">Settings</h1>
+                  <p className="text-gray-600">Coming soon...</p>
+                </div>
+              )}
             </div>
           </main>
         </div>
