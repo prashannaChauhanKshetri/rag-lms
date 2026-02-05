@@ -13,6 +13,25 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ============================================
+-- INSTITUTIONS (MULTI-TENANT SUPPORT)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS institutions (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    code TEXT UNIQUE,
+    domain TEXT,
+    logo_url TEXT,
+    contact_email TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_institutions_is_active ON institutions(is_active);
+CREATE INDEX idx_institutions_domain ON institutions(domain);
+
+-- ============================================
 -- USERS & AUTHENTICATION
 -- ============================================
 
@@ -20,14 +39,52 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('admin', 'instructor', 'student')),
-    email TEXT,
+    role TEXT NOT NULL CHECK (role IN ('super_admin', 'admin', 'instructor', 'student')),
+    email TEXT UNIQUE NOT NULL,
     full_name TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    is_email_verified BOOLEAN DEFAULT FALSE,
+    institution_id TEXT REFERENCES institutions(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_institution_id ON users(institution_id);
+
+-- ============================================
+-- INSTITUTION ADMINS (ROLE ASSIGNMENT)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS institution_admins (
+    id TEXT PRIMARY KEY,
+    user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    institution_id TEXT REFERENCES institutions(id) ON DELETE CASCADE,
+    permissions TEXT[],
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_institution_admins_user_id ON institution_admins(user_id);
+CREATE INDEX idx_institution_admins_institution_id ON institution_admins(institution_id);
+
+-- ============================================
+-- EMAIL VERIFICATION (MAGIC LINKS)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS email_verification_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT UNIQUE NOT NULL,
+    token_type TEXT CHECK (token_type IN ('email_verification', 'password_reset')),
+    is_used BOOLEAN DEFAULT FALSE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_email_verification_tokens_user_id ON email_verification_tokens(user_id);
+CREATE INDEX idx_email_verification_tokens_token ON email_verification_tokens(token);
+CREATE INDEX idx_email_verification_tokens_expires_at ON email_verification_tokens(expires_at);
 
 -- ============================================
 -- CHATBOTS (COURSES)
@@ -451,6 +508,7 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS teacher_profiles (
     id TEXT PRIMARY KEY,
     user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    institution_id TEXT REFERENCES institutions(id) ON DELETE CASCADE,
     first_name TEXT,
     last_name TEXT,
     phone TEXT,
@@ -466,7 +524,39 @@ CREATE TABLE IF NOT EXISTS teacher_profiles (
 );
 
 CREATE INDEX idx_teacher_user_id ON teacher_profiles(user_id);
+CREATE INDEX idx_teacher_institution_id ON teacher_profiles(institution_id);
 CREATE INDEX idx_teacher_name ON teacher_profiles(first_name, last_name);
+
+-- ============================================
+-- STUDENT PROFILES (NEW)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS student_profiles (
+    id TEXT PRIMARY KEY,
+    user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    institution_id TEXT REFERENCES institutions(id) ON DELETE CASCADE,
+    first_name TEXT,
+    last_name TEXT,
+    roll_number TEXT,
+    batch_year INT,
+    department TEXT,
+    specialization TEXT,
+    phone TEXT,
+    profile_picture_url TEXT,
+    bio TEXT,
+    parent_name TEXT,
+    parent_email TEXT,
+    parent_phone TEXT,
+    emergency_contact TEXT,
+    profile_completion_percentage INT DEFAULT 20,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_student_user_id ON student_profiles(user_id);
+CREATE INDEX idx_student_institution_id ON student_profiles(institution_id);
+CREATE INDEX idx_student_roll_number ON student_profiles(roll_number);
+CREATE INDEX idx_student_name ON student_profiles(first_name, last_name);
 
 -- ============================================
 -- INITIALIZATION COMPLETE

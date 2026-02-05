@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import local routers
-from routes import auth, admin, chatbots, chat, instructor, student
+from routes import auth, admin, chatbots, chat, instructor, student, super_admin
 from models import get_embed_model
 
 @asynccontextmanager
@@ -61,6 +61,7 @@ def health():
 # --- Include Routers ---
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(super_admin.router)
 app.include_router(chatbots.router)
 app.include_router(chat.router)
 app.include_router(instructor.router)

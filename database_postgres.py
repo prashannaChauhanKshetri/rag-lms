@@ -9,7 +9,7 @@ import json
 import logging
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
 from contextlib import contextmanager
 from dotenv import load_dotenv
@@ -72,6 +72,24 @@ def create_demo_users():
     
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
+            # Check if institutions exist
+            cur.execute("SELECT COUNT(*) as count FROM institutions")
+            inst_result = cur.fetchone()
+            inst_count = inst_result['count'] if inst_result else 0
+            
+            # Create default institution if needed
+            default_institution_id = None
+            if inst_count == 0:
+                default_institution_id = str(uuid.uuid4())
+                cur.execute("""
+                    INSERT INTO institutions (id, name, code, domain, is_active)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (default_institution_id, 'Default Institution', 'default', 'localhost', True))
+            else:
+                cur.execute("SELECT id FROM institutions LIMIT 1")
+                inst_result = cur.fetchone()
+                default_institution_id = inst_result['id'] if inst_result else None
+            
             # Check if users exist
             cur.execute("SELECT COUNT(*) as count FROM users")
             result = cur.fetchone()
@@ -79,81 +97,91 @@ def create_demo_users():
             
             if existing == 0:
                 # Create demo users
+                super_admin_id = str(uuid.uuid4())
+                admin_id = str(uuid.uuid4())
+                instructor_id = str(uuid.uuid4())
+                student_id = str(uuid.uuid4())
+                
                 demo_users = [
                     {
-                        'id': str(uuid.uuid4()),
+                        'id': super_admin_id,
+                        'username': 'superadmin',
+                        'password': 'superadmin123',
+                        'role': 'super_admin',
+                        'email': 'superadmin@raglms.com',
+                        'full_name': 'Super Admin',
+                        'institution_id': None
+                    },
+                    {
+                        'id': admin_id,
                         'username': 'admin',
                         'password': 'admin123',
                         'role': 'admin',
                         'email': 'admin@raglms.com',
-                        'full_name': 'Admin User'
+                        'full_name': 'Admin User',
+                        'institution_id': default_institution_id
                     },
                     {
-                        'id': str(uuid.uuid4()),
+                        'id': instructor_id,
                         'username': 'instructor',
                         'password': 'instructor123',
                         'role': 'instructor',
                         'email': 'instructor@raglms.com',
-                        'full_name': 'Demo Instructor'
+                        'full_name': 'Demo Instructor',
+                        'institution_id': default_institution_id
                     },
                     {
-                        'id': str(uuid.uuid4()),
+                        'id': student_id,
                         'username': 'student',
                         'password': 'student123',
                         'role': 'student',
                         'email': 'student@raglms.com',
-                        'full_name': 'Demo Student'
+                        'full_name': 'Demo Student',
+                        'institution_id': default_institution_id
                     }
                 ]
                 
                 for user in demo_users:
-                    password_hash = hashlib.sha256(user['password'].encode()).hexdigest()
+                    password_hash = utils_auth.get_password_hash(user['password'])
                     cur.execute(
-                        """INSERT INTO users (id, username, password_hash, role, email, full_name) 
-                           VALUES (%s, %s, %s, %s, %s, %s)""",
+                        """INSERT INTO users (id, username, password_hash, role, email, full_name, institution_id, is_email_verified) 
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
                         (user['id'], user['username'], password_hash, user['role'], 
-                         user['email'], user['full_name'])
+                         user['email'], user['full_name'], user['institution_id'], True)
                     )
                 
-                logger.info("Demo users created: admin/admin123, instructor/instructor123, student/student123")
+                # Assign admin to institution
+                if admin_id and default_institution_id:
+                    admin_role_id = str(uuid.uuid4())
+                    cur.execute("""
+                        INSERT INTO institution_admins (id, user_id, institution_id, permissions)
+                        VALUES (%s, %s, %s, %s)
+                    """, (admin_role_id, admin_id, default_institution_id, 
+                          ['manage_users', 'manage_courses', 'manage_assignments', 'view_analytics']))
+                
+                logger.info("Demo users created: superadmin/superadmin123, admin/admin123, instructor/instructor123, student/student123")
 
 # --- User Authentication ---
 
-def create_user(username: str, password: str, role: str, email: str = None, full_name: str = None) -> str:
-    """Create a new user"""
-    import hashlib
-    import uuid
+def create_user(username: str, password: str, role: str, email: str = None, full_name: str = None,
+                institution_id: str = None, is_email_verified: bool = False) -> str:
+    """Create a new user with institution support"""
+    import utils_auth
     
     user_id = str(uuid.uuid4())
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    password_hash = utils_auth.get_password_hash(password)
     
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO users (id, username, password_hash, role, email, full_name) 
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                (user_id, username, password_hash, role, email, full_name)
+                """INSERT INTO users (id, username, password_hash, role, email, full_name, institution_id, is_email_verified) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                (user_id, username, password_hash, role, email, full_name, institution_id, is_email_verified)
             )
     
     return user_id
 
-def verify_user(username: str, password: str) -> Optional[Dict]:
-    """Verify user credentials and return user data"""
-    import hashlib
-    
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    
-    with get_db_connection() as conn:
-        with get_dict_cursor(conn) as cur:
-            cur.execute(
-                "SELECT * FROM users WHERE username = %s AND password_hash = %s",
-                (username, password_hash)
-            )
-            user = cur.fetchone()
-    
-    return dict(user) if user else None
-
-def get_user(user_id: str) -> Optional[Dict]:
+def get_user_by_id(user_id: str) -> Optional[Dict]:
     """Get user by ID"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
@@ -169,11 +197,27 @@ def get_user_by_username(username: str) -> Optional[Dict]:
             user = cur.fetchone()
     return dict(user) if user else None
 
+def get_user_by_email(email: str) -> Optional[Dict]:
+    """Get user by email"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+            user = cur.fetchone()
+    return dict(user) if user else None
+
+def update_user_password(user_id: str, password_hash: str) -> bool:
+    """Update user password hash"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("UPDATE users SET password_hash = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s", 
+                       (password_hash, user_id))
+    return True
+
 def list_users() -> List[Dict]:
     """List all users"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY created_at DESC")
+            cur.execute("SELECT id, username, email, full_name, role, institution_id, created_at FROM users ORDER BY created_at DESC")
             users = cur.fetchall()
     return [dict(u) for u in users]
 
@@ -1004,16 +1048,17 @@ def delete_resource(resource_id: str):
 
 # --- TEACHER PROFILES ---
 
-def create_teacher_profile(user_id: str, first_name: str = None, last_name: str = None, phone: str = None, 
-                          bio: str = None, qualifications: str = None, department: str = None):
+def create_teacher_profile(user_id: str, institution_id: str = None, first_name: str = None, 
+                          last_name: str = None, phone: str = None, bio: str = None, 
+                          qualifications: str = None, department: str = None):
     """Create a teacher profile"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             profile_id = str(uuid.uuid4())
             cur.execute(
-                """INSERT INTO teacher_profiles (id, user_id, first_name, last_name, phone, bio, qualifications, department)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-                (profile_id, user_id, first_name, last_name, phone, bio, qualifications, department)
+                """INSERT INTO teacher_profiles (id, user_id, institution_id, first_name, last_name, phone, bio, qualifications, department)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (profile_id, user_id, institution_id, first_name, last_name, phone, bio, qualifications, department)
             )
 
 def get_teacher_profile(user_id: str) -> Optional[Dict]:
@@ -1107,6 +1152,238 @@ def list_assignments_for_section(section_id: str) -> List[Dict]:
             """, (section_id,))
             assignments = cur.fetchall()
     return [dict(a) for a in assignments]
+
+# ============================================
+# INSTITUTION MANAGEMENT FUNCTIONS
+# ============================================
+
+def create_institution(name: str, code: str, domain: str = "", logo_url: str = "", 
+                       contact_email: str = "") -> str:
+    """Create a new institution"""
+    institution_id = str(uuid.uuid4())
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                INSERT INTO institutions (id, name, code, domain, logo_url, contact_email)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (institution_id, name, code, domain, logo_url, contact_email))
+    return institution_id
+
+def get_institution(institution_id: str) -> Optional[Dict]:
+    """Get institution by ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM institutions WHERE id = %s", (institution_id,))
+            institution = cur.fetchone()
+    return dict(institution) if institution else None
+
+def get_institution_by_domain(domain: str) -> Optional[Dict]:
+    """Get institution by domain"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM institutions WHERE domain = %s AND is_active = TRUE", (domain,))
+            institution = cur.fetchone()
+    return dict(institution) if institution else None
+
+def list_institutions(active_only: bool = True) -> List[Dict]:
+    """List all institutions"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            if active_only:
+                cur.execute("SELECT * FROM institutions WHERE is_active = TRUE ORDER BY name ASC")
+            else:
+                cur.execute("SELECT * FROM institutions ORDER BY name ASC")
+            institutions = cur.fetchall()
+    return [dict(i) for i in institutions]
+
+def update_institution(institution_id: str, **kwargs) -> bool:
+    """Update institution"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            updates = []
+            values = []
+            for key, val in kwargs.items():
+                if key in ['name', 'code', 'domain', 'logo_url', 'contact_email', 'is_active']:
+                    updates.append(f"{key} = %s")
+                    values.append(val)
+            if updates:
+                values.append(institution_id)
+                query = f"UPDATE institutions SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = %s"
+                cur.execute(query, values)
+                return True
+    return False
+
+def assign_admin_to_institution(user_id: str, institution_id: str, permissions: List[str] = None) -> str:
+    """Assign an admin to an institution"""
+    admin_id = str(uuid.uuid4())
+    if permissions is None:
+        permissions = ['manage_users', 'manage_courses', 'manage_assignments', 'view_analytics']
+    
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Update user role to admin
+            cur.execute("UPDATE users SET role = %s WHERE id = %s", ('admin', user_id))
+            # Create institution admin mapping
+            cur.execute("""
+                INSERT INTO institution_admins (id, user_id, institution_id, permissions)
+                VALUES (%s, %s, %s, %s)
+            """, (admin_id, user_id, institution_id, permissions))
+    return admin_id
+
+def get_user_institution(user_id: str) -> Optional[Dict]:
+    """Get institution for a user"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT institution_id FROM users WHERE id = %s", (user_id,))
+            result = cur.fetchone()
+    return result['institution_id'] if result else None
+
+def get_admin_institutions(user_id: str) -> List[Dict]:
+    """Get institutions managed by an admin"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT i.* FROM institutions i
+                JOIN institution_admins ia ON i.id = ia.institution_id
+                WHERE ia.user_id = %s
+            """, (user_id,))
+            institutions = cur.fetchall()
+    return [dict(i) for i in institutions]
+
+def get_institution_users(institution_id: str, role: str = None) -> List[Dict]:
+    """Get all users in an institution, optionally filtered by role"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            if role:
+                cur.execute("""
+                    SELECT * FROM users WHERE institution_id = %s AND role = %s
+                    ORDER BY created_at DESC
+                """, (institution_id, role))
+            else:
+                cur.execute("""
+                    SELECT * FROM users WHERE institution_id = %s
+                    ORDER BY created_at DESC
+                """, (institution_id,))
+            users = cur.fetchall()
+    return [dict(u) for u in users]
+
+def is_super_admin(user_id: str) -> bool:
+    """Check if user is a super admin"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+            result = cur.fetchone()
+    return result['role'] == 'super_admin' if result else False
+
+def is_institution_admin(user_id: str, institution_id: str) -> bool:
+    """Check if user is an admin for a specific institution"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT 1 FROM institution_admins 
+                WHERE user_id = %s AND institution_id = %s
+            """, (user_id, institution_id))
+            result = cur.fetchone()
+    return result is not None
+
+# ============================================
+# EMAIL VERIFICATION FUNCTIONS
+# ============================================
+
+def create_verification_token(user_id: str, token: str, token_type: str = 'email_verification', 
+                              expires_in_minutes: int = 15) -> bool:
+    """Create an email verification token"""
+    token_id = str(uuid.uuid4())
+    expires_at = datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+    
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                INSERT INTO email_verification_tokens (id, user_id, token, token_type, expires_at)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (token_id, user_id, token, token_type, expires_at))
+    return True
+
+def verify_token(token: str, token_type: str = 'email_verification') -> Optional[Dict]:
+    """Verify a token and return associated user if valid"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT * FROM email_verification_tokens 
+                WHERE token = %s AND token_type = %s AND is_used = FALSE 
+                AND expires_at > CURRENT_TIMESTAMP
+            """, (token, token_type))
+            token_record = cur.fetchone()
+    
+    if token_record:
+        return dict(token_record)
+    return None
+
+def mark_token_used(token: str) -> bool:
+    """Mark a token as used"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("UPDATE email_verification_tokens SET is_used = TRUE WHERE token = %s", (token,))
+    return True
+
+def mark_email_verified(user_id: str) -> bool:
+    """Mark user's email as verified"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("UPDATE users SET is_email_verified = TRUE WHERE id = %s", (user_id,))
+    return True
+
+def create_student_profile(user_id: str, institution_id: str, first_name: str = "", 
+                          last_name: str = "", **kwargs) -> str:
+    """Create a student profile"""
+    profile_id = str(uuid.uuid4())
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                INSERT INTO student_profiles (id, user_id, institution_id, first_name, last_name, profile_completion_percentage)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (profile_id, user_id, institution_id, first_name, last_name, 20))
+            
+            # Update additional fields if provided
+            if kwargs:
+                updates = []
+                values = []
+                for key, val in kwargs.items():
+                    if key in ['roll_number', 'batch_year', 'department', 'specialization', 'phone', 'bio']:
+                        updates.append(f"{key} = %s")
+                        values.append(val)
+                if updates:
+                    values.append(profile_id)
+                    query = f"UPDATE student_profiles SET {', '.join(updates)} WHERE id = %s"
+                    cur.execute(query, values)
+    return profile_id
+
+def get_student_profile(user_id: str) -> Optional[Dict]:
+    """Get student profile by user ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM student_profiles WHERE user_id = %s", (user_id,))
+            profile = cur.fetchone()
+    return dict(profile) if profile else None
+
+def update_student_profile(user_id: str, **kwargs) -> bool:
+    """Update student profile"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            updates = []
+            values = []
+            for key, val in kwargs.items():
+                if key in ['first_name', 'last_name', 'roll_number', 'batch_year', 'department', 
+                          'specialization', 'phone', 'bio', 'parent_name', 'parent_email', 
+                          'parent_phone', 'emergency_contact', 'profile_picture_url']:
+                    updates.append(f"{key} = %s")
+                    values.append(val)
+            if updates:
+                values.append(user_id)
+                query = f"UPDATE student_profiles SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE user_id = %s"
+                cur.execute(query, values)
+                return True
+    return False
 
 # Initialize on import
 try:
