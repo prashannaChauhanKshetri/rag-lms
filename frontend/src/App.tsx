@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import Login from './components/Login';
+import EnhancedLogin from './components/auth/EnhancedLogin';
+import Signup from './components/auth/Signup';
+import SuperAdminDashboard from './components/admin/SuperAdminDashboard';
 import { Sidebar } from './components/shared/Sidebar';
 import { MobileNav } from './components/shared/MobileNav';
 import { Header } from './components/shared/Header';
@@ -40,10 +42,18 @@ import { AdminTeacherManager } from './components/admin/AdminTeacherManager';
 interface User {
   id: string;
   username: string;
-  role: 'student' | 'instructor' | 'admin';
+  role: 'student' | 'instructor' | 'admin' | 'super_admin';
   full_name: string;
   email: string;
   institution?: string;
+}
+
+interface AuthUser {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  institution_id: string;
 }
 
 const studentTabs = [
@@ -60,9 +70,17 @@ const studentTabs = [
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('home');
+  const [isSignupMode, setIsSignupMode] = useState(false);
 
-  const handleLoginSuccess = (userData: User) => {
-    setUser(userData);
+  const handleLoginSuccess = (userData: AuthUser) => {
+    setUser({
+      id: userData.id,
+      username: userData.username,
+      role: userData.role as 'student' | 'instructor' | 'admin' | 'super_admin',
+      full_name: userData.username,
+      email: userData.email,
+      institution: userData.institution_id,
+    });
   };
 
   const handleLogout = () => {
@@ -80,7 +98,20 @@ function App() {
   };
 
   const renderContent = () => {
-    if (!user) return <Login onLoginSuccess={handleLoginSuccess} />;
+    // Show signup or login based on mode
+    if (!user) {
+      if (isSignupMode) {
+        return (
+          <Signup onBackToLogin={() => setIsSignupMode(false)} />
+        );
+      }
+      return (
+        <EnhancedLogin 
+          onLoginSuccess={handleLoginSuccess}
+          onSignupClick={() => setIsSignupMode(true)}
+        />
+      );
+    }
 
     if (user.role === 'student') {
       return (
@@ -166,6 +197,11 @@ function App() {
           </main>
         </div>
       );
+    }
+
+    // Super Admin Dashboard
+    if (user.role === 'super_admin') {
+      return <SuperAdminDashboard />;
     }
 
     // Admin Dashboard
