@@ -14,15 +14,19 @@ load_dotenv()
 # Import local routers
 from routes import auth, admin, chatbots, chat, instructor, student, super_admin
 from models import get_embed_model
+import database_postgres as db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load model on startup to cache it
+    # Initialize database and create demo users on startup
     try:
-        get_embed_model()
-        logging.info("\u2713 Embedding model initialized successfully")
+        db.init_db()
+        logging.info("✓ Database initialized with demo users")
     except Exception as e:
-        logging.error(f"Failed to load embedding model: {e}")
+        logging.error(f"✗ Database initialization failed: {e}")
+    
+    # Skip embedding model loading - will be lazy loaded on first use
+    logging.info("✓ Server startup complete")
     
     yield
     

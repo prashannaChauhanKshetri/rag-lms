@@ -230,6 +230,19 @@ async def reset_password(reset_data: ResetPasswordRequest):
         raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
 
 
+@router.get("/institutions")
+async def get_public_institutions():
+    """Get all active institutions (Public endpoint for login/signup forms)"""
+    try:
+        institutions = db.list_institutions(active_only=True)
+        return {
+            "institutions": institutions,
+            "count": len(institutions)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve institutions: {str(e)}")
+
+
 @router.post("/login")
 async def login(response: Response, login_data: LoginRequest):
     """Login endpoint with JWT"""

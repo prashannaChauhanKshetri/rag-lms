@@ -67,7 +67,7 @@ def init_db():
 
 def create_demo_users():
     """Create demo users for testing"""
-    import hashlib
+    import utils_auth
     import uuid
     
     with get_db_connection() as conn:
@@ -90,76 +90,29 @@ def create_demo_users():
                 inst_result = cur.fetchone()
                 default_institution_id = inst_result['id'] if inst_result else None
             
-            # Check if users exist
+            # Check if superadmin exists
+            cur.execute("SELECT id FROM users WHERE username = %s", ('superadmin',))
+            superadmin_exists = cur.fetchone() is not None
+            
+            # Check if other demo users exist
             cur.execute("SELECT COUNT(*) as count FROM users")
             result = cur.fetchone()
             existing = result['count'] if result else 0
             
-            if existing == 0:
-                # Create demo users
+            # Create missing demo users
+            if not superadmin_exists:
+                # Create superadmin user only
                 super_admin_id = str(uuid.uuid4())
-                admin_id = str(uuid.uuid4())
-                instructor_id = str(uuid.uuid4())
-                student_id = str(uuid.uuid4())
                 
-                demo_users = [
-                    {
-                        'id': super_admin_id,
-                        'username': 'superadmin',
-                        'password': 'superadmin123',
-                        'role': 'super_admin',
-                        'email': 'superadmin@raglms.com',
-                        'full_name': 'Super Admin',
-                        'institution_id': None
-                    },
-                    {
-                        'id': admin_id,
-                        'username': 'admin',
-                        'password': 'admin123',
-                        'role': 'admin',
-                        'email': 'admin@raglms.com',
-                        'full_name': 'Admin User',
-                        'institution_id': default_institution_id
-                    },
-                    {
-                        'id': instructor_id,
-                        'username': 'instructor',
-                        'password': 'instructor123',
-                        'role': 'instructor',
-                        'email': 'instructor@raglms.com',
-                        'full_name': 'Demo Instructor',
-                        'institution_id': default_institution_id
-                    },
-                    {
-                        'id': student_id,
-                        'username': 'student',
-                        'password': 'student123',
-                        'role': 'student',
-                        'email': 'student@raglms.com',
-                        'full_name': 'Demo Student',
-                        'institution_id': default_institution_id
-                    }
-                ]
+                password_hash = utils_auth.get_password_hash('superadmin123')
+                cur.execute(
+                    """INSERT INTO users (id, username, password_hash, role, email, full_name, institution_id, is_email_verified) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (super_admin_id, 'superadmin', password_hash, 'super_admin', 
+                     'superadmin@raglms.com', 'Super Admin', None, True)
+                )
                 
-                for user in demo_users:
-                    password_hash = utils_auth.get_password_hash(user['password'])
-                    cur.execute(
-                        """INSERT INTO users (id, username, password_hash, role, email, full_name, institution_id, is_email_verified) 
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-                        (user['id'], user['username'], password_hash, user['role'], 
-                         user['email'], user['full_name'], user['institution_id'], True)
-                    )
-                
-                # Assign admin to institution
-                if admin_id and default_institution_id:
-                    admin_role_id = str(uuid.uuid4())
-                    cur.execute("""
-                        INSERT INTO institution_admins (id, user_id, institution_id, permissions)
-                        VALUES (%s, %s, %s, %s)
-                    """, (admin_role_id, admin_id, default_institution_id, 
-                          ['manage_users', 'manage_courses', 'manage_assignments', 'view_analytics']))
-                
-                logger.info("Demo users created: superadmin/superadmin123, admin/admin123, instructor/instructor123, student/student123")
+                logger.info("✓ Superadmin user created: superadmin/superadmin123")
 
 # --- User Authentication ---
 
