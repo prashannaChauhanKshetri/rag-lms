@@ -29,16 +29,26 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 - Attendance reports and statistics per student
 - Calendar-based attendance views
 
-### 4. Teacher Profile Management (Admin)
+### 4. Advanced AI Tools & Content Generation
+- **Lesson Planner**: Generates detailed lesson plans strictly grounded in textbook content (no hallucinations).
+- **Quiz Generator**: Auto-creates MCQs, True/False, and Short Answer questions from course material.
+- **Flashcard Creator**: Generates study flashcards for students based on specific topics.
+- **Smart Context**: Uses RAG to find relevant textbook pages for all generated content.
+
+### 5. Analytics & Progress Tracking
+- **Instructor Dashboard**: View course performance, average scores, and assignment completion rates.
+- **Student Progress**: Visual timeline of grades and assignment completion.
+- **Gradebook**: Comprehensive view of student performance across all assessments.
+
+### 6. Teacher Profile Management (Admin)
 - Comprehensive teacher profiles: First/Last name, email, phone, qualifications, department
 - Years of experience, office location, office hours tracking
 - Admin can view all teachers and their teaching load
 - Teacher class assignments and created assignments tracking
 
-### 5. Hybrid Search & RAG
+### 7. Hybrid Search & RAG
 - Combining PostgreSQL Full-Text Search (BM25) + `pgvector` (semantic) search
 - Course-aware document retrieval
-- AI-powered lesson planning and content generation
 - Intelligent quiz and flashcard auto-generation
 
 ### 6. Role-Based Access Control
@@ -150,19 +160,22 @@ rag-lms/
 - `GET /teachers/{user_id}/assignments` - Teacher's assignments
 
 ### Instructor Routes (`/instructor`)
-- `POST /classes` - Create class
-- `GET /classes` - List classes
-- `POST /sections` - Create section
-- `POST /sections/{section_id}/attendance` - Mark attendance
-- `POST /assignments/create` - Create assignment
-- `GET /assignments/{assignment_id}/submissions` - View submissions
-- `POST /submissions/{submission_id}/grade` - Grade submission
+- **Course Mgmt**: `POST /classes`, `POST /sections`, `POST /bulk-enroll`
+- **AI Tools**: 
+  - `POST /lesson-plans/generate` - Generate lesson plans
+  - `POST /questions/generate` - Generate quiz questions
+  - `POST /flashcards/generate` - Create study cards
+- **Assignments**: `POST /assignments/create`, `GET /submissions`, `POST /grade`
+- **Analytics**: `GET /analytics/course/{id}` - View course performance
 
 ### Student Routes (`/student`)
-- `GET /assignments` - List assignments
-- `GET /assignments/{assignment_id}` - Assignment details
-- `POST /assignments/{assignment_id}/submit` - Submit assignment with file
-- `GET /submissions/{submission_id}` - View submission & feedback
+- **Dashboard**: `GET /sections` (with attendance & pending tasks)
+- **Learning**: 
+  - `GET /assignments/pending` - View due tasks
+  - `GET /quizzes/{id}/take` - Take quizzes
+  - `POST /quizzes/submit` - Submit answers
+- **Progress**: `GET /progress`, `GET /grades` - View academic performance
+- **Resources**: `GET /resources` - Access course materials
 
 ## 🎓 Demo Credentials
 
@@ -228,12 +241,13 @@ MIT License - See LICENSE file
 ### Features Checklist
 - ✅ Class & Section Management
 - ✅ Assignment Submission & Grading
-- ✅ Attendance Tracking
-- ✅ Teacher Profile Management
-- ✅ Admin Dashboard
+- ✅ Attendance Tracking & Reporting
+- ✅ Teacher & Student Profiles
+- ✅ Admin Dashboard & Analytics
 - ✅ Hybrid Search (BM25 + Vector)
+- ✅ AI Lesson Planner (Textbook Grounded)
 - ✅ Quiz & Flashcard Generation
-- ✅ JWT Authentication
-- ✅ File Upload Support
+- ✅ Student Progress Tracking
+- ✅ JWT Authentication & Security
+- ✅ File Upload (S3/Local)
 - ✅ AI Tutoring Chat
-- ✅ Lesson Planning Tools
