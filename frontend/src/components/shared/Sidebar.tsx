@@ -36,10 +36,10 @@ export function Sidebar({ activeTab, onTabChange, tabs }: SidebarProps) {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed lg:sticky top-0 left-0 h-screen bg-[#064E3B] text-white transition-transform duration-300 z-40 flex flex-col w-64 flex-shrink-0",
+                "fixed lg:sticky top-0 left-0 h-screen bg-[#064E3B] dark:bg-gray-900 text-white transition-all duration-300 z-40 flex flex-col w-64 flex-shrink-0",
                 isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
             )}>
-                <div className="p-6 border-b border-white/10">
+                <div className="p-6 border-b border-white/10 dark:border-gray-700">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
                             <span className="font-bold text-white text-lg">G</span>
