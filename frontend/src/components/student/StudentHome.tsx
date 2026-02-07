@@ -6,10 +6,10 @@ interface StudentHomeProps {
 
 export function StudentHome({ onNavigate }: StudentHomeProps) {
     return (
-        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 dark:text-white">
 
             {/* Welcome Banner */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-green-500 to-emerald-600 p-8 text-white shadow-xl shadow-green-500/20">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-900 dark:to-emerald-900 p-8 text-white shadow-xl shadow-green-500/20 dark:shadow-green-900/20">
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold mb-2">Ready to learn, Alex? 🚀</h1>
                     <p className="text-green-50 mb-6 max-w-lg">
