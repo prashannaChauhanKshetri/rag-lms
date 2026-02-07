@@ -278,13 +278,15 @@ CREATE TABLE IF NOT EXISTS classes (
     name TEXT NOT NULL,
     description TEXT,
     teacher_id TEXT NOT NULL REFERENCES users(id),
+    institution_id TEXT REFERENCES institutions(id) ON DELETE CASCADE,
     grade_level TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(chatbot_id, name, teacher_id)
+    UNIQUE(chatbot_id, name, teacher_id, institution_id)
 );
 
 CREATE INDEX idx_classes_chatbot ON classes(chatbot_id);
 CREATE INDEX idx_classes_teacher ON classes(teacher_id);
+CREATE INDEX idx_classes_institution ON classes(institution_id);
 CREATE INDEX idx_classes_created ON classes(created_at DESC);
 
 -- ============================================
@@ -297,6 +299,7 @@ CREATE TABLE IF NOT EXISTS sections (
     chatbot_id TEXT NOT NULL REFERENCES chatbots(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     teacher_id TEXT NOT NULL REFERENCES users(id),
+    institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
     schedule JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -304,6 +307,7 @@ CREATE TABLE IF NOT EXISTS sections (
 CREATE INDEX idx_sections_class ON sections(class_id);
 CREATE INDEX idx_sections_chatbot ON sections(chatbot_id);
 CREATE INDEX idx_sections_teacher ON sections(teacher_id);
+CREATE INDEX idx_sections_institution ON sections(institution_id);
 
 -- ============================================
 -- ENROLLMENTS
@@ -314,11 +318,13 @@ CREATE TABLE IF NOT EXISTS enrollments (
     section_id TEXT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
     student_id TEXT NOT NULL REFERENCES users(id),
     enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(section_id, student_id)
+    deleted_at TIMESTAMP DEFAULT NULL,
+    UNIQUE(section_id, student_id, deleted_at) WHERE deleted_at IS NULL
 );
 
 CREATE INDEX idx_enrollments_section ON enrollments(section_id);
 CREATE INDEX idx_enrollments_student ON enrollments(student_id);
+CREATE INDEX idx_enrollments_deleted ON enrollments(deleted_at);
 
 -- ============================================
 -- ATTENDANCE
@@ -393,6 +399,92 @@ CREATE TABLE IF NOT EXISTS resources (
 );
 
 CREATE INDEX idx_resources_section ON resources(section_id);
+
+-- ============================================
+-- ENROLLMENT AUDIT TRAIL
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS enrollment_audit (
+    id TEXT PRIMARY KEY,
+    enrollment_id TEXT,
+    section_id TEXT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+    student_id TEXT NOT NULL REFERENCES users(id),
+    action TEXT NOT NULL CHECK (action IN ('enrolled', 'unenrolled', 'removed')),
+    performed_by TEXT NOT NULL REFERENCES users(id),
+    reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_audit_enrollment ON enrollment_audit(enrollment_id);
+CREATE INDEX idx_audit_section ON enrollment_audit(section_id);
+CREATE INDEX idx_audit_student ON enrollment_audit(student_id);
+CREATE INDEX idx_audit_action ON enrollment_audit(action);
+CREATE INDEX idx_audit_created ON enrollment_audit(created_at DESC);
+
+-- ============================================
+-- AUTHORIZATION HELPER FUNCTIONS
+-- ============================================
+
+-- Check if a teacher can manage a specific section
+CREATE OR REPLACE FUNCTION can_teacher_manage_section(
+    p_teacher_id TEXT,
+    p_section_id TEXT
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_section_teacher_id TEXT;
+    v_teacher_institution_id TEXT;
+    v_section_institution_id TEXT;
+BEGIN
+    -- Get section's teacher and institution
+    SELECT teacher_id, institution_id INTO v_section_teacher_id, v_section_institution_id
+    FROM sections
+    WHERE id = p_section_id;
+    
+    IF v_section_teacher_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Get teacher's institution
+    SELECT institution_id INTO v_teacher_institution_id
+    FROM users
+    WHERE id = p_teacher_id;
+    
+    -- Check ownership and institution match
+    RETURN (v_section_teacher_id = p_teacher_id AND v_teacher_institution_id = v_section_institution_id);
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- Check if a student can access a specific section
+CREATE OR REPLACE FUNCTION can_student_access_section(
+    p_student_id TEXT,
+    p_section_id TEXT
+)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM enrollments
+        WHERE section_id = p_section_id
+          AND student_id = p_student_id
+          AND deleted_at IS NULL
+    );
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- Get teacher's institution ID
+CREATE OR REPLACE FUNCTION get_teacher_institution_id(
+    p_teacher_id TEXT
+)
+RETURNS TEXT AS $$
+DECLARE
+    v_institution_id TEXT;
+BEGIN
+    SELECT institution_id INTO v_institution_id
+    FROM users
+    WHERE id = p_teacher_id AND role = 'instructor';
+    RETURN v_institution_id;
+END;
+$$ LANGUAGE plpgsql STABLE;
 
 -- ============================================
 -- USEFUL FUNCTIONS
@@ -557,6 +649,22 @@ CREATE INDEX idx_student_user_id ON student_profiles(user_id);
 CREATE INDEX idx_student_institution_id ON student_profiles(institution_id);
 CREATE INDEX idx_student_roll_number ON student_profiles(roll_number);
 CREATE INDEX idx_student_name ON student_profiles(first_name, last_name);
+
+-- ============================================
+-- SOFT DELETE SUPPORT (Added for audit trail)
+-- ============================================
+
+-- Add deleted_at column to sections if it doesn't exist
+ALTER TABLE sections
+ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_sections_deleted ON sections(deleted_at);
+
+-- Add deleted_at column to assignments if it doesn't exist
+ALTER TABLE assignments
+ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_assignments_deleted ON assignments(deleted_at);
 
 -- ============================================
 -- INITIALIZATION COMPLETE
