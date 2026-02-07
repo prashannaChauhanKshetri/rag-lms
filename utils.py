@@ -40,64 +40,6 @@ def extract_toc(doc: fitz.Document) -> Dict[int, str]:
         
     return {}
 
-# def extract_toc_with_qwen(doc: fitz.Document) -> Dict[int, str]:
-#     """
-#     Use Qwen3-VL-4B to read the Table of Contents from the first 10 pages.
-#     """
-#     logger.info("Attempting AI-powered TOC extraction with Qwen3-VL...")
-#     toc_map = {}
-    
-#     # Scan first 5 pages (usually TOC is here) - Reduced from 10 to save RAM
-#     for i in range(min(5, len(doc))):
-#         try:
-#             page = doc[i]
-#             text = page.get_text().lower()
-            
-#             # Heuristic: If page 1-3, scan it regardless (often TOC is early). 
-#             # For pages 4-10, require keywords.
-#             if i > 2:
-#                 if "content" not in text and "index" not in text and "chapter" not in text and "unit" not in text:
-#                     continue
-                
-#             logger.info(f"Scanning Page {i+1} for TOC...")
-#             pix = page.get_pixmap(dpi=150)
-#             img_data = pix.tobytes("png")
-            
-#             response = ollama.chat(
-#                 model='qwen3-vl:4b',
-#                 messages=[{
-#                     'role': 'user',
-#                     'content': 'Analyze this Table of Contents image. Extract the structure (Unit/Chapter/Lesson/Section) Name and its Starting Page Number. \nFormat: JSON {PageNumber: "Title"}. \nExample: {"1": "Unit 1: Algebra", "15": "Chapter 2: Geometry", "30": "Lesson 5: History", "162": "3. Trigonometry"}. \nLook for: "Unit", "Chapter", "Lesson", "Section", "Part", or numbered lists followed by a title. Works for any language (English, Nepali, etc.). Ignore dots/lines.',
-#                     'images': [img_data]
-#                 }],
-#                 options={'keep_alive': 0}  # Unload immediately to free RAM
-#             )
-            
-#             content = response['message']['content']
-#             # Clean up code blocks if present
-#             content = content.replace("```json", "").replace("```", "").strip()
-            
-#             try:
-#                 page_toc = json.loads(content)
-#                 if page_toc:
-#                     # Convert keys to int and update map
-#                     for p, title in page_toc.items():
-#                         try:
-#                             toc_map[int(p)] = title
-#                         except:
-#                             pass
-#             except json.JSONDecodeError:
-#                 pass # Qwen didn't output valid JSON
-                
-#         except Exception as e:
-#             logger.error(f"Error scanning page {i+1} for TOC: {e}")
-            
-#     if toc_map:
-#         logger.info(f"AI extracted {len(toc_map)} chapters: {toc_map}")
-#     else:
-#         logger.warning("AI could not find a Table of Contents.")
-        
-#     return toc_map
 
 def get_chapter_for_page(page_num: int, toc_map: Dict[int, str]) -> str:
     """Find the chapter/unit title that applies to `page_num` using `toc_map`.

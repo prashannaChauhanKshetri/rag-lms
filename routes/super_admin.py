@@ -273,26 +273,15 @@ async def change_user_role(
 async def get_analytics_overview(user_data = Depends(check_super_admin)):
     """Get system-wide analytics overview (Super Admin only)"""
     
-    users = db.list_users()
-    institutions = db.list_institutions(active_only=False)
-    
-    stats = {
-        "total_institutions": len(institutions),
-        "active_institutions": len([i for i in institutions if i.get('is_active')]),
-        "total_users": len(users),
-        "users_by_role": {
-            "super_admin": len([u for u in users if u['role'] == 'super_admin']),
-            "admin": len([u for u in users if u['role'] == 'admin']),
-            "instructor": len([u for u in users if u['role'] == 'instructor']),
-            "student": len([u for u in users if u['role'] == 'student'])
-        },
-        "email_verified": len([u for u in users if u.get('is_email_verified')]),
-        "email_unverified": len([u for u in users if not u.get('is_email_verified')])
-    }
+    analytics = db.get_system_analytics()
     
     return {
-        "message": "Analytics overview retrieved successfully",
-        "statistics": stats,
+        "message": "System analytics retrieved successfully",
+        "total_institutions": analytics['total_institutions'],
+        "active_institutions": analytics['active_institutions'],
+        "total_users": analytics['total_users'],
+        "users_by_role": analytics['users_by_role'],
+        "top_institutions": analytics['top_institutions'],
         "timestamp": datetime.utcnow().isoformat()
     }
 
@@ -303,22 +292,109 @@ async def get_institution_analytics(
 ):
     """Get detailed analytics for a specific institution (Super Admin only)"""
     
+    analytics = db.get_institution_analytics(institution_id)
+    if not analytics:
+        raise HTTPException(status_code=404, detail="Institution not found")
+    
+    return {
+        "message": "Institution analytics retrieved successfully",
+        "institution": analytics['institution'],
+        "students_count": analytics['students_count'],
+        "teachers_count": analytics['teachers_count'],
+        "admins_count": analytics['admins_count'],
+        "total_courses": analytics['total_courses'],
+        "pending_assignments": analytics['pending_assignments'],
+        "users_by_role": analytics['users_by_role'],
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+# ============================================
+# STUDENT MANAGEMENT ENDPOINTS
+# ============================================
+
+@router.get("/students")
+async def list_all_students(
+    search: Optional[str] = None,
+    institution_id: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    user_data = Depends(check_super_admin)
+):
+    """List all students across institutions (Super Admin only)"""
+    
+    result = db.list_all_students(
+        search=search,
+        institution_id=institution_id,
+        limit=limit,
+        offset=offset
+    )
+    
+    return {
+        "message": "Students retrieved successfully",
+        "students": result['students'],
+        "total": result['total'],
+        "limit": limit,
+        "offset": offset,
+        "filters": {
+            "search": search,
+            "institution_id": institution_id
+        }
+    }
+
+@router.get("/students/{student_id}")
+async def get_student_profile(
+    student_id: str,
+    user_data = Depends(check_super_admin)
+):
+    """Get detailed student profile (Super Admin only)"""
+    
+    student = db.get_student_detail(student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    return {
+        "message": "Student profile retrieved successfully",
+        "user": student['user'],
+        "profile": student['profile'],
+        "attendance": student['attendance']
+    }
+
+@router.get("/institutions/{institution_id}/students")
+async def list_institution_students(
+    institution_id: str,
+    search: Optional[str] = None,
+    department: Optional[str] = None,
+    status: str = "active",
+    limit: int = 50,
+    offset: int = 0,
+    user_data = Depends(check_super_admin)
+):
+    """List students in a specific institution (Super Admin only)"""
+    
+    # Verify institution exists
     institution = db.get_institution(institution_id)
     if not institution:
         raise HTTPException(status_code=404, detail="Institution not found")
     
-    users = db.get_institution_users(institution_id)
-    
-    stats = {
-        "total_users": len(users),
-        "students": len([u for u in users if u['role'] == 'student']),
-        "teachers": len([u for u in users if u['role'] == 'instructor']),
-        "admins": len([u for u in users if u['role'] == 'admin']),
-        "email_verified": len([u for u in users if u.get('is_email_verified')])
-    }
+    result = db.list_institution_students(
+        institution_id=institution_id,
+        search=search,
+        department=department,
+        status=status,
+        limit=limit,
+        offset=offset
+    )
     
     return {
+        "message": "Institution students retrieved successfully",
         "institution": institution,
-        "statistics": stats,
-        "timestamp": datetime.utcnow().isoformat()
+        "students": result['students'],
+        "total": result['total'],
+        "limit": limit,
+        "offset": offset,
+        "filters": {
+            "search": search,
+            "department": department,
+            "status": status
+        }
     }

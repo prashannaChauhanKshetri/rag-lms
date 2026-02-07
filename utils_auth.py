@@ -4,14 +4,26 @@ from typing import Optional, Dict
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import os
+import sys
 import logging
 from fastapi import HTTPException, status, Request
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# JWT Configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "rag_lms_super_secret_key_change_me_in_prod")
+# JWT Configuration - REQUIRE environment variable (FIX CRITICAL VULNERABILITY)
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    logging.error(
+        "CRITICAL: JWT_SECRET_KEY environment variable is not set!\n"
+        "This is required for secure token signing.\n"
+        "Generate a secure key with:\n"
+        "  python -c 'import secrets; print(secrets.token_urlsafe(32))'\n"
+        "Then add to your .env file:\n"
+        "  JWT_SECRET_KEY=<generated_value>"
+    )
+    sys.exit(1)
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
@@ -85,3 +97,93 @@ async def get_current_user(request: Request):
         )
     
     return user_data
+# ============================================
+# Authorization Helper Functions
+# ============================================
+
+def require_role(allowed_roles):
+    """
+    Dependency to require specific user role(s).
+    Usage: Depends(require_role(["instructor", "admin"]))
+    """
+    async def check_role(user: Dict = None, request: Request = None):
+        if user is None:
+            user = await get_current_user(request)
+        
+        user_role = user.get("role")
+        if user_role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Role '{user_role}' is not authorized. Required: {allowed_roles}"
+            )
+        return user
+    
+    return check_role
+
+async def check_section_access(user: Dict, section_id: str, mode: str = "learn"):
+    """
+    Check if user can access a section.
+    mode: "teach" (teacher management) or "learn" (student participation)
+    Returns True if authorized, raises HTTPException otherwise.
+    """
+    import database_postgres as db
+    
+    teacher_id = user.get("sub") or user.get("id")
+    
+    if mode == "teach":
+        # Teacher must own the section
+        if user.get("role") != "instructor":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only instructors can manage sections"
+            )
+        
+        if not db.can_teacher_manage_section(teacher_id, section_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to manage this section"
+            )
+    
+    elif mode == "learn":
+        # Student must be enrolled
+        if user.get("role") not in ["student", "instructor"]:  # instructors can view their sections
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this section"
+            )
+        
+        # Instructors can access their own sections; students must be enrolled
+        if user.get("role") == "student":
+            if not db.can_student_access_section(teacher_id, section_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You are not enrolled in this section"
+                )
+    
+    return True
+
+def require_institution(user: Dict, required_institution_id: str):
+    """
+    Check if user belongs to a specific institution.
+    """
+    user_institution_id = user.get("institution_id")
+    if user_institution_id != required_institution_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to resources from this institution"
+        )
+    return True
+
+def get_user_id(user: Dict) -> str:
+    """
+    Extract user ID from JWT token payload.
+    Tries 'sub' first (standard JWT subject claim), falls back to 'id'.
+    Raises HTTPException if neither claim is present.
+    """
+    user_id = user.get("sub") or user.get("id")
+    if not user_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot determine user ID from authentication token"
+        )
+    return user_id

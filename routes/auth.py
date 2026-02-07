@@ -133,8 +133,9 @@ async def signup(signup_data: SignupRequest):
         return {
             "message": "Signup successful. Please check your email to verify your account.",
             "user_id": user_id,
-            "email": signup_data.email,
-            "verification_token": verification_token  # TODO: Remove in production, send via email only
+            "email": signup_data.email
+            # FIX CRITICAL VULNERABILITY: Removed verification_token from response
+            # Token is now only sent via email, never exposed in API response
         }
     
     except Exception as e:
