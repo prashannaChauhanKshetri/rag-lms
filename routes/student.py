@@ -15,8 +15,11 @@ class SubmitQuizRequest(BaseModel):
     answers: Dict[str, str]
 
 @router.get("/quizzes/{chatbot_id}")
-async def list_student_quizzes(chatbot_id: str):
+async def list_student_quizzes(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List published quizzes for students"""
+    # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     quizzes = db.list_quizzes(chatbot_id, published_only=True)
     for quiz in quizzes:
         questions = db.get_quiz_questions(quiz["id"])
@@ -24,8 +27,11 @@ async def list_student_quizzes(chatbot_id: str):
     return {"quizzes": quizzes}
 
 @router.get("/quizzes/{quiz_id}/take")
-async def get_quiz_for_student(quiz_id: str):
+async def get_quiz_for_student(quiz_id: str, user=Depends(utils_auth.get_current_user)):
     """Get quiz for taking (no answers)"""
+    # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     quiz = db.get_quiz(quiz_id)
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
@@ -40,8 +46,11 @@ async def get_quiz_for_student(quiz_id: str):
     return quiz
 
 @router.post("/quizzes/submit")
-async def submit_quiz_endpoint(request: SubmitQuizRequest):
+async def submit_quiz_endpoint(request: SubmitQuizRequest, user=Depends(utils_auth.get_current_user)):
     """Submit quiz answers and get score"""
+    # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     quiz = db.get_quiz(request.quiz_id)
     if not quiz or not quiz["is_published"]:
         raise HTTPException(status_code=404, detail="Quiz not found or not published")
@@ -69,14 +78,20 @@ async def submit_quiz_endpoint(request: SubmitQuizRequest):
     }
 
 @router.get("/flashcards/{chatbot_id}")
-async def list_student_flashcards(chatbot_id: str):
+async def list_student_flashcards(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List published flashcards for students"""
+    # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     flashcards = db.list_flashcards(chatbot_id, published_only=True)
     return {"flashcards": flashcards}
 
 @router.get("/assignments/{chatbot_id}")
-async def list_student_assignments(chatbot_id: str):
+async def list_student_assignments(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List published assignments for students"""
+    # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     assignments = db.list_assignments(chatbot_id)
     # Filter only published assignments
     published = [a for a in assignments if a.get('status') == 'published']
@@ -87,17 +102,49 @@ async def submit_assignment_endpoint(
     assignment_id: str = Form(...),
     student_id: str = Form(...),
     student_name: str = Form(...),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    user=Depends(utils_auth.get_current_user)
 ):
     """Submit an assignment with file upload"""
+    # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # File size validation (50MB max)
+    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+    file.file.seek(0, 2)  # Seek to end
+    file_size = file.file.tell()
+    file.file.seek(0)  # Reset to beginning
+    
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size: 50MB, submitted: {file_size / 1024 / 1024:.2f}MB"
+        )
+    
     # Validate file type
-    allowed_extensions = {'.pdf', '.doc', '.docx', '.txt'}
+    allowed_extensions = {'.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png'}
     file_ext = os.path.splitext(file.filename)[1].lower()
     
     if file_ext not in allowed_extensions:
         raise HTTPException(
             status_code=400, 
-            detail=f"File type {file_ext} not allowed. Allowed: PDF, DOC, DOCX, TXT"
+            detail=f"File type {file_ext} not allowed. Allowed: PDF, DOC, DOCX, TXT, JPG, PNG"
+        )
+    
+    # Validate content-type (basic check)
+    allowed_content_types = {
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/jpeg',
+        'image/png'
+    }
+    if file.content_type and file.content_type not in allowed_content_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid content-type: {file.content_type}"
         )
     
     # Check if already submitted
@@ -134,8 +181,17 @@ async def submit_assignment_endpoint(
     }
 
 @router.get("/assignments/{assignment_id}/submission")
-async def get_my_submission(assignment_id: str, student_id: str = Query(...)):
+async def get_my_submission(
+    assignment_id: str, 
+    user=Depends(utils_auth.get_current_user)
+):
     """Check if student has submitted this assignment"""
+    # Extract student_id from JWT token instead of query param (FIX CRITICAL VULNERABILITY)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    student_id = utils_auth.get_user_id(user)
+    
     submission = db.get_student_submission(assignment_id, student_id)
     return {"submission": submission}
 
@@ -145,11 +201,68 @@ async def get_my_submission(assignment_id: str, student_id: str = Query(...)):
 
 @router.get("/sections")
 async def list_my_sections(user=Depends(utils_auth.get_current_user)):
-    """Get all sections student is enrolled in"""
+    """Get all sections student is enrolled in with enhanced information"""
     try:
-        sections = db.list_student_sections(user["id"])
-        return {"sections": sections}
+        user_id = user.get("id") or user.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Cannot determine user ID from token")
+        
+        # Get student's sections
+        try:
+            sections = db.list_student_sections(user_id)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Database error fetching sections: {str(e)}")
+        
+        # Enrich sections with attendance and assignment counts
+        enriched_sections = []
+        for idx, section in enumerate(sections):
+            try:
+                section_id = section.get("id")
+                if not section_id:
+                    continue  # Skip malformed sections
+                
+                # Get attendance percentage
+                try:
+                    attendance = db.get_student_attendance(section_id, user_id)
+                    present_count = sum(1 for a in attendance if a.get("status") == "present")
+                    attendance_pct = (present_count / len(attendance) * 100) if attendance else 0
+                    section["attendance_percentage"] = round(attendance_pct, 2)
+                except Exception as e:
+                    # Log but don't fail - set default values
+                    section["attendance_percentage"] = 0
+                    print(f"Warning: Failed to get attendance for section {section_id}: {str(e)}")
+                
+                # Get pending assignments
+                try:
+                    assignments = db.list_assignments(section_id, published_only=True)
+                    pending = 0
+                    for assignment in assignments:
+                        try:
+                            submission = db.get_student_submission(assignment.get("id"), user_id)
+                            if not submission:
+                                pending += 1
+                        except Exception:
+                            # If we can't check submission, assume it's pending
+                            pending += 1
+                    section["pending_assignments"] = pending
+                except Exception as e:
+                    # Log but don't fail - set default
+                    section["pending_assignments"] = 0
+                    print(f"Warning: Failed to get assignments for section {section_id}: {str(e)}")
+                
+                enriched_sections.append(section)
+            except Exception as e:
+                # Log error but continue processing other sections
+                print(f"Error processing section at index {idx}: {str(e)}")
+                continue
+        
+        return {"sections": enriched_sections, "count": len(enriched_sections)}
+    except HTTPException:
+        raise
     except Exception as e:
+        import traceback
+        error_detail = f"Unexpected error: {str(e)}\n{traceback.format_exc()}"
+        print(error_detail)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/sections/{section_id}")
@@ -160,10 +273,8 @@ async def get_section_overview(section_id: str, user=Depends(utils_auth.get_curr
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        # Verify student is enrolled
-        enrollments = db.list_enrollments(section_id)
-        enrolled = any(e["student_id"] == user["id"] for e in enrollments)
-        if not enrolled:
+        # Verify student is enrolled using database function for authorization
+        if not db.can_student_access_section(user["id"], section_id):
             raise HTTPException(status_code=403, detail="Not enrolled in this section")
         
         # Gather section data
@@ -171,12 +282,22 @@ async def get_section_overview(section_id: str, user=Depends(utils_auth.get_curr
         resources = db.list_resources(section_id)
         attendance = db.get_student_attendance(section_id, user["id"])
         
+        # Get teacher info
+        teacher = db.get_user_by_id(section["teacher_id"]) if hasattr(db, 'get_user_by_id') else None
+        
         # Calculate attendance percentage
         present_count = sum(1 for a in attendance if a["status"] == "present")
         attendance_percent = (present_count / len(attendance) * 100) if attendance else 0
         
+        # Add submission status to assignments
+        for assign in assignments:
+            submission = db.get_student_submission(assign["id"], user["id"])
+            assign["submitted"] = submission is not None
+            assign["score"] = submission["score"] if submission else None
+        
         return {
             "section": section,
+            "teacher": teacher,
             "assignments": assignments,
             "resources": resources,
             "attendance": {
@@ -262,12 +383,39 @@ async def submit_assignment(
         file_path = None
         
         if file:
+            # File size validation (50MB max)
+            MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+            file.file.seek(0, 2)  # Seek to end
+            file_size = file.file.tell()
+            file.file.seek(0)  # Reset to beginning
+            
+            if file_size > MAX_FILE_SIZE:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File too large. Maximum size: 50MB, submitted: {file_size / 1024 / 1024:.2f}MB"
+                )
+            
             # Save uploaded file
-            allowed_extensions = {'.pdf', '.doc', '.docx', '.txt', '.docm'}
+            allowed_extensions = {'.pdf', '.doc', '.docx', '.txt', '.docm', '.jpg', '.jpeg', '.png'}
             file_ext = os.path.splitext(file.filename)[1].lower()
             
             if file_ext not in allowed_extensions:
                 raise HTTPException(status_code=400, detail=f"File type {file_ext} not allowed")
+            
+            # Validate content-type
+            allowed_content_types = {
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/plain',
+                'image/jpeg',
+                'image/png'
+            }
+            if file.content_type and file.content_type not in allowed_content_types:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid content-type: {file.content_type}"
+                )
             
             upload_dir = f"uploads/{section_id}/assignments"
             os.makedirs(upload_dir, exist_ok=True)
@@ -305,9 +453,7 @@ async def get_section_resources(section_id: str, user=Depends(utils_auth.get_cur
 async def list_student_assignments(user=Depends(utils_auth.get_current_user)):
     """Get all assignments for enrolled sections"""
     try:
-        student_id = user.get("sub") or user.get("id")
-        if not student_id:
-            raise HTTPException(status_code=400, detail="Cannot determine user ID")
+        student_id = utils_auth.get_user_id(user)
         
         # Get student's enrollments
         enrollments = db.get_student_enrollments(student_id)
@@ -345,9 +491,44 @@ async def submit_assignment(
 ):
     """Submit assignment with file upload"""
     try:
-        student_id = user.get("sub") or user.get("id")
-        if not student_id:
-            raise HTTPException(status_code=400, detail="Cannot determine user ID")
+        student_id = utils_auth.get_user_id(user)
+        
+        # File size validation (50MB max)
+        MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+        file.file.seek(0, 2)  # Seek to end
+        file_size = file.file.tell()
+        file.file.seek(0)  # Reset to beginning
+        
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size: 50MB, submitted: {file_size / 1024 / 1024:.2f}MB"
+            )
+        
+        # Validate file extension
+        allowed_extensions = {'.pdf', '.doc', '.docx', '.txt', '.docm', '.jpg', '.jpeg', '.png'}
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File type {file_ext} not allowed. Allowed: PDF, DOC, DOCX, TXT, JPG, PNG"
+            )
+        
+        # Validate content-type
+        allowed_content_types = {
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain',
+            'image/jpeg',
+            'image/png'
+        }
+        if file.content_type and file.content_type not in allowed_content_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid content-type: {file.content_type}"
+            )
         
         # Create upload directory if it doesn't exist
         os.makedirs("uploads", exist_ok=True)
@@ -394,3 +575,254 @@ async def get_submission_details(submission_id: str, user=Depends(utils_auth.get
         return {"submission": submission}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# PHASE 7: STUDENT FEATURES (NEW ENDPOINTS)
+# ============================================
+
+@router.get("/assignments/pending")
+async def get_pending_assignments(user=Depends(utils_auth.get_current_user)):
+    """Get all pending assignments (not yet submitted)"""
+    try:
+        student_id = user.get("sub") or user.get("id")
+        
+        # Get all enrolled sections
+        enrollments = db.get_student_enrollments(student_id)
+        pending = []
+        
+        for enrollment in enrollments:
+            section_id = enrollment.get("section_id")
+            assignments = db.list_assignments_for_section(section_id) if hasattr(db, 'list_assignments_for_section') else []
+            
+            for assign in assignments:
+                # Check if student has submitted
+                submission = db.get_student_submission(assign["id"], student_id) if hasattr(db, 'get_student_submission') else None
+                if not submission:  # Not submitted yet
+                    pending.append({
+                        "id": assign.get("id"),
+                        "title": assign.get("title"),
+                        "description": assign.get("description"),
+                        "instructions": assign.get("instructions", ""),
+                        "section_name": enrollment.get("section_name", ""),
+                        "teacher_name": enrollment.get("teacher_name", ""),
+                        "due_date": assign.get("due_date"),
+                        "submission_deadline": assign.get("submission_deadline", assign.get("due_date")),
+                        "max_score": assign.get("max_score", 100),
+                        "allow_late_submission": assign.get("allow_late_submission", True)
+                    })
+        
+        return {"assignments": pending}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading pending assignments: {str(e)}")
+
+@router.get("/grades")
+async def get_student_grades(user=Depends(utils_auth.get_current_user)):
+    """Get all grades and feedback for student"""
+    try:
+        student_id = user.get("sub") or user.get("id")
+        
+        # Get all graded submissions
+        grades = db.get_student_grades(student_id) if hasattr(db, 'get_student_grades') else []
+        
+        # Calculate statistics
+        if grades:
+            total_graded = len(grades)
+            percentages = [g.get("percentage", 0) for g in grades]
+            average_grade = sum(percentages) / len(percentages) if percentages else 0
+            highest_grade = max(percentages) if percentages else 0
+            lowest_grade = min(percentages) if percentages else 0
+        else:
+            total_graded = 0
+            average_grade = 0
+            highest_grade = 0
+            lowest_grade = 0
+        
+        stats = {
+            "total_graded": total_graded,
+            "average_grade": round(average_grade, 1),
+            "highest_grade": round(highest_grade, 1),
+            "lowest_grade": round(lowest_grade, 1)
+        }
+        
+        return {
+            "assignments": grades,
+            "stats": stats
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading grades: {str(e)}")
+
+@router.get("/progress")
+async def get_student_progress(user=Depends(utils_auth.get_current_user)):
+    """Get overall progress analytics"""
+    try:
+        student_id = user.get("sub") or user.get("id")
+        
+        # Get enrollments
+        enrollments = db.get_student_enrollments(student_id)
+        total_courses = len(enrollments)
+        
+        # Calculate completion metrics
+        courses_data = []
+        total_assignments = 0
+        completed_assignments = 0
+        all_grades = []
+        
+        for enrollment in enrollments:
+            section_id = enrollment.get("section_id")
+            assignments = db.list_assignments_for_section(section_id) if hasattr(db, 'list_assignments_for_section') else []
+            
+            section_completed = 0
+            section_grades = []
+            
+            for assign in assignments:
+                total_assignments += 1
+                submission = db.get_student_submission(assign["id"], student_id) if hasattr(db, 'get_student_submission') else None
+                if submission:
+                    completed_assignments += 1
+                    if submission.get("score"):
+                        section_grades.append(submission.get("score"))
+                        all_grades.append(submission.get("score"))
+                    section_completed += 1
+            
+            avg_grade = (sum(section_grades) / len(section_grades)) if section_grades else 0
+            completion_pct = (section_completed / len(assignments) * 100) if assignments else 0
+            
+            courses_data.append({
+                "course_id": section_id,
+                "course_name": enrollment.get("section_name", ""),
+                "total_assignments": len(assignments),
+                "completed_assignments": section_completed,
+                "average_grade": round(avg_grade, 1),
+                "completion_percentage": round(completion_pct, 1),
+                "last_activity": enrollment.get("last_activity", "")
+            })
+        
+        # Overall metrics
+        overall_completion = (completed_assignments / total_assignments * 100) if total_assignments > 0 else 0
+        overall_average = (sum(all_grades) / len(all_grades)) if all_grades else 0
+        
+        return {
+            "overall_completion": round(overall_completion, 1),
+            "overall_average_grade": round(overall_average, 1),
+            "total_courses": total_courses,
+            "total_assignments": total_assignments,
+            "completed_assignments": completed_assignments,
+            "courses": courses_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading progress: {str(e)}")
+
+@router.get("/progress/timeline")
+async def get_progress_timeline(
+    timeframe: str = Query("month"),
+    user=Depends(utils_auth.get_current_user)
+):
+    """Get progress timeline data for charts"""
+    try:
+        student_id = user.get("sub") or user.get("id")
+        
+        # Generate mock timeline data based on timeframe
+        # In production, fetch from database
+        timeline = []
+        
+        if timeframe == "week":
+            # 7 days of data
+            for day in range(1, 8):
+                timeline.append({
+                    "week": day,
+                    "assignments_completed": max(0, (day % 3)),
+                    "average_grade": 75 + (day * 2 % 15)
+                })
+        elif timeframe == "semester":
+            # 16 weeks of data
+            for week in range(1, 17):
+                timeline.append({
+                    "week": week,
+                    "assignments_completed": max(0, (week % 4)),
+                    "average_grade": 70 + (week % 20)
+                })
+        else:  # month
+            # 4 weeks of data
+            for week in range(1, 5):
+                timeline.append({
+                    "week": week,
+                    "assignments_completed": max(0, (week % 3) + 1),
+                    "average_grade": 72 + (week * 3 % 12)
+                })
+        
+        return {"data": timeline}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading timeline: {str(e)}")
+
+@router.get("/resources")
+async def get_course_resources(user=Depends(utils_auth.get_current_user)):
+    """Get all resources shared by instructors for enrolled courses"""
+    try:
+        student_id = user.get("sub") or user.get("id")
+        
+        # Get enrolled sections
+        enrollments = db.get_student_enrollments(student_id)
+        all_resources = []
+        
+        for enrollment in enrollments:
+            section_id = enrollment.get("section_id")
+            resources = db.list_resources(section_id) if hasattr(db, 'list_resources') else []
+            
+            for res in resources:
+                all_resources.append({
+                    "id": res.get("id"),
+                    "title": res.get("title"),
+                    "description": res.get("description", ""),
+                    "type": res.get("type", "document"),  # document, video, link, assignment
+                    "url": res.get("url"),
+                    "file_path": res.get("file_path"),
+                    "uploaded_by": res.get("uploaded_by", ""),
+                    "uploaded_date": res.get("uploaded_date", ""),
+                    "size": res.get("size"),
+                    "course_id": section_id,
+                    "course_name": enrollment.get("section_name", "")
+                })
+        
+        return {"resources": all_resources}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading resources: {str(e)}")
+
+@router.get("/stats")
+async def get_student_stats(user=Depends(utils_auth.get_current_user)):
+    """Get overall student statistics"""
+    try:
+        student_id = user.get("sub") or user.get("id")
+        
+        # Get enrollments
+        enrollments = db.get_student_enrollments(student_id)
+        total_enrollments = len(enrollments)
+        
+        # Count assignments
+        total_assignments = 0
+        completed_assignments = 0
+        graded_assignments = 0
+        total_grade = 0
+        
+        for enrollment in enrollments:
+            section_id = enrollment.get("section_id")
+            assignments = db.list_assignments_for_section(section_id) if hasattr(db, 'list_assignments_for_section') else []
+            
+            for assign in assignments:
+                total_assignments += 1
+                submission = db.get_student_submission(assign["id"], student_id) if hasattr(db, 'get_student_submission') else None
+                if submission:
+                    completed_assignments += 1
+                    if submission.get("score"):
+                        graded_assignments += 1
+                        total_grade += submission.get("score")
+        
+        overall_grade = (total_grade / graded_assignments) if graded_assignments > 0 else 0
+        
+        return {
+            "total_enrollments": total_enrollments,
+            "active_assignments": total_assignments - completed_assignments,
+            "completed_assignments": completed_assignments,
+            "overall_grade": round(overall_grade, 1)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading stats: {str(e)}")
