@@ -1,6 +1,7 @@
 # api.py - SLIM Entry Point for RAG-LMS
 import os
 import logging
+import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -10,6 +11,14 @@ from dotenv import load_dotenv
 
 # Load environment variables FIRST
 load_dotenv()
+
+# Validate critical environment variables
+required_env_vars = ["JWT_SECRET_KEY", "POSTGRES_HOST", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB"]
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_vars:
+    logging.error(f"CRITICAL: Missing required environment variables: {', '.join(missing_vars)}")
+    logging.error("Please set these in your .env file and restart the server.")
+    sys.exit(1)
 
 # Import local routers
 from routes import auth, admin, chatbots, chat, instructor, student, super_admin
@@ -38,13 +47,22 @@ logger = logging.getLogger("rag-api")
 
 app = FastAPI(title="RAG-LMS API", lifespan=lifespan)
 
-# CORS configuration
+# CORS configuration - restrict to trusted origins only (FIX CRITICAL VULNERABILITY)
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:3000,http://localhost:5173,http://localhost"
+).split(",")
+# Strip whitespace from each origin
+allowed_origins = [origin.strip() for origin in allowed_origins]
+
+logging.info(f"CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Serve static files

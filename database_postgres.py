@@ -8,6 +8,7 @@ import psycopg2.extras
 import json
 import logging
 import os
+import sys
 import uuid
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
@@ -17,13 +18,30 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Database connection parameters
+# Database connection parameters - REQUIRE all env vars (FIX CRITICAL VULNERABILITY)
+POSTGRES_HOST = os.getenv('POSTGRES_HOST')
+POSTGRES_USER = os.getenv('POSTGRES_USER')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+POSTGRES_DB = os.getenv('POSTGRES_DB')
+POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
+
+if not all([POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB]):
+    missing = []
+    if not POSTGRES_HOST: missing.append("POSTGRES_HOST")
+    if not POSTGRES_USER: missing.append("POSTGRES_USER")
+    if not POSTGRES_PASSWORD: missing.append("POSTGRES_PASSWORD")
+    if not POSTGRES_DB: missing.append("POSTGRES_DB")
+    
+    logging.error(f"CRITICAL: Missing required database environment variables: {', '.join(missing)}")
+    logging.error("Please set these in your .env file and restart the server.")
+    sys.exit(1)
+
 DB_PARAMS = {
-    'host': os.getenv('POSTGRES_HOST', 'localhost'),
-    'port': os.getenv('POSTGRES_PORT', '5432'),
-    'database': os.getenv('POSTGRES_DB', 'rag_lms'),
-    'user': os.getenv('POSTGRES_USER', 'rag_lms_user'),
-    'password': os.getenv('POSTGRES_PASSWORD', 'raglms_secure_2025')
+    'host': POSTGRES_HOST,
+    'port': POSTGRES_PORT,
+    'database': POSTGRES_DB,
+    'user': POSTGRES_USER,
+    'password': POSTGRES_PASSWORD
 }
 
 logger = logging.getLogger("rag-db")
@@ -542,7 +560,8 @@ def create_assignment(assignment_id: str, chatbot_id: str, title: str, descripti
                 (assignment_id, chatbot_id, title, description, due_date, 'draft')
             )
 
-def list_assignments(chatbot_id: str) -> List[Dict]:
+def list_assignments_by_chatbot(chatbot_id: str) -> List[Dict]:
+    """RENAMED: was list_assignments(chatbot_id) - list assignments by chatbot ID"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
@@ -709,11 +728,17 @@ def delete_class(class_id: str):
 def create_section(section_id: str, chatbot_id: str, name: str, teacher_id: str, class_id: Optional[str] = None, schedule: Optional[Dict] = None):
     """Create a new section for a course"""
     with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Get teacher's institution_id
+            cur.execute("SELECT institution_id FROM users WHERE id = %s", (teacher_id,))
+            teacher = cur.fetchone()
+            institution_id = teacher['institution_id'] if teacher else None
+        
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO sections (id, class_id, chatbot_id, name, teacher_id, schedule)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                (section_id, class_id, chatbot_id, name, teacher_id, psycopg2.extras.Json(schedule or {}))
+                """INSERT INTO sections (id, class_id, chatbot_id, name, teacher_id, institution_id, schedule)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                (section_id, class_id, chatbot_id, name, teacher_id, institution_id, psycopg2.extras.Json(schedule or {}))
             )
 
 def get_section(section_id: str) -> Optional[Dict]:
@@ -725,33 +750,41 @@ def get_section(section_id: str) -> Optional[Dict]:
     return dict(section) if section else None
 
 def list_sections_for_chatbot(chatbot_id: str) -> List[Dict]:
-    """List all sections for a chatbot"""
+    """List all sections for a chatbot (with institution context, excluding deleted)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
+            # Get chatbot's institution_id to ensure we only get relevant sections
+            cur.execute("SELECT institution_id FROM chatbots WHERE id = %s", (chatbot_id,))
+            chatbot = cur.fetchone()
+            institution_id = chatbot['institution_id'] if chatbot else None
+            
             cur.execute(
-                "SELECT * FROM sections WHERE chatbot_id = %s ORDER BY created_at DESC",
-                (chatbot_id,)
+                "SELECT * FROM sections WHERE chatbot_id = %s AND institution_id = %s AND deleted_at IS NULL ORDER BY created_at DESC",
+                (chatbot_id, institution_id)
             )
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
 def list_sections_for_teacher(teacher_id: str) -> List[Dict]:
-    """List all sections taught by a teacher"""
+    """List all sections taught by a teacher (excluding deleted)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
+            # List ALL sections for this teacher (excluding soft-deleted)
+            # Note: We don't filter by institution_id here because a teacher may teach
+            # sections across multiple institutions or have legacy sections
             cur.execute(
-                "SELECT * FROM sections WHERE teacher_id = %s ORDER BY created_at DESC",
+                "SELECT * FROM sections WHERE teacher_id = %s AND deleted_at IS NULL ORDER BY created_at DESC",
                 (teacher_id,)
             )
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
 def get_sections_by_class(class_id: str) -> List[Dict]:
-    """Get all sections for a class"""
+    """Get all sections for a class (excluding soft-deleted)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                "SELECT * FROM sections WHERE class_id = %s ORDER BY created_at DESC",
+                "SELECT * FROM sections WHERE class_id = %s AND deleted_at IS NULL ORDER BY created_at DESC",
                 (class_id,)
             )
             sections = cur.fetchall()
@@ -774,35 +807,194 @@ def update_section(section_id: str, name: str = None, schedule: Dict = None):
                 query = f"UPDATE sections SET {', '.join(updates)} WHERE id = %s"
                 cur.execute(query, params)
 
-# --- ENROLLMENTS ---
-
-def enroll_student(enrollment_id: str, section_id: str, student_id: str):
-    """Enroll a student in a section"""
+def delete_section(section_id: str):
+    """Soft delete a section (mark as deleted, preserve audit trail)"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
+            # Check if section exists
+            cur.execute("SELECT id FROM sections WHERE id = %s", (section_id,))
+            if not cur.fetchone():
+                raise ValueError(f"Section {section_id} not found")
+            
+            # Mark section as deleted but preserve data for audit trail
             cur.execute(
-                """INSERT INTO enrollments (id, section_id, student_id)
-                   VALUES (%s, %s, %s)""",
-                (enrollment_id, section_id, student_id)
+                "UPDATE sections SET deleted_at = CURRENT_TIMESTAMP WHERE id = %s",
+                (section_id,)
             )
 
+# --- ENROLLMENTS ---
+
+def enroll_student(enrollment_id: str, section_id: str, student_id: str, performed_by: str = None):
+    """Enroll a student in a section with audit logging"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            # Check if section exists
+            cur.execute("SELECT id FROM sections WHERE id = %s AND deleted_at IS NULL", (section_id,))
+            if not cur.fetchone():
+                raise ValueError(f"Section {section_id} not found")
+            
+            # Check if student exists
+            cur.execute("SELECT id FROM users WHERE id = %s", (student_id,))
+            if not cur.fetchone():
+                raise ValueError(f"Student {student_id} not found")
+            
+            # Try to insert new enrollment or re-activate soft-deleted one
+            try:
+                cur.execute(
+                    """INSERT INTO enrollments (id, section_id, student_id, deleted_at)
+                       VALUES (%s, %s, %s, NULL)""",
+                    (enrollment_id, section_id, student_id)
+                )
+            except Exception as e:
+                # If duplicate error, try to undelete if soft-deleted
+                cur.execute(
+                    """UPDATE enrollments SET deleted_at = NULL
+                       WHERE section_id = %s AND student_id = %s AND deleted_at IS NOT NULL
+                       RETURNING id""",
+                    (section_id, student_id)
+                )
+                if not cur.fetchone():
+                    raise e
+            
+            # Log audit trail
+            if performed_by:
+                import uuid
+                audit_id = f"audit_{uuid.uuid4()}"
+                cur.execute(
+                    """INSERT INTO enrollment_audit (id, enrollment_id, section_id, student_id, action, performed_by, created_at)
+                       VALUES (%s, %s, %s, %s, 'enrolled', %s, CURRENT_TIMESTAMP)""",
+                    (audit_id, enrollment_id, section_id, student_id, performed_by)
+                )
+
+def bulk_enroll_students(section_id: str, student_ids: List[str], performed_by: str) -> Dict:
+    """
+    Enroll multiple students in a section at once.
+    Returns dict with 'enrolled' list and 'skipped' list of conflicts.
+    """
+    import uuid
+    enrolled = []
+    skipped = []
+    
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Verify section exists
+            cur.execute(
+                "SELECT id, institution_id FROM sections WHERE id = %s AND deleted_at IS NULL",
+                (section_id,)
+            )
+            section = cur.fetchone()
+            if not section:
+                raise ValueError(f"Section {section_id} not found")
+        
+        with conn.cursor() as cur:
+            for student_id in student_ids:
+                try:
+                    # Verify student exists
+                    cur.execute("SELECT id FROM users WHERE id = %s", (student_id,))
+                    if not cur.fetchone():
+                        skipped.append({"student_id": student_id, "reason": "Student not found"})
+                        continue
+                    
+                    enrollment_id = f"enroll_{uuid.uuid4()}"
+                    
+                    # Try to insert new enrollment
+                    try:
+                        cur.execute(
+                            """INSERT INTO enrollments (id, section_id, student_id, deleted_at)
+                               VALUES (%s, %s, %s, NULL)""",
+                            (enrollment_id, section_id, student_id)
+                        )
+                        enrolled.append(student_id)
+                    except Exception:
+                        # If conflict, try to undelete
+                        cur.execute(
+                            """UPDATE enrollments SET deleted_at = NULL
+                               WHERE section_id = %s AND student_id = %s AND deleted_at IS NOT NULL
+                               RETURNING id""",
+                            (section_id, student_id)
+                        )
+                        if cur.fetchone():
+                            enrolled.append(student_id)
+                        else:
+                            skipped.append({
+                                "student_id": student_id,
+                                "reason": "Already enrolled"
+                            })
+                            continue
+                    
+                    # Log audit
+                    audit_id = f"audit_{uuid.uuid4()}"
+                    cur.execute(
+                        """INSERT INTO enrollment_audit (id, enrollment_id, section_id, student_id, action, performed_by)
+                           VALUES (%s, %s, %s, %s, 'enrolled', %s)""",
+                        (audit_id, enrollment_id, section_id, student_id, performed_by)
+                    )
+                
+                except Exception as e:
+                    skipped.append({"student_id": student_id, "reason": str(e)[:100]})
+    
+    return {
+        "enrolled": enrolled,
+        "skipped": skipped,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
 def list_enrollments(section_id: str) -> List[Dict]:
-    """List all enrollments for a section"""
+    """List all active enrollments for a section with student profiles and attendance stats"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                """SELECT e.*, u.username, u.full_name, u.email 
+                """SELECT 
+                    e.id as enrollment_id,
+                    e.student_id,
+                    u.username,
+                    u.full_name,
+                    u.email,
+                    e.enrolled_at,
+                    sp.roll_number,
+                    sp.department,
+                    sp.profile_picture_url,
+                    COALESCE(
+                        ROUND(100.0 * COUNT(CASE WHEN a.status = 'present' THEN 1 END) FILTER (WHERE a.status IS NOT NULL) 
+                              / NULLIF(COUNT(*) FILTER (WHERE a.status IS NOT NULL), 0), 2),
+                        0
+                    ) as attendance_percentage
                    FROM enrollments e
                    JOIN users u ON e.student_id = u.id
-                   WHERE e.section_id = %s
+                   LEFT JOIN student_profiles sp ON e.student_id = sp.user_id
+                   LEFT JOIN attendance a ON e.section_id = a.section_id AND e.student_id = a.student_id
+                   WHERE e.section_id = %s AND e.deleted_at IS NULL
+                   GROUP BY e.id, e.student_id, u.username, u.full_name, u.email, e.enrolled_at, sp.roll_number, sp.department, sp.profile_picture_url
                    ORDER BY u.full_name""",
                 (section_id,)
             )
             enrollments = cur.fetchall()
     return [dict(e) for e in enrollments]
 
+def can_student_access_section(student_id: str, section_id: str) -> bool:
+    """Check if a student is enrolled in a section using database function"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT can_student_access_section(%s, %s) as can_access",
+                (student_id, section_id)
+            )
+            result = cur.fetchone()
+            return result['can_access'] if result else False
+
+def can_teacher_manage_section(teacher_id: str, section_id: str) -> bool:
+    """Check if a teacher can manage a section using database function"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT can_teacher_manage_section(%s, %s) as can_manage",
+                (teacher_id, section_id)
+            )
+            result = cur.fetchone()
+            return result['can_manage'] if result else False
+
 def list_student_sections(student_id: str) -> List[Dict]:
-    """List all sections a student is enrolled in"""
+    """List all sections a student is enrolled in (excluding soft-deleted)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
@@ -810,21 +1002,113 @@ def list_student_sections(student_id: str) -> List[Dict]:
                    FROM enrollments e
                    JOIN sections s ON e.section_id = s.id
                    JOIN users u ON s.teacher_id = u.id
-                   WHERE e.student_id = %s
+                   WHERE e.student_id = %s AND e.deleted_at IS NULL AND s.deleted_at IS NULL
                    ORDER BY s.created_at DESC""",
                 (student_id,)
             )
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
-def remove_enrollment(section_id: str, student_id: str):
-    """Remove a student from a section"""
+def remove_enrollment(section_id: str, student_id: str, performed_by: str = None, reason: str = None):
+    """Soft delete an enrollment (preserve audit trail)"""
+    import uuid
     with get_db_connection() as conn:
-        with conn.cursor() as cur:
+        with get_dict_cursor(conn) as cur:
+            # Get the enrollment ID for audit trail
             cur.execute(
-                "DELETE FROM enrollments WHERE section_id = %s AND student_id = %s",
+                "SELECT id FROM enrollments WHERE section_id = %s AND student_id = %s AND deleted_at IS NULL",
                 (section_id, student_id)
             )
+            enrollment = cur.fetchone()
+            if not enrollment:
+                raise ValueError(f"No active enrollment found for student {student_id} in section {section_id}")
+            
+            enrollment_id = enrollment['id']
+        
+        with conn.cursor() as cur:
+            # Soft delete the enrollment
+            cur.execute(
+                "UPDATE enrollments SET deleted_at = CURRENT_TIMESTAMP WHERE section_id = %s AND student_id = %s",
+                (section_id, student_id)
+            )
+            
+            # Log audit trail
+            if performed_by:
+                audit_id = f"audit_{uuid.uuid4()}"
+                cur.execute(
+                    """INSERT INTO enrollment_audit (id, enrollment_id, section_id, student_id, action, performed_by, reason)
+                       VALUES (%s, %s, %s, %s, 'removed', %s, %s)""",
+                    (audit_id, enrollment_id, section_id, student_id, performed_by, reason)
+                )
+
+def get_enrollment_history(section_id: str = None, student_id: str = None, enrollment_id: str = None) -> List[Dict]:
+    """Get enrollment audit trail filtered by section, student, or enrollment ID"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            query = "SELECT * FROM enrollment_audit WHERE 1=1"
+            params = []
+            
+            if enrollment_id:
+                query += " AND enrollment_id = %s"
+                params.append(enrollment_id)
+            if section_id:
+                query += " AND section_id = %s"
+                params.append(section_id)
+            if student_id:
+                query += " AND student_id = %s"
+                params.append(student_id)
+            
+            query += " ORDER BY created_at DESC LIMIT 1000"
+            cur.execute(query, params)
+            history = cur.fetchall()
+    return [dict(h) for h in history]
+
+def unenroll_by_institution(institution_id: str, chatbot_id: str = None, performed_by: str = None):
+    """
+    Soft-delete all enrollments for an institution or specific course within institution.
+    Used when a course is archived/deleted.
+    """
+    import uuid
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Get all sections to unenroll from
+            if chatbot_id:
+                query = """SELECT id FROM sections 
+                          WHERE institution_id = %s AND chatbot_id = %s AND deleted_at IS NULL"""
+                cur.execute(query, (institution_id, chatbot_id))
+            else:
+                query = """SELECT id FROM sections 
+                          WHERE institution_id = %s AND deleted_at IS NULL"""
+                cur.execute(query, (institution_id,))
+            
+            section_ids = [row['id'] for row in cur.fetchall()]
+        
+        with conn.cursor() as cur:
+            for section_id in section_ids:
+                # Get all active enrollments
+                cur.execute(
+                    "SELECT id, student_id FROM enrollments WHERE section_id = %s AND deleted_at IS NULL",
+                    (section_id,)
+                )
+                enrollments = cur.fetchall()
+                
+                for enrollment in enrollments:
+                    enrollment_id, student_id = enrollment
+                    
+                    # Soft delete
+                    cur.execute(
+                        "UPDATE enrollments SET deleted_at = CURRENT_TIMESTAMP WHERE id = %s",
+                        (enrollment_id,)
+                    )
+                    
+                    # Log audit
+                    if performed_by:
+                        audit_id = f"audit_{uuid.uuid4()}"
+                        cur.execute(
+                            """INSERT INTO enrollment_audit (id, enrollment_id, section_id, student_id, action, performed_by, reason)
+                               VALUES (%s, %s, %s, %s, 'unenrolled', %s, 'Course archived')""",
+                            (audit_id, enrollment_id, section_id, student_id, performed_by)
+                        )
 
 # --- ATTENDANCE ---
 
@@ -868,6 +1152,67 @@ def get_student_attendance(section_id: str, student_id: str) -> List[Dict]:
             records = cur.fetchall()
     return [dict(r) for r in records]
 
+def get_attendance_report(section_id: str, start_date: str, end_date: str) -> Dict:
+    """
+    Get attendance report for a section for a date range.
+    Returns aggregated stats per student: present, absent, late, excused count and percentage.
+    """
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # 1. Get total distinct dates attendance was taken in this range
+            cur.execute(
+                """SELECT COUNT(DISTINCT date) as total_classes 
+                   FROM attendance 
+                   WHERE section_id = %s AND date >= %s AND date <= %s""",
+                (section_id, start_date, end_date)
+            )
+            res = cur.fetchone()
+            total_classes = res['total_classes'] if res else 0
+            
+            # 2. Get student stats (Left Join to include students even with no attendance records)
+            cur.execute(
+                """SELECT 
+                    e.student_id,
+                    u.full_name,
+                    u.email,
+                    COUNT(a.id) as records_count,
+                    COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
+                    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count,
+                    COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late_count,
+                    COUNT(CASE WHEN a.status = 'excused' THEN 1 END) as excused_count
+                   FROM enrollments e
+                   JOIN users u ON e.student_id = u.id
+                   LEFT JOIN attendance a ON e.student_id = a.student_id 
+                        AND a.section_id = e.section_id 
+                        AND a.date >= %s AND a.date <= %s
+                   WHERE e.section_id = %s AND e.deleted_at IS NULL
+                   GROUP BY e.student_id, u.full_name, u.email
+                   ORDER BY u.full_name""",
+                (start_date, end_date, section_id)
+            )
+            student_records = cur.fetchall()
+            
+            # Process records to calculate percentage
+            results = []
+            for r in student_records:
+                d = dict(r)
+                # Calculate percentage based on number of statuses recorded for this student
+                # (Avoids penalizing students for days before they enrolled if no record exists)
+                denominator = d['records_count']
+                if denominator > 0:
+                    d['attendance_percentage'] = round((d['present_count'] / denominator) * 100, 2)
+                else:
+                    d['attendance_percentage'] = 0.0
+                results.append(d)
+    
+    return {
+        "section_id": section_id,
+        "start_date": start_date,
+        "end_date": end_date,
+        "total_classes": total_classes,
+        "student_records": results
+    }
+
 # --- ASSIGNMENTS ---
 
 def create_assignment(assignment_id: str, section_id: str, title: str, description: str = "", due_date: str = None, points: int = 0):
@@ -888,21 +1233,21 @@ def get_assignment(assignment_id: str) -> Optional[Dict]:
             assignment = cur.fetchone()
     return dict(assignment) if assignment else None
 
-def list_assignments(section_id: str, published_only: bool = False) -> List[Dict]:
-    """List assignments for a section"""
+def list_assignments_by_section(section_id: str, published_only: bool = False) -> List[Dict]:
+    """RENAMED: was list_assignments(section_id) - list assignments for a section (excluding soft-deleted)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             if published_only:
                 cur.execute(
                     """SELECT * FROM assignments
-                       WHERE section_id = %s AND is_published = TRUE
+                       WHERE section_id = %s AND is_published = TRUE AND deleted_at IS NULL
                        ORDER BY due_date ASC, created_at DESC""",
                     (section_id,)
                 )
             else:
                 cur.execute(
                     """SELECT * FROM assignments
-                       WHERE section_id = %s
+                       WHERE section_id = %s AND deleted_at IS NULL
                        ORDER BY due_date ASC, created_at DESC""",
                     (section_id,)
                 )
@@ -919,10 +1264,74 @@ def publish_assignment(assignment_id: str):
             )
 
 def delete_assignment(assignment_id: str):
-    """Delete an assignment"""
+    """Soft delete an assignment (preserve submissions for audit)"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM assignments WHERE id = %s", (assignment_id,))
+            cur.execute(
+                "UPDATE assignments SET deleted_at = CURRENT_TIMESTAMP WHERE id = %s",
+                (assignment_id,)
+            )
+
+def update_assignment(assignment_id: str, title: str = None, description: str = None, due_date: str = None, points: int = None):
+    """Update assignment details"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            updates = []
+            params = []
+            if title is not None:
+                updates.append("title = %s")
+                params.append(title)
+            if description is not None:
+                updates.append("description = %s")
+                params.append(description)
+            if due_date is not None:
+                updates.append("due_date = %s")
+                params.append(due_date)
+            if points is not None:
+                updates.append("points = %s")
+                params.append(points)
+            if updates:
+                params.append(assignment_id)
+                query = f"UPDATE assignments SET {', '.join(updates)} WHERE id = %s"
+                cur.execute(query, params)
+
+def get_assignment_submissions_summary(assignment_id: str) -> Dict:
+    """Get summary stats for assignment submissions"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Get assignment details
+            cur.execute("SELECT * FROM assignments WHERE id = %s", (assignment_id,))
+            assignment = cur.fetchone()
+            if not assignment:
+                raise ValueError(f"Assignment {assignment_id} not found")
+            
+            # Get submission counts and stats
+            cur.execute(
+                """SELECT 
+                    COUNT(*) as total_submissions,
+                    COUNT(CASE WHEN score IS NOT NULL THEN 1 END) as graded_count,
+                    COUNT(CASE WHEN score IS NULL THEN 1 END) as pending_count,
+                    AVG(score) as average_score,
+                    MAX(score) as highest_score,
+                    MIN(score) as lowest_score
+                FROM assignment_submissions
+                WHERE assignment_id = %s""",
+                (assignment_id,)
+            )
+            stats = cur.fetchone()
+    
+    return {
+        "assignment_id": assignment_id,
+        "title": assignment["title"],
+        "due_date": assignment["due_date"],
+        "total_points": assignment["points"],
+        "total_submissions": stats["total_submissions"] or 0,
+        "graded_count": stats["graded_count"] or 0,
+        "pending_count": stats["pending_count"] or 0,
+        "average_score": float(stats["average_score"]) if stats["average_score"] else None,
+        "highest_score": float(stats["highest_score"]) if stats["highest_score"] else None,
+        "lowest_score": float(stats["lowest_score"]) if stats["lowest_score"] else None
+    }
 
 # --- ASSIGNMENT SUBMISSIONS ---
 
@@ -1093,18 +1502,8 @@ def get_assignment(assignment_id: str) -> Optional[Dict]:
             assignment = cur.fetchone()
     return dict(assignment) if assignment else None
 
-def list_assignments_for_section(section_id: str) -> List[Dict]:
-    """List assignments for a specific section"""
-    with get_db_connection() as conn:
-        with get_dict_cursor(conn) as cur:
-            cur.execute("""
-                SELECT a.* FROM assignments a
-                JOIN sections s ON a.chatbot_id = s.chatbot_id
-                WHERE s.id = %s
-                ORDER BY a.created_at DESC
-            """, (section_id,))
-            assignments = cur.fetchall()
-    return [dict(a) for a in assignments]
+# DELETED: Duplicate function list_assignments_for_section() removed
+# Use list_assignments_by_section() instead for consistent naming
 
 # ============================================
 # INSTITUTION MANAGEMENT FUNCTIONS
@@ -1238,6 +1637,248 @@ def is_institution_admin(user_id: str, institution_id: str) -> bool:
             """, (user_id, institution_id))
             result = cur.fetchone()
     return result is not None
+
+# ============================================
+# ANALYTICS & STUDENT MANAGEMENT FUNCTIONS
+# ============================================
+
+def get_system_analytics() -> Dict:
+    """Get system-wide analytics (Super Admin only)"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Count institutions
+            cur.execute("SELECT COUNT(*) as count FROM institutions WHERE is_active = TRUE")
+            active_inst = cur.fetchone()['count'] or 0
+            
+            cur.execute("SELECT COUNT(*) as count FROM institutions")
+            total_inst = cur.fetchone()['count'] or 0
+            
+            # Count users by role
+            cur.execute("SELECT role, COUNT(*) as count FROM users GROUP BY role")
+            users_by_role = {row['role']: row['count'] or 0 for row in cur.fetchall()}
+            
+            # Total users
+            total_users = sum(users_by_role.values())
+            
+            # Count students per institution (top 5)
+            cur.execute("""
+                SELECT i.name, COUNT(u.id) as student_count
+                FROM institutions i
+                LEFT JOIN users u ON i.id = u.institution_id AND u.role = 'student'
+                GROUP BY i.id, i.name
+                ORDER BY student_count DESC
+                LIMIT 5
+            """)
+            top_institutions = [dict(row) for row in cur.fetchall()]
+            
+    return {
+        'total_institutions': total_inst,
+        'active_institutions': active_inst,
+        'total_users': total_users,
+        'users_by_role': {
+            'super_admin': users_by_role.get('super_admin', 0),
+            'admin': users_by_role.get('admin', 0),
+            'instructor': users_by_role.get('instructor', 0),
+            'student': users_by_role.get('student', 0)
+        },
+        'top_institutions': top_institutions
+    }
+
+def get_institution_analytics(institution_id: str) -> Dict:
+    """Get detailed analytics for an institution"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Get institution details
+            cur.execute("SELECT * FROM institutions WHERE id = %s", (institution_id,))
+            institution = cur.fetchone()
+            if not institution:
+                return {}
+            
+            # Count users by role
+            cur.execute("""
+                SELECT role, COUNT(*) as count FROM users 
+                WHERE institution_id = %s
+                GROUP BY role
+            """, (institution_id,))
+            users_by_role = {row['role']: row['count'] or 0 for row in cur.fetchall()}
+            
+            # Count active students
+            cur.execute("""
+                SELECT COUNT(*) as count FROM users 
+                WHERE institution_id = %s AND role = 'student'
+            """, (institution_id,))
+            total_students = cur.fetchone()['count'] or 0
+            
+            # Count courses
+            cur.execute("""
+                SELECT COUNT(*) as count FROM chatbots 
+                WHERE institution_id = %s
+            """, (institution_id,))
+            total_courses = cur.fetchone()['count'] or 0
+            
+            # Count pending assignments
+            cur.execute("""
+                SELECT COUNT(*) as count FROM assignments 
+                WHERE chatbot_id IN (
+                    SELECT id FROM chatbots WHERE institution_id = %s
+                ) AND status = 'published'
+            """, (institution_id,))
+            pending_assignments = cur.fetchone()['count'] or 0
+            
+    return {
+        'institution': dict(institution),
+        'students_count': users_by_role.get('student', 0),
+        'teachers_count': users_by_role.get('instructor', 0),
+        'admins_count': users_by_role.get('admin', 0),
+        'total_courses': total_courses,
+        'pending_assignments': pending_assignments,
+        'users_by_role': users_by_role
+    }
+
+def list_institution_students(institution_id: str, search: str = None, 
+                              department: str = None, status: str = 'active',
+                              limit: int = 50, offset: int = 0) -> Dict:
+    """List students in an institution with filters"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Build query
+            where_clause = "u.institution_id = %s AND u.role = 'student'"
+            params = [institution_id]
+            
+            # Search filter
+            if search:
+                where_clause += " AND (u.full_name ILIKE %s OR u.email ILIKE %s OR u.username ILIKE %s)"
+                search_term = f"%{search}%"
+                params.extend([search_term, search_term, search_term])
+            
+            # Department filter
+            if department:
+                where_clause += " AND sp.department = %s"
+                params.append(department)
+            
+            # Status filter (active/inactive)
+            if status == 'active':
+                where_clause += " AND u.is_email_verified = TRUE"
+            
+            # Get total count
+            count_query = f"""
+                SELECT COUNT(*) as count FROM users u
+                LEFT JOIN student_profiles sp ON u.id = sp.user_id
+                WHERE {where_clause}
+            """
+            cur.execute(count_query, params)
+            total = cur.fetchone()['count'] or 0
+            
+            # Get students
+            query = f"""
+                SELECT u.id, u.username, u.email, u.full_name, u.created_at,
+                       sp.roll_number, sp.batch_year, sp.department, sp.specialization
+                FROM users u
+                LEFT JOIN student_profiles sp ON u.id = sp.user_id
+                WHERE {where_clause}
+                ORDER BY u.created_at DESC
+                LIMIT %s OFFSET %s
+            """
+            params.extend([limit, offset])
+            cur.execute(query, params)
+            students = [dict(row) for row in cur.fetchall()]
+    
+    return {
+        'students': students,
+        'total': total,
+        'limit': limit,
+        'offset': offset
+    }
+
+def get_student_detail(student_id: str) -> Optional[Dict]:
+    """Get detailed student profile"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Get user info
+            cur.execute("SELECT * FROM users WHERE id = %s", (student_id,))
+            user = cur.fetchone()
+            if not user:
+                return None
+            
+            # Get student profile
+            cur.execute("SELECT * FROM student_profiles WHERE user_id = %s", (student_id,))
+            profile = cur.fetchone()
+            
+            # Get attendance
+            cur.execute("""
+                SELECT section_id, COUNT(*) as total, 
+                       SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present
+                FROM attendance
+                WHERE student_id = %s
+                GROUP BY section_id
+            """, (student_id,))
+            attendance_records = [dict(row) for row in cur.fetchall()]
+            
+    return {
+        'user': dict(user),
+        'profile': dict(profile) if profile else None,
+        'attendance': attendance_records
+    }
+
+def get_institution_courses(institution_id: str) -> List[Dict]:
+    """Get all courses for an institution"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("""
+                SELECT * FROM chatbots 
+                WHERE institution_id = %s 
+                ORDER BY created_at DESC
+            """, (institution_id,))
+            courses = [dict(row) for row in cur.fetchall()]
+    return courses
+
+def list_all_students(search: str = None, institution_id: str = None,
+                      limit: int = 50, offset: int = 0) -> Dict:
+    """List all students across institutions (Super Admin only)"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Build query
+            where_clause = "u.role = 'student'"
+            params = []
+            
+            # Institution filter
+            if institution_id:
+                where_clause += " AND u.institution_id = %s"
+                params.append(institution_id)
+            
+            # Search filter
+            if search:
+                where_clause += " AND (u.full_name ILIKE %s OR u.email ILIKE %s)"
+                search_term = f"%{search}%"
+                params.extend([search_term, search_term])
+            
+            # Get total
+            count_query = f"SELECT COUNT(*) as count FROM users WHERE {where_clause}"
+            cur.execute(count_query, params)
+            total = cur.fetchone()['count'] or 0
+            
+            # Get students
+            query = f"""
+                SELECT u.id, u.username, u.email, u.full_name, u.institution_id, u.created_at,
+                       i.name as institution_name,
+                       sp.roll_number, sp.department
+                FROM users u
+                LEFT JOIN institutions i ON u.institution_id = i.id
+                LEFT JOIN student_profiles sp ON u.id = sp.user_id
+                WHERE {where_clause}
+                ORDER BY u.created_at DESC
+                LIMIT %s OFFSET %s
+            """
+            params.extend([limit, offset])
+            cur.execute(query, params)
+            students = [dict(row) for row in cur.fetchall()]
+    
+    return {
+        'students': students,
+        'total': total,
+        'limit': limit,
+        'offset': offset
+    }
 
 # ============================================
 # EMAIL VERIFICATION FUNCTIONS
