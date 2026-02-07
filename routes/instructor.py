@@ -1,6 +1,7 @@
 import uuid
 import re
 import json
+import logging
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Body, Depends
 from pydantic import BaseModel
@@ -34,8 +35,52 @@ class CreateSectionRequest(BaseModel):
     name: str
     schedule: Optional[Dict] = None
 
+class UpdateSectionRequest(BaseModel):
+    name: Optional[str] = None
+    schedule: Optional[Dict] = None
+    class_id: Optional[str] = None
+
 class EnrollStudentRequest(BaseModel):
     student_id: str
+
+class BulkEnrollRequest(BaseModel):
+    student_ids: List[str]
+
+class BulkEnrollResponse(BaseModel):
+    enrolled: List[str]
+    skipped: List[Dict[str, str]]
+    timestamp: str
+
+class EnrollmentHistoryResponse(BaseModel):
+    enrollment_id: str
+    section_id: str
+    student_id: str
+    action: str
+    performed_by: str
+    reason: Optional[str] = None
+    created_at: str
+
+class AttendanceReportRequest(BaseModel):
+    start_date: str
+    end_date: str
+
+class StudentAttendanceRecord(BaseModel):
+    student_id: str
+    full_name: str
+    email: str
+    total_classes: int
+    present_count: int
+    absent_count: int
+    late_count: int
+    excused_count: int
+    attendance_percentage: float
+
+class AttendanceReportResponse(BaseModel):
+    section_id: str
+    start_date: str
+    end_date: str
+    total_classes: int
+    student_records: List[StudentAttendanceRecord]
 
 class MarkAttendanceRequest(BaseModel):
     date: str
@@ -47,6 +92,12 @@ class CreateAssignmentRequest(BaseModel):
     description: str = ""
     due_date: Optional[str] = None
     points: int = 0
+
+class UpdateAssignmentRequest(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    due_date: Optional[str] = None
+    points: Optional[int] = None
 
 class GradeSubmissionRequest(BaseModel):
     score: float
@@ -502,7 +553,7 @@ async def create_assignment_endpoint(request: CreateAssignmentRequest):
 @router.get("/assignments/{chatbot_id}")
 async def list_assignments_endpoint(chatbot_id: str):
     """List assignments"""
-    assigns = db.list_assignments(chatbot_id)
+    assigns = db.list_assignments_by_chatbot(chatbot_id)  # FIX: Updated function name
     return {"assignments": assigns}
 
 @router.post("/assignments/{assignment_id}/publish")
@@ -667,6 +718,222 @@ async def create_section(request: CreateSectionRequest, user=Depends(utils_auth.
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/sections/all")
+async def list_all_sections(user=Depends(utils_auth.get_current_user)):
+    """List all sections for the current instructor"""
+    try:
+        if user.get("role") != "instructor":
+            raise HTTPException(status_code=403, detail="Only instructors can list sections")
+        
+        sections = db.list_sections_for_teacher((user.get("sub") or user.get("id")))
+        
+        # Enrich with student count and enrollment data
+        for section in sections:
+            enrollments = db.list_enrollments(section["id"])
+            section["student_count"] = len(enrollments)
+            section["students"] = enrollments
+        
+        return sections
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/details")
+async def get_section(section_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get section details"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        # Check auth: teacher of section or admin
+        if user.get("role") == "instructor" and section["teacher_id"] != (user.get("sub") or (user.get("sub") or user.get("id"))):
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        enrollments = db.list_enrollments(section_id)
+        section["students"] = enrollments
+        return section
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/available-students")
+async def get_available_students(section_id: str, search: str = None, user=Depends(utils_auth.get_current_user)):
+    """Get students not yet enrolled in this section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        # Check auth: teacher of section
+        teacher_id = user.get("sub") or user.get("id")
+        if teacher_id != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        # Get all students first
+        all_students = db.list_users()
+        students = [s for s in all_students if s.get("role") == "student"]
+        
+        # Get currently enrolled students
+        enrollments = db.list_enrollments(section_id)
+        enrolled_ids = {e["student_id"] for e in enrollments}
+        
+        # Filter out already enrolled students
+        available = [s for s in students if s["id"] not in enrolled_ids]
+        
+        # Apply search filter if provided
+        if search:
+            search_lower = search.lower()
+            available = [
+                s for s in available
+                if search_lower in s.get("username", "").lower() or 
+                   search_lower in s.get("full_name", "").lower() or
+                   search_lower in s.get("email", "").lower()
+            ]
+        
+        # Return name, id, email for dropdown
+        return [
+            {
+                "id": s["id"],
+                "username": s["username"],
+                "full_name": s.get("full_name", s["username"]),
+                "email": s.get("email", ""),
+            }
+            for s in available
+        ]
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/enrollment-history")
+async def get_enrollment_history(section_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get enrollment audit trail for a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        teacher_id = user.get("sub") or user.get("id")
+        if teacher_id != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Only section teacher can view enrollment history")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        history = db.get_enrollment_history(section_id=section_id)
+        return {"enrollment_history": history}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/attendance")
+async def get_section_attendance(section_id: str, date: Optional[str] = None, user=Depends(utils_auth.get_current_user)):
+    """Get attendance records for a section, optionally for a specific date"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Only section teacher can view attendance")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        # Get all students in section
+        enrollments = db.list_enrollments(section_id)
+        
+        if date:
+            # Fetch attendance for the specific date
+            attendance_records = db.get_attendance(section_id, date)
+            attendance_map = {r["student_id"]: r for r in attendance_records}
+            
+            # Merge with enrollments
+            for student in enrollments:
+                if student["student_id"] in attendance_map:
+                    record = attendance_map[student["student_id"]]
+                    student["status"] = record.get("status")
+                    student["notes"] = record.get("notes")
+                else:
+                    # Default state for students who haven't been marked yet for this date
+                    # We can leave it undefined or set a default.
+                    # The frontend defaults to 'present' if missing, but maybe we should send null?
+                    # Let's send null for status so frontend knows it's not marked.
+                    # But wait, frontend logic: 
+                    # const rec = attendance.get(student.student_id) || { student_id: student.student_id, status: 'present' as const };
+                    # So if we don't send anything, it defaults to present.
+                    # If we send 'present', it shows present.
+                    # If we send 'absent', it shows absent.
+                    pass
+                    
+        return {"attendance_records": enrollments}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/assignments")
+async def list_assignments_for_section(section_id: str, user=Depends(utils_auth.get_current_user)):
+    """List assignments for a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Only section teacher can view assignments")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        assignments = db.list_assignments_by_section(section_id)  # FIX: Updated function name
+        return {"assignments": assignments}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sections/{section_id}/resources")
+async def list_section_resources(section_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get resources for a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Only section teacher can view resources")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        resources = db.get_section_resources(section_id)
+        return {"resources": resources}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/sections/{chatbot_id}")
 async def list_sections(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List sections for a chatbot"""
@@ -685,21 +952,48 @@ async def list_sections(chatbot_id: str, user=Depends(utils_auth.get_current_use
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/sections/{section_id}/details")
-async def get_section(section_id: str, user=Depends(utils_auth.get_current_user)):
-    """Get section details"""
+@router.put("/sections/{section_id}")
+async def update_section(section_id: str, request: UpdateSectionRequest, user=Depends(utils_auth.get_current_user)):
+    """Update section details (instructor only)"""
     try:
         section = db.get_section(section_id)
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        # Check auth: teacher of section or admin
-        if user.get("role") == "instructor" and section["teacher_id"] != (user.get("sub") or (user.get("sub") or user.get("id"))):
-            raise HTTPException(status_code=403, detail="Not authorized")
+        # Check auth: teacher of section
+        if user.get("role") != "instructor" or section["teacher_id"] != (user.get("sub") or user.get("id")):
+            raise HTTPException(status_code=403, detail="Only section teacher can update")
         
-        enrollments = db.list_enrollments(section_id)
-        section["students"] = enrollments
-        return section
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        db.update_section(section_id, request.name, request.schedule)
+        updated_section = db.get_section(section_id)
+        return {"message": "Section updated", "section": updated_section}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/sections/{section_id}")
+async def delete_section(section_id: str, user=Depends(utils_auth.get_current_user)):
+    """Delete a section (soft delete - mark as deleted)"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        # Check auth: teacher of section
+        if user.get("role") != "instructor" or section["teacher_id"] != (user.get("sub") or user.get("id")):
+            raise HTTPException(status_code=403, detail="Only section teacher can delete")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        db.delete_section(section_id)
+        return {"message": "Section deleted (archived)"}
     except HTTPException:
         raise
     except Exception as e:
@@ -717,12 +1011,43 @@ async def enroll_student(section_id: str, request: EnrollStudentRequest, user=De
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+        teacher_id = user.get("sub") or user.get("id")
+        if teacher_id != section["teacher_id"]:
             raise HTTPException(status_code=403, detail="Only section teacher can enroll students")
         
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
         enrollment_id = str(uuid.uuid4())
-        db.enroll_student(enrollment_id, section_id, request.student_id)
+        db.enroll_student(enrollment_id, section_id, request.student_id, performed_by=teacher_id)
         return {"message": "Student enrolled", "enrollment_id": enrollment_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/sections/{section_id}/bulk-enroll")
+async def bulk_enroll_students(section_id: str, request: BulkEnrollRequest, user=Depends(utils_auth.get_current_user)):
+    """Bulk enroll multiple students in a section"""
+    try:
+        section = db.get_section(section_id)
+        if not section:
+            raise HTTPException(status_code=404, detail="Section not found")
+        
+        teacher_id = user.get("sub") or user.get("id")
+        if teacher_id != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Only section teacher can enroll students")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        if not request.student_ids:
+            raise HTTPException(status_code=400, detail="No students provided")
+        
+        result = db.bulk_enroll_students(section_id, request.student_ids, performed_by=teacher_id)
+        return result
     except HTTPException:
         raise
     except Exception as e:
@@ -736,10 +1061,15 @@ async def remove_student(section_id: str, student_id: str, user=Depends(utils_au
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+        teacher_id = user.get("sub") or user.get("id")
+        if teacher_id != section["teacher_id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
         
-        db.remove_enrollment(section_id, student_id)
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        db.remove_enrollment(section_id, student_id, performed_by=teacher_id)
         return {"message": "Student removed"}
     except HTTPException:
         raise
@@ -754,6 +1084,10 @@ async def remove_student(section_id: str, student_id: str, user=Depends(utils_au
 async def mark_attendance(section_id: str, request: MarkAttendanceRequest, user=Depends(utils_auth.get_current_user)):
     """Mark attendance for multiple students"""
     try:
+        logger = logging.getLogger("rag-attendance")
+        
+        logger.info(f"Marking attendance for section {section_id} on {request.date} with {len(request.students)} students")
+        
         section = db.get_section(section_id)
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
@@ -761,37 +1095,55 @@ async def mark_attendance(section_id: str, request: MarkAttendanceRequest, user=
         if (user.get("sub") or user.get("id")) != section["teacher_id"]:
             raise HTTPException(status_code=403, detail="Only section teacher can mark attendance")
         
-        for student_rec in request.students:
-            attendance_id = str(uuid.uuid4())
-            db.mark_attendance(
-                attendance_id,
-                section_id,
-                student_rec["student_id"],
-                request.date,
-                student_rec["status"],
-                (user.get("sub") or (user.get("sub") or user.get("id"))),
-                student_rec.get("notes")
-            )
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
         
+        for idx, student_rec in enumerate(request.students):
+            try:
+                logger.debug(f"Processing student {idx + 1}: {student_rec.get('student_id') if isinstance(student_rec, dict) else 'unknown'}")
+                
+                attendance_id = str(uuid.uuid4())
+                db.mark_attendance(
+                    attendance_id,
+                    section_id,
+                    student_rec["student_id"],
+                    request.date,
+                    student_rec["status"],
+                    (user.get("sub") or user.get("id")),
+                    student_rec.get("notes")
+                )
+            except Exception as e:
+                logger.error(f"Error marking attendance for student {student_rec.get('student_id') if isinstance(student_rec, dict) else 'unknown'}: {str(e)}")
+                raise
+        
+        logger.info(f"Attendance marked successfully for {len(request.students)} students in section {section_id}")
         return {"message": f"Attendance marked for {len(request.students)} students"}
     except HTTPException:
         raise
     except Exception as e:
+        logger = logging.getLogger("rag-attendance")
+        logger.error(f"Error marking attendance: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/sections/{section_id}/attendance")
-async def get_attendance_report(section_id: str, date: str, user=Depends(utils_auth.get_current_user)):
-    """Get attendance for a section on a date"""
+@router.post("/sections/{section_id}/attendance-report")
+async def get_attendance_report_by_range(section_id: str, request: AttendanceReportRequest, user=Depends(utils_auth.get_current_user)):
+    """Get attendance report for a section for a date range with statistics"""
     try:
         section = db.get_section(section_id)
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+        teacher_id = user.get("sub") or user.get("id")
+        if teacher_id != section["teacher_id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
         
-        records = db.get_attendance(section_id, date)
-        return {"date": date, "attendance": records}
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
+        report = db.get_attendance_report(section_id, request.start_date, request.end_date)
+        return report
     except HTTPException:
         raise
     except Exception as e:
@@ -812,30 +1164,15 @@ async def create_assignment(section_id: str, request: CreateAssignmentRequest, u
         if (user.get("sub") or user.get("id")) != section["teacher_id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
         
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
+        
         assignment_id = str(uuid.uuid4())
         db.create_assignment(assignment_id, section_id, request.title, request.description, request.due_date, request.points)
         return {"message": "Assignment created", "assignment_id": assignment_id}
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/sections/{section_id}/assignments")
-async def list_assignments_for_section(section_id: str, user=Depends(utils_auth.get_current_user)):
-    """List assignments for a section"""
-    try:
-        section = db.get_section(section_id)
-        if not section:
-            raise HTTPException(status_code=404, detail="Section not found")
-        
-        assignments = db.list_assignments(section_id, published_only=False)
-        
-        # Add submission counts
-        for assign in assignments:
-            subs = db.list_submissions(assign["id"])
-            assign["submission_count"] = len(subs)
-        
-        return {"assignments": assignments}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -877,6 +1214,45 @@ async def get_submissions(assignment_id: str, user=Depends(utils_auth.get_curren
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/assignments/{assignment_id}/submissions/summary")
+async def get_submissions_summary(assignment_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get summary statistics for assignment submissions"""
+    try:
+        assignment = db.get_assignment(assignment_id)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        
+        section = db.get_section(assignment["section_id"])
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        summary = db.get_assignment_submissions_summary(assignment_id)
+        return summary
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/assignments/{assignment_id}")
+async def update_assignment(assignment_id: str, request: UpdateAssignmentRequest, user=Depends(utils_auth.get_current_user)):
+    """Update assignment details"""
+    try:
+        assignment = db.get_assignment(assignment_id)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        
+        section = db.get_section(assignment["section_id"])
+        if (user.get("sub") or user.get("id")) != section["teacher_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        db.update_assignment(assignment_id, request.title, request.description, request.due_date, request.points)
+        updated = db.get_assignment(assignment_id)
+        return {"message": "Assignment updated", "assignment": updated}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/submissions/{submission_id}/grade")
 async def grade_submission(submission_id: str, request: GradeSubmissionRequest, user=Depends(utils_auth.get_current_user)):
     """Grade a submission"""
@@ -912,6 +1288,10 @@ async def create_resource(section_id: str, request: CreateResourceRequest, user=
         
         if (user.get("sub") or user.get("id")) != section["teacher_id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Check institution-level access
+        if section.get("institution_id"):
+            utils_auth.require_institution(user, section["institution_id"])
         
         resource_id = str(uuid.uuid4())
         db.create_resource(resource_id, section_id, request.title, request.resource_type, request.url)
