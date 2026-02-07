@@ -16,9 +16,9 @@ interface InstructorHomeProps {
 
 export function InstructorHome({ user, onNavigate }: InstructorHomeProps) {
     return (
-        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 dark:text-gray-100">
             {/* 1. Welcome Header (Similar to Student) */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 to-violet-600 p-8 text-white shadow-xl shadow-indigo-500/20">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-900 dark:to-violet-900 p-8 text-white shadow-xl shadow-indigo-500/20 dark:shadow-indigo-900/20">
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold mb-2">Welcome back, {user.full_name.split(' ')[0]}! 👋</h1>
                     <p className="text-indigo-100 mb-6 max-w-lg">

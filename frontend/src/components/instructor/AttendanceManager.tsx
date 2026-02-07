@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { Calendar, Check, X, Clock, FileText, ChevronDown } from 'lucide-react';
 
 interface Student {
-  id: string;
+  student_id: string;  // Backend returns student_id, not id
+  enrollment_id: string;
   full_name: string;
   username: string;
   email: string;
+  status?: 'present' | 'absent' | 'late' | 'excused';  // Optional, from attendance records
+  notes?: string;  // Optional notes from attendance records
 }
 
 interface Section {
@@ -34,15 +37,20 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
   useEffect(() => {
     const fetchSections = async () => {
       try {
-        const res = await fetch('/instructor/sections', {
+        const res = await fetch('/instructor/sections/all', {
           credentials: 'include'
         });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         const data = await res.json();
-        setSections(data.sections || []);
-        
+        setSections(data || []);
+
         // Auto-select first section if none selected
-        if (data.sections?.length > 0) {
-          setSelectedSectionId(data.sections[0].id);
+        if (data?.length > 0) {
+          setSelectedSectionId(data[0].id);
         }
       } catch (error) {
         console.error('Failed to fetch sections:', error);
@@ -54,47 +62,82 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
     fetchSections();
   }, []);
 
-  // Fetch enrolled students when section changes
+  // Fetch enrolled students and attendance when section or date changes
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchData = async () => {
       if (!selectedSectionId) {
         setStudents([]);
         setAttendance(new Map());
         return;
       }
 
+      setLoading(true);
       try {
-        const res = await fetch(`/instructor/sections/${selectedSectionId}/details`, {
+        // Fetch attendance records (includes student details) for the selected date
+        const res = await fetch(`/instructor/sections/${selectedSectionId}/attendance?date=${date}`, {
           credentials: 'include'
         });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         const data = await res.json();
-        setStudents(data.students || []);
-        
-        // Initialize attendance map
-        const initialAttendance = new Map();
-        data.students.forEach((s: Student) => {
-          initialAttendance.set(s.id, { student_id: s.id, status: 'present' });
+        console.log('📋 Attendance records received:', data);
+
+        const records: Student[] = data.attendance_records || [];
+        setStudents(records);
+
+        // Initialize attendance map with explicit types
+        const initialAttendance = new Map<string, AttendanceRecord>();
+        records.forEach((s) => {
+          // If status is present in response (from DB), use it. Otherwise default to 'present'.
+          // The backend returns 'status' and 'notes' fields merged into the student object if a record exists.
+          const status: AttendanceRecord['status'] = (s.status as AttendanceRecord['status']) || 'present';
+          const notes: string = s.notes || '';
+
+          const record: AttendanceRecord = {
+            student_id: s.student_id,
+            status: status,
+            notes: notes
+          };
+          initialAttendance.set(s.student_id, record);
         });
+
+        console.log('📊 Initial attendance map:', Array.from(initialAttendance.entries()));
         setAttendance(initialAttendance);
       } catch (error) {
-        console.error('Failed to fetch students:', error);
+        console.error('Failed to fetch attendance data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchStudents();
-  }, [selectedSectionId]);
+    fetchData();
+  }, [selectedSectionId, date]);
 
   const updateAttendance = (studentId: string, status: 'present' | 'absent' | 'late' | 'excused') => {
-    const rec = attendance.get(studentId) || { student_id: studentId, status: 'present' };
-    rec.status = status;
-    setAttendance(new Map(attendance.set(studentId, rec)));
+    const existing = attendance.get(studentId) || { student_id: studentId, status: 'present' as const };
+    // Create a new object to ensure all fields are preserved
+    const updated = {
+      student_id: studentId,  // Always include student_id
+      status: status,
+      notes: existing.notes || ''
+    };
+    console.log(`Updating attendance for ${studentId}:`, updated);
+    setAttendance(new Map(attendance.set(studentId, updated)));
     setSaved(false);
   };
 
   const updateNotes = (studentId: string, notes: string) => {
-    const rec = attendance.get(studentId) || { student_id: studentId, status: 'present' };
-    rec.notes = notes;
-    setAttendance(new Map(attendance.set(studentId, rec)));
+    const existing = attendance.get(studentId) || { student_id: studentId, status: 'present' as const };
+    // Create a new object to ensure all fields are preserved
+    const updated = {
+      student_id: studentId,  // Always include student_id
+      status: existing.status,
+      notes: notes
+    };
+    setAttendance(new Map(attendance.set(studentId, updated)));
   };
 
   const saveAttendance = async () => {
@@ -110,6 +153,10 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
         students: Array.from(attendance.values())
       };
 
+      console.log('💾 Saving attendance with payload:', payload);
+      console.log('📅 Date:', date);
+      console.log('👥 Students data:', payload.students);
+
       const res = await fetch(`/instructor/sections/${selectedSectionId}/attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,6 +168,8 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
+        const errorText = await res.text();
+        console.error('❌ Server error:', errorText);
         alert('Failed to save attendance');
       }
     } catch (error) {
@@ -211,10 +260,10 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
           <p className="text-center text-slate-500 py-8">No students enrolled</p>
         ) : (
           students.map((student) => {
-            const rec = attendance.get(student.id) || { student_id: student.id, status: 'present' };
+            const rec = attendance.get(student.student_id) || { student_id: student.student_id, status: 'present' as const };
             return (
               <div
-                key={student.id}
+                key={student.student_id}
                 className="bg-white p-4 rounded-lg border border-slate-200 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -228,12 +277,11 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
                     {(['present', 'absent', 'late', 'excused'] as const).map((status) => (
                       <button
                         key={status}
-                        onClick={() => updateAttendance(student.id, status)}
-                        className={`flex items-center gap-1 px-3 py-2 rounded-md transition-all text-sm font-medium border ${
-                          rec.status === status
-                            ? statusColors[status]
-                            : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
-                        }`}
+                        onClick={() => updateAttendance(student.student_id, status)}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-md transition-all text-sm font-medium border ${rec.status === status
+                          ? statusColors[status]
+                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                          }`}
                       >
                         {statusIcons[status]}
                         <span className="hidden sm:inline capitalize">{status}</span>
@@ -247,7 +295,7 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
                   type="text"
                   placeholder="Notes (optional)"
                   value={rec.notes || ''}
-                  onChange={(e) => updateNotes(student.id, e.target.value)}
+                  onChange={(e) => updateNotes(student.student_id, e.target.value)}
                   className="mt-3 w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
                 />
               </div>
