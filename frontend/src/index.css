@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global dark mode styling */
+@layer base {
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+
+  html.dark main {
+    @apply bg-gray-900 text-gray-100;
+  }
+}
+
+
 @layer base {
   :root {
     --background: 0 0% 100%;
