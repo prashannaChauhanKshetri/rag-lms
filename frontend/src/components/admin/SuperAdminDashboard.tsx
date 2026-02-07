@@ -13,6 +13,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import StudentProfileModal from './StudentProfileModal';
 
 interface InstitutionsResponse {
   institutions: Institution[];
@@ -58,23 +59,52 @@ interface Analytics {
   total_users: number;
   users_by_role: Record<string, number>;
   institutions_by_status: Record<string, number>;
+  top_institutions?: Array<{ name: string; student_count: number }>;
 }
 
-type TabType = 'overview' | 'institutions' | 'users' | 'analytics';
+interface Student {
+  id: string;
+  user_id: string;
+  first_name?: string;
+  last_name?: string;
+  email: string;
+  username: string;
+  institution: string;
+  institution_id: string;
+  department?: string;
+  enrollment_date: string;
+  status: string;
+}
+
+interface StudentListResponse {
+  students: Student[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+type TabType = 'overview' | 'institutions' | 'users' | 'analytics' | 'students';
 
 const SuperAdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
+  
   // Search and filter
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
+  const [filterInstitution, setFilterInstitution] = useState('all');
   
   // Modal states
   const [showNewInstitution, setShowNewInstitution] = useState(false);
@@ -87,6 +117,10 @@ const SuperAdminDashboard: React.FC = () => {
   
   const [editingInstitution, setEditingInstitution] = useState<Institution | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  // Student profile modal
+  const [showStudentProfile, setShowStudentProfile] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -104,6 +138,22 @@ const SuperAdminDashboard: React.FC = () => {
         const endpoint = `/super_admin/users${queryString ? `?${queryString}` : ''}`;
         const response = await api.get(endpoint) as UsersResponse;
         setUsers(response.users || []);
+      } else if (activeTab === 'students') {
+        // Load institutions for filter dropdown
+        const instResponse = await api.get('/super_admin/institutions') as InstitutionsResponse;
+        setInstitutions(instResponse.institutions || []);
+        
+        // Load students
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (filterInstitution !== 'all') params.append('institution_id', filterInstitution);
+        params.append('limit', String(itemsPerPage));
+        params.append('offset', String((currentPage - 1) * itemsPerPage));
+        const queryString = params.toString();
+        const endpoint = `/super_admin/students${queryString ? `?${queryString}` : ''}`;
+        const response = await api.get(endpoint) as StudentListResponse;
+        setStudents(response.students || []);
+        setTotalItems(response.total || 0);
       } else if (activeTab === 'analytics') {
         const response = await api.get('/super_admin/analytics/overview') as AnalyticsResponse;
         setAnalytics(response);
@@ -114,7 +164,7 @@ const SuperAdminDashboard: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, filterRole, searchTerm]);
+  }, [activeTab, filterRole, filterInstitution, searchTerm, currentPage, itemsPerPage]);
 
   // Load data on component mount and tab change
   useEffect(() => {
@@ -263,60 +313,129 @@ const SuperAdminDashboard: React.FC = () => {
               <BarChart3 className="inline w-5 h-5 mr-2" />
               Analytics
             </button>
+            <button
+              onClick={() => {
+                setActiveTab('students');
+                setCurrentPage(1);
+              }}
+              className={`pb-4 px-1 font-medium transition-colors border-b-2 ${
+                activeTab === 'students'
+                  ? 'text-[#10B981] border-[#10B981]'
+                  : 'text-gray-600 border-transparent hover:text-gray-900'
+              }`}
+            >
+              <Users className="inline w-5 h-5 mr-2" />
+              Students
+            </button>
           </div>
         </div>
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {/* Quick Stats */}
-              <div className="bg-white rounded-xl shadow p-6">
-                <div className="flex items-center justify-between">
+          <div className="space-y-6">
+            {/* Key Stats - Responsive Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Total Institutions */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Total Institutions</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-blue-600 text-sm font-medium">Total Institutions</p>
+                    <p className="text-4xl font-bold text-blue-900 mt-2">
                       {analytics?.total_institutions || 0}
                     </p>
                   </div>
-                  <Building2 className="w-12 h-12 text-[#10B981] opacity-10" />
+                  <Building2 className="w-10 h-10 text-blue-400 opacity-50" />
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow p-6">
-                <div className="flex items-center justify-between">
+              {/* Active Institutions */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Active Institutions</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-green-600 text-sm font-medium">Active Institutions</p>
+                    <p className="text-4xl font-bold text-green-900 mt-2">
                       {analytics?.active_institutions || 0}
                     </p>
                   </div>
-                  <CheckCircle className="w-12 h-12 text-green-500 opacity-10" />
+                  <CheckCircle className="w-10 h-10 text-green-400 opacity-50" />
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow p-6">
-                <div className="flex items-center justify-between">
+              {/* Total Users */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Total Users</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-purple-600 text-sm font-medium">Total Users</p>
+                    <p className="text-4xl font-bold text-purple-900 mt-2">
                       {analytics?.total_users || 0}
                     </p>
                   </div>
-                  <Users className="w-12 h-12 text-blue-500 opacity-10" />
+                  <Users className="w-10 h-10 text-purple-400 opacity-50" />
+                </div>
+              </div>
+
+              {/* Email Verified */}
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-orange-600 text-sm font-medium">Verified Users</p>
+                    <p className="text-4xl font-bold text-orange-900 mt-2">
+                      {analytics?.users_by_role ? 
+                        Object.values(analytics.users_by_role).reduce((a, b) => a + b, 0) 
+                        : 0}
+                    </p>
+                  </div>
+                  <CheckCircle className="w-10 h-10 text-orange-400 opacity-50" />
                 </div>
               </div>
             </div>
 
-            {/* Users by Role */}
+            {/* Users by Role Breakdown */}
             {analytics?.users_by_role && (
-              <div className="bg-white rounded-xl shadow p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Users by Role</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Object.entries(analytics.users_by_role).map(([role, count]) => (
-                    <div key={role} className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-gray-600 text-sm capitalize">{role}</p>
-                      <p className="text-2xl font-bold text-gray-900">{count}</p>
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Users Distribution by Role</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {/* Super Admin */}
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
+                    <p className="text-red-700 text-xs font-semibold uppercase tracking-wide">Super Admin</p>
+                    <p className="text-3xl font-bold text-red-900 mt-2">{analytics.users_by_role.super_admin || 0}</p>
+                  </div>
+
+                  {/* Admins */}
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                    <p className="text-orange-700 text-xs font-semibold uppercase tracking-wide">Institution Admins</p>
+                    <p className="text-3xl font-bold text-orange-900 mt-2">{analytics.users_by_role.admin || 0}</p>
+                  </div>
+
+                  {/* Instructors */}
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                    <p className="text-blue-700 text-xs font-semibold uppercase tracking-wide">Instructors</p>
+                    <p className="text-3xl font-bold text-blue-900 mt-2">{analytics.users_by_role.instructor || 0}</p>
+                  </div>
+
+                  {/* Students */}
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                    <p className="text-green-700 text-xs font-semibold uppercase tracking-wide">Students</p>
+                    <p className="text-3xl font-bold text-green-900 mt-2">{analytics.users_by_role.student || 0}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Top Institutions */}
+            {analytics?.top_institutions && analytics.top_institutions.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Top Institutions by Student Count</h3>
+                <div className="space-y-3">
+                  {analytics.top_institutions.map((inst, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-[#10B981] text-white rounded-full flex items-center justify-center font-bold text-sm">
+                          {idx + 1}
+                        </div>
+                        <p className="font-medium text-gray-900">{inst.name}</p>
+                      </div>
+                      <p className="font-bold text-[#10B981] text-lg">{inst.student_count || 0} students</p>
                     </div>
                   ))}
                 </div>
@@ -510,63 +629,158 @@ const SuperAdminDashboard: React.FC = () => {
             )}
 
             {/* Institutions List */}
-            <div className="bg-white rounded-xl shadow overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 bg-gray-50">
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                  <div className="flex-1 w-full">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          loadData();
+                        }}
+                        placeholder="Search institutions by name, code, or domain..."
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium whitespace-nowrap"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
               {isLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
                 </div>
               ) : institutions.length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
-                  <Building2 className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                  <p>No institutions yet</p>
+                <div className="p-12 text-center">
+                  <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-gray-500 font-medium">No institutions found</p>
                 </div>
               ) : (
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Code</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Domain</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                      <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                        <tr>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Name</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Code</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Domain</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Contact Email</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
+                          <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {institutions.map((inst) => (
+                          <tr key={inst.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{inst.name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{inst.code}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{inst.domain || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title={inst.contact_email}>
+                              {inst.contact_email || '-'}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-2 ${
+                                inst.is_active
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-200 text-gray-700'
+                              }`}>
+                                {inst.is_active ? (
+                                  <>
+                                    <span className="w-2 h-2 rounded-full bg-green-600"></span>
+                                    Active
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="w-2 h-2 rounded-full bg-gray-500"></span>
+                                    Inactive
+                                  </>
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingInstitution(inst);
+                                    setShowEditModal(true);
+                                  }}
+                                  className="text-[#10B981] hover:text-[#059669] p-2 hover:bg-green-50 rounded transition-colors"
+                                  title="Edit"
+                                >
+                                  <Edit2 className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteInstitution(inst.id)}
+                                  className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="md:hidden divide-y">
                     {institutions.map((inst) => (
-                      <tr key={inst.id} className="border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm text-gray-900">{inst.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{inst.code}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{inst.domain || '-'}</td>
-                        <td className="px-6 py-4 text-sm">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      <div key={inst.id} className="p-4 space-y-3 hover:bg-gray-50 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{inst.name}</h4>
+                            <p className="text-sm text-gray-600">{inst.code}</p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-2 ${
                             inst.is_active
                               ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
+                              : 'bg-gray-200 text-gray-700'
                           }`}>
                             {inst.is_active ? 'Active' : 'Inactive'}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
+                        </div>
+                        {inst.domain && (
+                          <p className="text-sm text-gray-600"><span className="font-medium">Domain:</span> {inst.domain}</p>
+                        )}
+                        {inst.contact_email && (
+                          <p className="text-sm text-gray-600 truncate"><span className="font-medium">Contact:</span> {inst.contact_email}</p>
+                        )}
+                        <div className="flex gap-2 pt-2">
                           <button
                             onClick={() => {
                               setEditingInstitution(inst);
                               setShowEditModal(true);
                             }}
-                            className="text-[#10B981] hover:text-[#059669] mr-4"
+                            className="flex-1 text-[#10B981] border border-[#10B981] py-2 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                           >
-                            <Edit2 className="w-5 h-5" />
+                            <Edit2 className="w-4 h-4" />
+                            Edit
                           </button>
                           <button
                             onClick={() => handleDeleteInstitution(inst.id)}
-                            className="text-red-500 hover:text-red-700"
+                            className="flex-1 text-red-500 border border-red-300 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-4 h-4" />
+                            Delete
                           </button>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -574,82 +788,162 @@ const SuperAdminDashboard: React.FC = () => {
 
         {/* Users Tab */}
         {activeTab === 'users' && (
-          <div>
-            <div className="mb-6 flex gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyUp={() => loadData()}
-                  placeholder="Search by name, email, or username..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                />
+          <div className="space-y-6">
+            {/* Search and Filter Bar */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        loadData();
+                      }}
+                      placeholder="Name, email, or username..."
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Role</label>
+                  <select
+                    value={filterRole}
+                    onChange={(e) => {
+                      setFilterRole(e.target.value);
+                      loadData();
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="student">Students</option>
+                    <option value="instructor">Instructors</option>
+                    <option value="admin">Institution Admins</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
               </div>
-              <select
-                value={filterRole}
-                onChange={(e) => {
-                  setFilterRole(e.target.value);
-                  loadData();
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-              >
-                <option value="all">All Roles</option>
-                <option value="student">Students</option>
-                <option value="instructor">Instructors</option>
-                <option value="admin">Admins</option>
-                <option value="super_admin">Super Admin</option>
-              </select>
             </div>
 
-            <div className="bg-white rounded-xl shadow overflow-hidden">
+            {/* Users Table - Responsive */}
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
               {isLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
                 </div>
               ) : users.length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
-                  <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                  <p>No users found</p>
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500">No users found</p>
+                  </div>
                 </div>
               ) : (
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Verified</th>
-                      <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                        <tr>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Name</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Email</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Username</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Role</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Joined</th>
+                          <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {users.map((user) => (
+                          <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.full_name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{user.username}</td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                                user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
+                                user.role === 'admin' ? 'bg-orange-100 text-orange-800' :
+                                user.role === 'instructor' ? 'bg-blue-100 text-blue-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {user.role === 'super_admin' ? 'Super Admin' :
+                                 user.role === 'admin' ? 'Inst. Admin' :
+                                 user.role}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {user.is_email_verified ? (
+                                <span className="flex items-center gap-2 text-green-700 font-medium">
+                                  <CheckCircle className="w-5 h-5" />
+                                  Verified
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-2 text-yellow-700 font-medium">
+                                  <AlertCircle className="w-5 h-5" />
+                                  Pending
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {new Date(user.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <button className="text-[#10B981] hover:text-[#059669] p-2 hover:bg-green-50 rounded transition-colors">
+                                <Eye className="w-5 h-5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="md:hidden divide-y">
                     {users.map((user) => (
-                      <tr key={user.id} className="border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.full_name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                        <td className="px-6 py-4 text-sm">
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                            {user.role}
+                      <div key={user.id} className="p-4 space-y-3 hover:bg-gray-50">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-gray-900">{user.full_name}</p>
+                            <p className="text-sm text-gray-600">@{user.username}</p>
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
+                            user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
+                            user.role === 'admin' ? 'bg-orange-100 text-orange-800' :
+                            user.role === 'instructor' ? 'bg-blue-100 text-blue-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {user.role === 'super_admin' ? 'Super Admin' :
+                             user.role === 'admin' ? 'Inst. Admin' :
+                             user.role}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          {user.is_email_verified ? (
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <AlertCircle className="w-5 h-5 text-yellow-600" />
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button className="text-[#10B981] hover:text-[#059669]">
-                            <Eye className="w-5 h-5" />
-                          </button>
-                        </td>
-                      </tr>
+                        </div>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <p>{user.email}</p>
+                          <p className="flex items-center gap-2">
+                            {user.is_email_verified ? (
+                              <>
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                                <span className="text-green-700 font-medium">Verified</span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle className="w-4 h-4 text-yellow-600" />
+                                <span className="text-yellow-700 font-medium">Pending</span>
+                              </>
+                            )}
+                          </p>
+                          <p>Joined: {new Date(user.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -701,6 +995,220 @@ const SuperAdminDashboard: React.FC = () => {
               </div>
             )}
           </div>
+        )}
+
+        {/* Students Tab */}
+        {activeTab === 'students' && (
+          <div className="space-y-6">
+            {/* Search and Filter Bar */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Search Students</label>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Name or email..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Institution</label>
+                  <select
+                    value={filterInstitution}
+                    onChange={(e) => {
+                      setFilterInstitution(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                  >
+                    <option value="all">All Institutions</option>
+                    {institutions.map((inst) => (
+                      <option key={inst.id} value={inst.id}>
+                        {inst.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-end">
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setFilterInstitution('all');
+                      setCurrentPage(1);
+                    }}
+                    className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Students Table - Responsive */}
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
+                </div>
+              ) : students.length === 0 ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500">No students found</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                        <tr>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Name</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Email</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Institution</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Department</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Enrollment Date</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
+                          <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {students.map((student) => (
+                          <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                              {student.first_name} {student.last_name}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{student.email}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{student.institution}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{student.department || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {new Date(student.enrollment_date).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                student.status === 'active' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {student.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <button 
+                                onClick={() => {
+                                  setSelectedStudentId(student.id);
+                                  setShowStudentProfile(true);
+                                }}
+                                className="text-[#10B981] hover:text-[#059669]"
+                              >
+                                <Eye className="w-5 h-5 inline" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="md:hidden divide-y">
+                    {students.map((student) => (
+                      <div 
+                        key={student.id} 
+                        onClick={() => {
+                          setSelectedStudentId(student.id);
+                          setShowStudentProfile(true);
+                        }}
+                        className="p-4 space-y-3 hover:bg-green-50 cursor-pointer transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-gray-900">{student.first_name} {student.last_name}</p>
+                            <p className="text-sm text-gray-600">{student.email}</p>
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            student.status === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {student.status}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          <p><strong>Institution:</strong> {student.institution}</p>
+                          {student.department && <p><strong>Department:</strong> {student.department}</p>}
+                          <p><strong>Enrolled:</strong> {new Date(student.enrollment_date).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-[#10B981] text-sm font-medium pt-2">
+                          View Profile →
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="bg-gray-50 border-t px-6 py-4 flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} students
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      >
+                        Previous
+                      </button>
+                      <div className="flex items-center gap-2">
+                        {Array.from({ length: Math.ceil(totalItems / itemsPerPage) }).map((_, idx) => {
+                          const pageNum = idx + 1;
+                          return pageNum > currentPage - 2 && pageNum < currentPage + 2 ? (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                                currentPage === pageNum
+                                  ? 'bg-[#10B981] text-white'
+                                  : 'border border-gray-300 hover:bg-gray-100'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          ) : null;
+                        })}
+                      </div>
+                      <button
+                        onClick={() => setCurrentPage(Math.min(Math.ceil(totalItems / itemsPerPage), currentPage + 1))}
+                        disabled={currentPage >= Math.ceil(totalItems / itemsPerPage)}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Student Profile Modal */}
+        {showStudentProfile && selectedStudentId && (
+          <StudentProfileModal
+            studentId={selectedStudentId}
+            onClose={() => {
+              setShowStudentProfile(false);
+              setSelectedStudentId('');
+            }}
+          />
         )}
       </div>
     </div>
