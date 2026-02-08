@@ -259,7 +259,8 @@ async def login(response: Response, login_data: LoginRequest):
         "sub": user['id'],
         "username": user['username'],
         "role": user['role'],
-        "full_name": user['full_name']
+        "full_name": user['full_name'],
+        "institution_id": user['institution_id']
     }
     access_token = utils_auth.create_access_token(data=token_data)
     
@@ -312,5 +313,6 @@ async def get_session(request: Request):
         "user_id": user_data.get("sub"),
         "username": user_data.get("username"),
         "role": user_data.get("role"),
-        "full_name": user_data.get("full_name")
+        "full_name": user_data.get("full_name"),
+        "institution_id": user_data.get("institution_id")
     }
