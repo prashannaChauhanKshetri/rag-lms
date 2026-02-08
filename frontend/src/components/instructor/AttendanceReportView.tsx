@@ -49,7 +49,7 @@ export function AttendanceReportView({
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'name' | 'attendance'>('name');
 
-  const [sections, setSections] = useState<Array<{id: string; name: string}>>([]);
+  const [sections, setSections] = useState<Array<{ id: string; name: string }>>([]);
   const [sectionsLoading, setSectionsLoading] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(sectionId || null);
 
@@ -128,12 +128,12 @@ export function AttendanceReportView({
 
   const sortedRecords = reportData?.student_records
     ? [...reportData.student_records].sort((a, b) => {
-        if (sortBy === 'name') {
-          return a.full_name.localeCompare(b.full_name);
-        } else {
-          return b.attendance_percentage - a.attendance_percentage;
-        }
-      })
+      if (sortBy === 'name') {
+        return a.full_name.localeCompare(b.full_name);
+      } else {
+        return b.attendance_percentage - a.attendance_percentage;
+      }
+    })
     : [];
 
 
@@ -210,11 +210,11 @@ export function AttendanceReportView({
             />
           </div>
 
-          <div className="flex items-end md:col-span-4">
+          <div className="flex items-end sm:col-span-2 md:col-span-1 lg:col-span-1">
             <button
               onClick={fetchReport}
               disabled={isLoading || !selectedSectionId}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
             >
               {isLoading ? (
                 <>
@@ -243,46 +243,45 @@ export function AttendanceReportView({
       {reportData && (
         <div className="space-y-6">
           {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 sm:p-4">
+              <p className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                 Total Classes
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {reportData.total_classes || 0}
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 sm:p-4">
+              <p className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                 Students Tracked
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {reportData.student_records?.length || 0}
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Average Attendance
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 sm:p-4">
+              <p className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Avg. Attendance
               </p>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              <p className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {reportData.student_records?.length
                   ? (
-                      reportData.student_records.reduce(
-                        (sum: number, r: StudentRecord) => sum + (r.attendance_percentage || 0),
-                        0
-                      ) / reportData.student_records.length
-                    ).toFixed(1)
+                    reportData.student_records.reduce(
+                      (sum: number, r: StudentRecord) => sum + (r.attendance_percentage || 0),
+                      0
+                    ) / reportData.student_records.length
+                  ).toFixed(1)
                   : '0'}
-              %
+                %
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 sm:p-4 col-span-2 lg:col-span-1">
+              <p className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                 Date Range
               </p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {new Date(reportData.start_date).toLocaleDateString()} to{' '}
-                {new Date(reportData.end_date).toLocaleDateString()}
+              <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                {new Date(reportData.start_date).toLocaleDateString()} - {new Date(reportData.end_date).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -308,7 +307,8 @@ export function AttendanceReportView({
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                   <tr>
@@ -328,7 +328,7 @@ export function AttendanceReportView({
                       Excused
                     </th>
                     <th className="px-6 py-3 text-right font-semibold text-gray-900 dark:text-white">
-                      Attendance %
+                      %
                     </th>
                   </tr>
                 </thead>
@@ -340,11 +340,11 @@ export function AttendanceReportView({
                         className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                       >
                         <td className="px-6 py-4">
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-white">
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 dark:text-white truncate">
                               {record.full_name}
                             </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                               {record.email}
                             </p>
                           </div>
@@ -371,7 +371,7 @@ export function AttendanceReportView({
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span
-                            className={`font-bold text-lg ${getAttendanceColor(
+                            className={`font-bold ${getAttendanceColor(
                               record.attendance_percentage
                             )}`}
                           >
@@ -382,15 +382,62 @@ export function AttendanceReportView({
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center">
-                        <p className="text-gray-600 dark:text-gray-400">
-                          No attendance records found for this period
-                        </p>
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                        No records found
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-800">
+              {sortedRecords.length > 0 ? (
+                sortedRecords.map((record: StudentRecord) => (
+                  <div key={record.student_id} className="p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 dark:text-white truncate">
+                          {record.full_name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {record.email}
+                        </p>
+                      </div>
+                      <span
+                        className={`font-bold text-lg ${getAttendanceColor(
+                          record.attendance_percentage
+                        )}`}
+                      >
+                        {record.attendance_percentage?.toFixed(1) || '0'}%
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="text-center p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Pres.</p>
+                        <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{record.present_count || 0}</p>
+                      </div>
+                      <div className="text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <p className="text-[10px] text-red-600 dark:text-red-400 font-medium">Abs.</p>
+                        <p className="text-sm font-bold text-red-700 dark:text-red-300">{record.absent_count || 0}</p>
+                      </div>
+                      <div className="text-center p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Late</p>
+                        <p className="text-sm font-bold text-amber-700 dark:text-amber-300">{record.late_count || 0}</p>
+                      </div>
+                      <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Exc.</p>
+                        <p className="text-sm font-bold text-blue-700 dark:text-blue-300">{record.excused_count || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-gray-500">
+                  No records found
+                </div>
+              )}
             </div>
           </div>
 

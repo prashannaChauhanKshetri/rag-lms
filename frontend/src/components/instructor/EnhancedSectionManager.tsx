@@ -313,11 +313,10 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                   <button
                     key={section.id}
                     onClick={() => handleSectionSelect(section)}
-                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
-                      selectedSection?.id === section.id
+                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${selectedSection?.id === section.id
                         ? 'bg-emerald-50 dark:bg-emerald-900/20 border-l-2 border-emerald-600 dark:border-emerald-400'
                         : ''
-                    }`}
+                      }`}
                   >
                     <p className="font-medium text-gray-900 dark:text-white text-sm">
                       {section.name}
@@ -478,7 +477,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
               </div>
 
               {/* Tabs */}
-              <div className="border-b border-gray-200 dark:border-gray-800 flex gap-1 bg-white dark:bg-gray-900 rounded-t-xl">
+              <div className="border-b border-gray-200 dark:border-gray-800 flex gap-1 bg-white dark:bg-gray-900 rounded-t-xl overflow-x-auto no-scrollbar scroll-smooth">
                 {(
                   [
                     { id: 'enrollments', label: 'Enrollments', count: enrolledStudents.length },
@@ -489,11 +488,10 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                      activeTab === tab.id
+                    className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id
                         ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
                         : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
-                    }`}
+                      }`}
                   >
                     {tab.label}
                     {tab.id === 'enrollments' && tab.count && (
@@ -502,7 +500,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                       </span>
                     )}
                   </button>
-                ))} 
+                ))}
               </div>
 
               {/* Enrollments Tab */}
@@ -573,7 +571,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                         <button
                           onClick={handleEnrollStudent}
                           disabled={!selectedStudentId || isSaving}
-                          className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 min-w-[120px] px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                         >
                           {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
                           Enroll Student
@@ -584,7 +582,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                             setStudentSearchQuery('');
                             setAvailableStudents([]);
                           }}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors text-sm"
                         >
                           Clear
                         </button>
@@ -605,7 +603,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                       {enrolledStudents.map((student) => (
                         <div
                           key={student.id}
-                          className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                          className="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                         >
                           <button
                             onClick={() =>
@@ -627,30 +625,28 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                                     </span>
                                   )}
                               </div>
-                              <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400">
+                              <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mt-1">
                                 {student.roll_number && (
                                   <div className="flex items-center gap-1">
-                                    <Hash className="h-3.5 w-3.5" />
+                                    <Hash className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                     {student.roll_number}
                                   </div>
                                 )}
-                                <div className="flex items-center gap-1">
-                                  <Mail className="h-3.5 w-3.5" />
-                                  {student.email}
+                                <div className="flex items-center gap-1 min-w-0">
+                                  <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                                  <span className="truncate">{student.email}</span>
                                 </div>
                                 {student.attendance_percentage !== undefined && (
-                                  <div className="flex items-center gap-1">
-                                    <UserCheck className="h-3.5 w-3.5" />
-                                    {student.attendance_percentage.toFixed(1)}%
-                                    attendance
+                                  <div className="flex items-center gap-1 whitespace-nowrap">
+                                    <UserCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                    {student.attendance_percentage.toFixed(1)}% attendance
                                   </div>
                                 )}
                               </div>
                             </div>
                             <ChevronDown
-                              className={`h-5 w-5 text-gray-400 transition-transform flex-shrink-0 ${
-                                expandedStudent === student.id ? 'rotate-180' : ''
-                              }`}
+                              className={`h-5 w-5 text-gray-400 transition-transform flex-shrink-0 ${expandedStudent === student.id ? 'rotate-180' : ''
+                                }`}
                             />
                           </button>
 

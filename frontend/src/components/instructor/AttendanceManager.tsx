@@ -267,9 +267,9 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
                 className="bg-white p-4 rounded-lg border border-slate-200 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-slate-800 truncate">{student.full_name}</p>
-                    <p className="text-sm text-slate-500 truncate">{student.email}</p>
+                  <div className="min-w-0 flex-1 pr-2">
+                    <p className="font-semibold text-slate-800 truncate text-sm sm:text-base">{student.full_name}</p>
+                    <p className="text-xs text-slate-500 truncate">{student.email}</p>
                   </div>
 
                   {/* Status Buttons */}
@@ -278,13 +278,13 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
                       <button
                         key={status}
                         onClick={() => updateAttendance(student.student_id, status)}
-                        className={`flex items-center gap-1 px-3 py-2 rounded-md transition-all text-sm font-medium border ${rec.status === status
+                        className={`flex items-center justify-center gap-1 flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-all text-[11px] sm:text-sm font-medium border ${rec.status === status
                           ? statusColors[status]
                           : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
                           }`}
                       >
-                        {statusIcons[status]}
-                        <span className="hidden sm:inline capitalize">{status}</span>
+                        <span className="flex-shrink-0">{statusIcons[status]}</span>
+                        <span className="capitalize">{status}</span>
                       </button>
                     ))}
                   </div>

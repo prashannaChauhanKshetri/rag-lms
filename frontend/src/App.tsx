@@ -70,6 +70,28 @@ const studentTabs = [
   { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
 ];
 
+const instructorTabs = [
+  { id: 'home', label: 'Home', icon: HomeIcon },
+  { id: 'sections', label: 'Sections', icon: Users },
+  { id: 'attendance-report', label: 'Reports', icon: BarChart3 },
+  { id: 'attendance', label: 'Attendance', icon: Calendar },
+  { id: 'assignments', label: 'Assignments', icon: FileText },
+  { id: 'classes', label: 'Classes', icon: BookOpen },
+  { id: 'courses', label: 'Course Manager', icon: Brain },
+  { id: 'quizzes', label: 'Quiz Creator', icon: HelpCircle },
+  { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
+  { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard },
+  { id: 'analytics', label: 'Analytics', icon: CheckSquare },
+];
+
+const adminTabs = [
+  { id: 'home', label: 'Dashboard', icon: HomeIcon },
+  { id: 'teachers', label: 'Teachers', icon: Users },
+  { id: 'courses', label: 'Courses', icon: BookOpen },
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'settings', label: 'Settings', icon: Settings },
+];
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('home');
@@ -110,7 +132,7 @@ function App() {
         );
       }
       return (
-        <EnhancedLogin 
+        <EnhancedLogin
           onLoginSuccess={handleLoginSuccess}
           onSignupClick={() => setIsSignupMode(true)}
         />
@@ -170,19 +192,7 @@ function App() {
           <Sidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            tabs={[
-              { id: 'home', label: 'Home', icon: HomeIcon },
-              { id: 'classes', label: 'Classes', icon: BookOpen },
-              { id: 'sections', label: 'Sections', icon: Users },
-              { id: 'attendance-report', label: 'Attendance Reports', icon: BarChart3 },
-              { id: 'attendance', label: 'Attendance', icon: Calendar },
-              { id: 'courses', label: 'Course Manager', icon: Brain },
-              { id: 'quizzes', label: 'Quiz Creator', icon: HelpCircle },
-              { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
-              { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard },
-              { id: 'assignments', label: 'Assignments', icon: FileText },
-              { id: 'analytics', label: 'Analytics', icon: CheckSquare },
-            ]}
+            tabs={instructorTabs}
           />
           <main className="flex-1 flex flex-col h-screen overflow-hidden">
             <Header
@@ -190,11 +200,11 @@ function App() {
               userRole={user.role}
               institutionName={user.institution || 'Institution'}
             />
-            <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+            <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
               {activeTab === 'home' && <InstructorHome user={user} onNavigate={handleNavigate} />}
               {activeTab === 'classes' && <ClassManager />}
               {activeTab === 'sections' && (
-                <EnhancedSectionManager 
+                <EnhancedSectionManager
                   onSectionSelect={(sectionId) => {
                     setSelectedSectionId(sectionId);
                   }}
@@ -213,6 +223,11 @@ function App() {
               {activeTab === 'analytics' && <AnalyticsDashboard />}
             </div>
           </main>
+          <MobileNav
+            tabs={instructorTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </div>
       );
     }
@@ -229,13 +244,7 @@ function App() {
           <Sidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            tabs={[
-              { id: 'home', label: 'Dashboard', icon: HomeIcon },
-              { id: 'teachers', label: 'Teachers', icon: Users },
-              { id: 'courses', label: 'Courses', icon: BookOpen },
-              { id: 'users', label: 'Users', icon: Users },
-              { id: 'settings', label: 'Settings', icon: Settings },
-            ]}
+            tabs={adminTabs}
           />
           <main className="flex-1 flex flex-col h-screen overflow-hidden">
             <Header
@@ -243,7 +252,7 @@ function App() {
               userRole={user.role}
               institutionName={user.institution || "Gyana University"}
             />
-            <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+            <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
               {activeTab === 'home' && (
                 <div className="text-center">
                   <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
@@ -266,6 +275,11 @@ function App() {
               )}
             </div>
           </main>
+          <MobileNav
+            tabs={adminTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </div>
       );
     }
