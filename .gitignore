@@ -27,3 +27,8 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Project Docs & Config
+DEPLOYMENT_READY.md
+SYSTEM_ARCHITECTURE.md
+.github/
