@@ -6,7 +6,10 @@ from pydantic import BaseModel
 import database_postgres as db
 import vectorstore_postgres as vs
 from utils import build_system_user_prompt
+import logging
 from models import get_embed_model
+
+logger = logging.getLogger("rag-chat")
 
 router = APIRouter(tags=["Chat"])
 
@@ -41,24 +44,29 @@ async def chat_endpoint(
     
     # Hybrid Retrieval with dynamic weights
     # If asking for exercises, boost keyword search (BM25) as headers often contain "Exercise"
-    bm25_w = 0.5 if is_exercise_query else 0.3
-    faiss_w = 0.5 if is_exercise_query else 0.7
+    # bm25_w = 0.5 if is_exercise_query else 0.3
+    # faiss_w = 0.5 if is_exercise_query else 0.7
     
     hits = vs.hybrid_query(
         chatbot_id, 
         question, 
         q_emb, 
-        top_k=final_top_k,
-        bm25_weight=bm25_w,
-        faiss_weight=faiss_w
+        top_k=10,  # Use dynamic top_k for better context
+        bm25_weight=0.4,    # Boost keyword search for textbooks
+        faiss_weight=0.6
     )
     
     if not hits:
         # Fallback: Relaxed search if strict one failed
         hits = vs.hybrid_query(
-            chatbot_id, question, q_emb, top_k=final_top_k, 
+            chatbot_id, question, q_emb, top_k=10, 
             bm25_weight=0.1, faiss_weight=0.9 # Rely mostly on semantic vector search
         )
+    
+    # Calculate and log metrics
+    if hits:
+        avg_score = sum(h.get('hybrid_score', 0) for h in hits) / len(hits)
+        logger.info(f"Query: '{question}' | Hits: {len(hits)} | Avg Score: {avg_score:.3f}")
         
     if not hits:
         return {"answer": "I couldn't find any relevant information in the documents.", "sources": []}
