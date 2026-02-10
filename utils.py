@@ -16,8 +16,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-utils")
 
 # Constants
-CHUNK_SIZE = 1000  # Tokens
-CHUNK_OVERLAP = 100
+CHUNK_SIZE = 1200  # Larger chunks
+CHUNK_OVERLAP = 150  # More overlap for context
 
 def count_tokens(text: str) -> int:
     """Count tokens using tiktoken (cl100k_base)"""
@@ -251,9 +251,54 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
     
     # Sort by page number
     chunks.sort(key=lambda x: x['page'])
-    logger.info(f"Created {len(chunks)} chunks from {len(doc)} pages")
+    
+    # NEW: Filter and merge small chunks
+    chunks = filter_and_merge_small_chunks(chunks, min_size=100)
+    
+    logger.info(f"After filtering: {len(chunks)} chunks")
     logger.info(f"Chapters detected: {set(c['chapter'] for c in chunks)}")
     return chunks
+
+def filter_and_merge_small_chunks(chunks: List[Dict], min_size: int = 100) -> List[Dict]:
+    """
+    Remove tiny chunks and merge small adjacent chunks
+    """
+    filtered = []
+    i = 0
+    
+    while i < len(chunks):
+        current = chunks[i]
+        
+        # Skip tiny administrative chunks (usually headers/footers or title page noise)
+        if current['token_count'] < 50 and current['page'] < 5:
+            i += 1
+            continue
+        
+        # Try to merge small chunks from same page
+        if current['token_count'] < min_size and i + 1 < len(chunks):
+            next_chunk = chunks[i + 1]
+            
+            # Merge if same page and chapter
+            if (next_chunk['page'] == current['page'] and 
+                next_chunk['chapter'] == current['chapter']):
+                
+                merged = {
+                    'text': current['text'] + "\n\n" + next_chunk['text'],
+                    'page': current['page'],
+                    'chapter': current['chapter'],
+                    'section_type': 'content',
+                    'token_count': current['token_count'] + next_chunk['token_count'],
+                    'original_text': current['original_text'] + "\n\n" + next_chunk['original_text']
+                }
+                filtered.append(merged)
+                i += 2  # Skip both chunks
+                continue
+        
+        # Keep normal chunks as-is
+        filtered.append(current)
+        i += 1
+    
+    return filtered
 
 def split_text_by_tokens(text: str, chunk_size: int, overlap: int) -> List[str]:
     """Split text into chunks of max `chunk_size` tokens"""

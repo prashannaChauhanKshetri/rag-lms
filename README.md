@@ -46,10 +46,11 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 - Admin can view all teachers and their teaching load
 - Teacher class assignments and created assignments tracking
 
-### 7. Hybrid Search & RAG
+### 7. Hybrid Search & RAG (Work in Progress)
 - Combining PostgreSQL Full-Text Search (BM25) + `pgvector` (semantic) search
 - Course-aware document retrieval
 - Intelligent quiz and flashcard auto-generation
+- Student can chat with AI tutor
 
 ### 6. Role-Based Access Control
 | Role | Features |
