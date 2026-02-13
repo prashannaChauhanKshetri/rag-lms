@@ -14,8 +14,10 @@ import {
   TrendingUp,
   Award,
   Settings,
+  UserPlus,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import AdminEnrollmentCenter from './AdminEnrollmentCenter';
 
 interface InstitutionResponse {
   institution: InstitutionData;
@@ -49,18 +51,18 @@ interface InstitutionUser {
   role: string;
 }
 
-type TabType = 'overview' | 'members' | 'courses' | 'settings';
+type TabType = 'overview' | 'members' | 'courses' | 'enrollments' | 'settings';
 
 const InstitutionAdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [institution, setInstitution] = useState<InstitutionData | null>(null);
   const [members, setMembers] = useState<InstitutionUser[]>([]);
   const [admin, setAdmin] = useState<InstitutionAdmin | null>(null);
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'student' | 'instructor'>('all');
 
@@ -146,11 +148,10 @@ const InstitutionAdminDashboard: React.FC = () => {
           <div className="flex gap-4 sm:gap-8 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === 'overview'
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'overview'
                   ? 'text-[#10B981] border-[#10B981]'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+                }`}
             >
               <BarChart3 className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Overview</span>
@@ -158,33 +159,40 @@ const InstitutionAdminDashboard: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('members')}
-              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === 'members'
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'members'
                   ? 'text-[#10B981] border-[#10B981]'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+                }`}
             >
               <Users className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               Members
             </button>
             <button
               onClick={() => setActiveTab('courses')}
-              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === 'courses'
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'courses'
                   ? 'text-[#10B981] border-[#10B981]'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+                }`}
             >
               <BookOpen className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               Courses
             </button>
             <button
-              onClick={() => setActiveTab('settings')}
-              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === 'settings'
+              onClick={() => setActiveTab('enrollments')}
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'enrollments'
                   ? 'text-[#10B981] border-[#10B981]'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+                }`}
+            >
+              <UserPlus className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+              Enrollments
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'settings'
+                  ? 'text-[#10B981] border-[#10B981]'
+                  : 'text-gray-600 border-transparent hover:text-gray-900'
+                }`}
             >
               <Settings className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               Settings
@@ -345,11 +353,10 @@ const InstitutionAdminDashboard: React.FC = () => {
                             <td className="px-6 py-4 text-sm font-medium text-gray-900">{member.full_name}</td>
                             <td className="px-6 py-4 text-sm text-gray-600">{member.email}</td>
                             <td className="px-6 py-4 text-sm">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
-                                member.role === 'student'
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${member.role === 'student'
                                   ? 'bg-blue-100 text-blue-800'
                                   : 'bg-purple-100 text-purple-800'
-                              }`}>
+                                }`}>
                                 {member.role}
                               </span>
                             </td>
@@ -384,11 +391,10 @@ const InstitutionAdminDashboard: React.FC = () => {
                             <h3 className="text-sm font-semibold text-gray-900 truncate">{member.full_name}</h3>
                             <p className="text-xs text-gray-500 truncate mt-0.5">{member.email}</p>
                             <div className="mt-2">
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
-                                member.role === 'student'
+                              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${member.role === 'student'
                                   ? 'bg-blue-100 text-blue-800'
                                   : 'bg-purple-100 text-purple-800'
-                              }`}>
+                                }`}>
                                 {member.role}
                               </span>
                             </div>
@@ -451,6 +457,11 @@ const InstitutionAdminDashboard: React.FC = () => {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Enrollments Tab */}
+            {activeTab === 'enrollments' && (
+              <AdminEnrollmentCenter />
             )}
 
             {/* Settings Tab */}

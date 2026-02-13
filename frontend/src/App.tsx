@@ -20,7 +20,8 @@ import {
   HelpCircle,
   Users,
   Settings,
-  BarChart3
+  BarChart3,
+  UserPlus,
 } from 'lucide-react';
 import { InstructorHome } from './components/instructor/InstructorHome';
 import { CourseManager } from './components/instructor/CourseManager';
@@ -41,6 +42,7 @@ import { EnrolledSections } from './components/student/EnrolledSections';
 import { SectionOverview } from './components/student/EnhancedCourseOverview';
 import { EnhancedSectionManager } from './components/instructor/EnhancedSectionManager';
 import { AttendanceReportView } from './components/instructor/AttendanceReportView';
+import AdminEnrollmentCenter from './components/admin/AdminEnrollmentCenter';
 
 interface User {
   id: string;
@@ -88,6 +90,7 @@ const adminTabs = [
   { id: 'home', label: 'Dashboard', icon: HomeIcon },
   { id: 'teachers', label: 'Teachers', icon: Users },
   { id: 'courses', label: 'Courses', icon: BookOpen },
+  { id: 'enrollments', label: 'Enrollments', icon: UserPlus },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
@@ -261,6 +264,7 @@ function App() {
               )}
               {activeTab === 'teachers' && <AdminTeacherManager />}
               {activeTab === 'courses' && <CourseManager />}
+              {activeTab === 'enrollments' && <AdminEnrollmentCenter />}
               {activeTab === 'users' && (
                 <div className="text-center">
                   <h1 className="text-2xl font-bold">User Management</h1>
