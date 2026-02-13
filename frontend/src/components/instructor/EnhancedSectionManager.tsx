@@ -3,7 +3,6 @@ import { api } from '../../lib/api';
 import {
   Users,
   Plus,
-  Upload,
   Trash2,
   AlertCircle,
   Loader2,
@@ -11,10 +10,8 @@ import {
   Mail,
   Hash,
   UserCheck,
-  X,
   Settings,
 } from 'lucide-react';
-import { EnrollmentManager } from './EnrollmentManager';
 
 interface EnhancedSectionManagerProps {
   chatbotId?: string;
@@ -46,12 +43,6 @@ interface EnrolledStudent {
   attendance_percentage?: number;
 }
 
-interface AvailableStudent {
-  id: string;
-  username: string;
-  full_name: string;
-  email: string;
-}
 
 export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManagerProps) {
   const [sections, setSections] = useState<Section[]>([]);
@@ -59,18 +50,14 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>(
     []
   );
-  const [availableStudents, setAvailableStudents] = useState<AvailableStudent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    'sections' | 'enrollments' | 'bulk-enroll' | 'settings'
+    'sections' | 'enrollments' | 'settings'
   >('sections');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
-  const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
   const [showCreateSection, setShowCreateSection] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
@@ -110,99 +97,13 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
 
   const handleSectionSelect = (section: Section) => {
     setSelectedSection(section);
-    // Students are already loaded in the section response
     setEnrolledStudents((section.students as unknown as EnrolledStudent[]) || []);
     setActiveTab('enrollments');
-    fetchAvailableStudents(section.id);
-    setSelectedStudentId('');
-    setStudentSearchQuery('');
     if (onSectionSelect) {
       onSectionSelect(section.id, section.name);
     }
   };
 
-  const fetchAvailableStudents = async (sectionId: string, search?: string) => {
-    try {
-      setIsLoadingStudents(true);
-      const url = new URL(`${window.location.origin}/api/instructor/sections/${sectionId}/available-students`);
-      if (search) {
-        url.searchParams.append('search', search);
-      }
-      const res = await api.get<AvailableStudent[]>(
-        `/instructor/sections/${sectionId}/available-students${search ? `?search=${search}` : ''}`
-      );
-      setAvailableStudents(res || []);
-    } catch (err) {
-      setError(`Failed to fetch available students: ${err}`);
-    } finally {
-      setIsLoadingStudents(false);
-    }
-  };
-
-  const handleEnrollStudent = async () => {
-    if (!selectedSection || !selectedStudentId) {
-      setError('Please select a student to enroll');
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      await api.post(`/instructor/sections/${selectedSection.id}/enroll`, {
-        student_id: selectedStudentId,
-      });
-
-      // Find the enrolled student details
-      const enrolledStudent = availableStudents.find((s) => s.id === selectedStudentId);
-      if (enrolledStudent) {
-        const newEnrolledStudent: EnrolledStudent = {
-          id: `enrollment-${enrolledStudent.id}`,
-          student_id: enrolledStudent.id,
-          username: enrolledStudent.username,
-          full_name: enrolledStudent.full_name,
-          email: enrolledStudent.email,
-          enrolled_at: new Date().toISOString(),
-        };
-        setEnrolledStudents([...enrolledStudents, newEnrolledStudent]);
-      }
-
-      // Refresh available students
-      await fetchAvailableStudents(selectedSection.id);
-      setSelectedStudentId('');
-      setError(null);
-    } catch (err) {
-      setError(`Failed to enroll student: ${err}`);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleStudentSearch = async (query: string) => {
-    setStudentSearchQuery(query);
-    if (selectedSection) {
-      // Debounced search on typing
-      if (query.length >= 2 || query.length === 0) {
-        await fetchAvailableStudents(selectedSection.id, query || undefined);
-      }
-    }
-  };
-
-  const handleRemoveStudent = async (studentId: string) => {
-    if (!selectedSection) return;
-
-    try {
-      await api.delete(
-        `/instructor/sections/${selectedSection.id}/students/${studentId}`
-      );
-      setEnrolledStudents(
-        enrolledStudents.filter((s) => s.student_id !== studentId)
-      );
-      // Refresh available students
-      await fetchAvailableStudents(selectedSection.id);
-      setShowDeleteConfirm(null);
-    } catch (err) {
-      setError(`Failed to remove student: ${err}`);
-    }
-  };
 
   const handleDeleteSection = async (sectionId: string) => {
     try {
@@ -314,8 +215,8 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                     key={section.id}
                     onClick={() => handleSectionSelect(section)}
                     className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${selectedSection?.id === section.id
-                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-l-2 border-emerald-600 dark:border-emerald-400'
-                        : ''
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 border-l-2 border-emerald-600 dark:border-emerald-400'
+                      : ''
                       }`}
                   >
                     <p className="font-medium text-gray-900 dark:text-white text-sm">
@@ -418,14 +319,6 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => setActiveTab('bulk-enroll')}
-                      title="Bulk Enroll"
-                      className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/10 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg text-emerald-700 dark:text-emerald-300 text-sm flex items-center gap-2 transition-colors"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Bulk Enroll
-                    </button>
                     <button className="p-2 hover:bg-white/50 dark:hover:bg-gray-800/50 rounded-lg transition-colors">
                       <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                     </button>
@@ -481,7 +374,6 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                 {(
                   [
                     { id: 'enrollments', label: 'Enrollments', count: enrolledStudents.length },
-                    { id: 'bulk-enroll', label: 'Bulk Enroll' },
                     { id: 'settings', label: 'Settings' },
                   ] as const
                 ).map((tab) => (
@@ -489,8 +381,8 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id
-                        ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
-                        : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                      ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
                       }`}
                   >
                     {tab.label}
@@ -506,86 +398,17 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
               {/* Enrollments Tab */}
               {activeTab === 'enrollments' && (
                 <div className="bg-white dark:bg-gray-900 border border-t-0 border-gray-200 dark:border-gray-800 rounded-b-xl">
-                  {/* Enrollment Form Section */}
-                  <div className="border-b border-gray-200 dark:border-gray-800 p-6 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-900/10 dark:to-cyan-900/10">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                      <Plus className="h-5 w-5" />
-                      Enroll Students
-                    </h3>
-                    <div className="space-y-3">
+                  {/* Read-Only Notice */}
+                  <div className="border-b border-gray-200 dark:border-gray-800 p-4 bg-blue-50 dark:bg-blue-900/20">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Search & Select Student
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="Search by name, email, or username..."
-                            value={studentSearchQuery}
-                            onChange={(e) => handleStudentSearch(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                          />
-                          {isLoadingStudents && (
-                            <Loader2 className="absolute right-3 top-2.5 h-5 w-5 animate-spin text-gray-400" />
-                          )}
-                        </div>
-                      </div>
-
-                      {availableStudents.length > 0 && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Available Students ({availableStudents.length})
-                          </label>
-                          <select
-                            value={selectedStudentId}
-                            onChange={(e) => setSelectedStudentId(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                          >
-                            <option value="">Select a student...</option>
-                            {availableStudents.map((student) => (
-                              <option key={student.id} value={student.id}>
-                                {student.full_name} ({student.username}) - {student.email}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      {availableStudents.length === 0 && !isLoadingStudents && studentSearchQuery === '' && (
-                        <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                          <p className="text-sm text-blue-800 dark:text-blue-200">
-                            Type to search for students to enroll
-                          </p>
-                        </div>
-                      )}
-
-                      {availableStudents.length === 0 && !isLoadingStudents && studentSearchQuery !== '' && (
-                        <div className="p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-                          <p className="text-sm text-amber-800 dark:text-amber-200">
-                            No matching students found
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex gap-3 pt-2">
-                        <button
-                          onClick={handleEnrollStudent}
-                          disabled={!selectedStudentId || isSaving}
-                          className="flex-1 min-w-[120px] px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
-                        >
-                          {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                          Enroll Student
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedStudentId('');
-                            setStudentSearchQuery('');
-                            setAvailableStudents([]);
-                          }}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors text-sm"
-                        >
-                          Clear
-                        </button>
+                        <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                          Read-Only View
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+                          Enrollment management has been moved to the Admin role. Contact your institution's registrar to enroll or remove students.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -651,54 +474,13 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                           </button>
 
                           {expandedStudent === student.id && (
-                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
                               <div className="text-xs text-gray-600 dark:text-gray-400">
                                 <span className="font-medium">
                                   Enrolled{' '}
                                   {new Date(student.enrolled_at).toLocaleDateString()}
                                 </span>
                               </div>
-                              <button
-                                onClick={() =>
-                                  setShowDeleteConfirm(student.student_id)
-                                }
-                                className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex items-center gap-1"
-                              >
-                                <X className="h-4 w-4" />
-                                Remove
-                              </button>
-
-                              {showDeleteConfirm === student.student_id && (
-                                <div className="fixed inset-0 z-50 bg-black/50 dark:bg-black/70 flex items-center justify-center">
-                                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 max-w-sm">
-                                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                                      Remove Student?
-                                    </h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                      {student.full_name} will be unenrolled
-                                      from this section.
-                                    </p>
-                                    <div className="flex gap-3">
-                                      <button
-                                        onClick={() =>
-                                          handleRemoveStudent(student.student_id)
-                                        }
-                                        className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
-                                      >
-                                        Remove
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          setShowDeleteConfirm(null)
-                                        }
-                                        className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-medium rounded-lg transition-colors"
-                                      >
-                                        Cancel
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>
@@ -708,23 +490,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                 </div>
               )}
 
-              {/* Bulk Enroll Tab */}
-              {activeTab === 'bulk-enroll' && (
-                <div className="bg-white dark:bg-gray-900 border border-t-0 border-gray-200 dark:border-gray-800 rounded-b-xl p-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <Upload className="h-5 w-5 text-emerald-600" />
-                      Bulk Enroll Students
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Quickly enroll multiple students by pasting IDs or uploading a CSV file. This action updates the section enrollments immediately.
-                    </p>
-                    {selectedSection && (
-                      <EnrollmentManager sectionId={selectedSection.id} sectionName={selectedSection.name} />
-                    )}
-                  </div>
-                </div>
-              )}
+
 
 
               {/* Settings Tab */}
