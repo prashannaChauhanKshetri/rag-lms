@@ -779,6 +779,21 @@ def list_sections_for_teacher(teacher_id: str) -> List[Dict]:
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
+def list_all_sections() -> List[Dict]:
+    """List all sections across all teachers (Admin use, excluding deleted)"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT s.*, u.full_name as teacher_name, u.username as teacher_username
+                   FROM sections s
+                   LEFT JOIN users u ON s.teacher_id = u.id
+                   WHERE s.deleted_at IS NULL
+                   ORDER BY s.created_at DESC"""
+            )
+            sections = cur.fetchall()
+    return [dict(s) for s in sections]
+
+
 def get_sections_by_class(class_id: str) -> List[Dict]:
     """Get all sections for a class (excluding soft-deleted)"""
     with get_db_connection() as conn:

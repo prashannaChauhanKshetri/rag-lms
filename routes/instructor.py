@@ -1000,81 +1000,33 @@ async def delete_section(section_id: str, user=Depends(utils_auth.get_current_us
         raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================
-# ENROLLMENTS
+# ENROLLMENTS (DEPRECATED - Moved to Admin)
 # ============================================
 
 @router.post("/sections/{section_id}/enroll")
-async def enroll_student(section_id: str, request: EnrollStudentRequest, user=Depends(utils_auth.get_current_user)):
-    """Enroll a student in a section"""
-    try:
-        section = db.get_section(section_id)
-        if not section:
-            raise HTTPException(status_code=404, detail="Section not found")
-        
-        teacher_id = user.get("sub") or user.get("id")
-        if teacher_id != section["teacher_id"]:
-            raise HTTPException(status_code=403, detail="Only section teacher can enroll students")
-        
-        # Check institution-level access
-        if section.get("institution_id"):
-            utils_auth.require_institution(user, section["institution_id"])
-        
-        enrollment_id = str(uuid.uuid4())
-        db.enroll_student(enrollment_id, section_id, request.student_id, performed_by=teacher_id)
-        return {"message": "Student enrolled", "enrollment_id": enrollment_id}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def enroll_student_deprecated(section_id: str, request: EnrollStudentRequest, user=Depends(utils_auth.get_current_user)):
+    """DEPRECATED: Enrollment management has been moved to Admin role"""
+    raise HTTPException(
+        status_code=403,
+        detail="Enrollment management has been moved to Admin role. Please contact your institution's registrar."
+    )
 
 @router.post("/sections/{section_id}/bulk-enroll")
-async def bulk_enroll_students(section_id: str, request: BulkEnrollRequest, user=Depends(utils_auth.get_current_user)):
-    """Bulk enroll multiple students in a section"""
-    try:
-        section = db.get_section(section_id)
-        if not section:
-            raise HTTPException(status_code=404, detail="Section not found")
-        
-        teacher_id = user.get("sub") or user.get("id")
-        if teacher_id != section["teacher_id"]:
-            raise HTTPException(status_code=403, detail="Only section teacher can enroll students")
-        
-        # Check institution-level access
-        if section.get("institution_id"):
-            utils_auth.require_institution(user, section["institution_id"])
-        
-        if not request.student_ids:
-            raise HTTPException(status_code=400, detail="No students provided")
-        
-        result = db.bulk_enroll_students(section_id, request.student_ids, performed_by=teacher_id)
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def bulk_enroll_students_deprecated(section_id: str, request: BulkEnrollRequest, user=Depends(utils_auth.get_current_user)):
+    """DEPRECATED: Enrollment management has been moved to Admin role"""
+    raise HTTPException(
+        status_code=403,
+        detail="Enrollment management has been moved to Admin role. Please contact your institution's registrar."
+    )
 
 @router.delete("/sections/{section_id}/students/{student_id}")
-async def remove_student(section_id: str, student_id: str, user=Depends(utils_auth.get_current_user)):
-    """Remove a student from a section"""
-    try:
-        section = db.get_section(section_id)
-        if not section:
-            raise HTTPException(status_code=404, detail="Section not found")
-        
-        teacher_id = user.get("sub") or user.get("id")
-        if teacher_id != section["teacher_id"]:
-            raise HTTPException(status_code=403, detail="Not authorized")
-        
-        # Check institution-level access
-        if section.get("institution_id"):
-            utils_auth.require_institution(user, section["institution_id"])
-        
-        db.remove_enrollment(section_id, student_id, performed_by=teacher_id)
-        return {"message": "Student removed"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def remove_student_deprecated(section_id: str, student_id: str, user=Depends(utils_auth.get_current_user)):
+    """DEPRECATED: Enrollment management has been moved to Admin role"""
+    raise HTTPException(
+        status_code=403,
+        detail="Enrollment management has been moved to Admin role. Please contact your institution's registrar."
+    )
+
 
 # ============================================
 # ATTENDANCE
