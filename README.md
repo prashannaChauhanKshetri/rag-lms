@@ -5,8 +5,8 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 ## 🎯 Project Overview
 
 **Final Year Project** building an intelligent LMS with:
-- **Admin Dashboard** - Teacher management, institution analytics, and system monitoring
-- **Instructor Portal** - Class & section management, assignments, attendance tracking, lesson planning, quiz/flashcard generation
+- **Admin Dashboard** - Teacher management, **enrollment management (registrar)**, institution analytics, and system monitoring
+- **Instructor Portal** - Class & section management, assignments, attendance tracking, lesson planning, quiz/flashcard generation (read-only student roster)
 - **Student Portal** - Course enrollment, assignment submission, grading feedback, quizzes, flashcards, and AI-powered tutoring
 
 ## 🚀 Key Features
@@ -14,7 +14,8 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 ### 1. Class & Section Management
 - Hierarchical organization: **Classes** → **Sections** → **Students**
 - Teachers create classes linked to courses
-- Section-based student enrollment
+- **Admin-managed enrollment** — Admins (registrars) enroll/remove students via the Enrollment Center
+- Instructors have read-only access to their section rosters
 - Easy class cloning and archival
 
 ### 2. Assignment Management
@@ -55,9 +56,9 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 ### 6. Role-Based Access Control
 | Role | Features |
 |------|----------|
-| **Admin** | Manage teachers, view analytics, system configuration |
-| **Instructor** | Manage classes/sections, create assignments, track attendance, generate quizzes |
-| **Student** | Enroll in sections, submit assignments, take quizzes, study with flashcards, chat with AI tutors |
+| **Admin** | Manage teachers, **enroll/remove students (registrar)**, view analytics, system configuration |
+| **Instructor** | Manage classes/sections, create assignments, track attendance, generate quizzes, **view student roster (read-only)** |
+| **Student** | View enrolled sections, submit assignments, take quizzes, study with flashcards, chat with AI tutors |
 
 ## 🛠️ Tech Stack
 
@@ -159,9 +160,17 @@ rag-lms/
 - `PUT /teachers/{user_id}/profile` - Update teacher info
 - `GET /teachers/{user_id}/classes` - Teacher's classes
 - `GET /teachers/{user_id}/assignments` - Teacher's assignments
+- **Enrollment Management (Registrar):**
+  - `GET /sections/all` - List all sections with student counts
+  - `POST /sections/{id}/enroll` - Single student enrollment
+  - `POST /sections/{id}/bulk-enroll` - Bulk enrollment (IDs or CSV)
+  - `DELETE /sections/{id}/students/{sid}` - Remove student
+  - `GET /sections/{id}/available-students` - Search unenrolled students
+  - `GET /sections/{id}/enrollment-history` - Audit trail
 
 ### Instructor Routes (`/instructor`)
-- **Course Mgmt**: `POST /classes`, `POST /sections`, `POST /bulk-enroll`
+- **Course Mgmt**: `POST /classes`, `POST /sections`
+- **Roster**: `GET /sections/{id}/students` (read-only view)
 - **AI Tools**: 
   - `POST /lesson-plans/generate` - Generate lesson plans
   - `POST /questions/generate` - Generate quiz questions
@@ -245,6 +254,7 @@ MIT License - See LICENSE file
 - ✅ Attendance Tracking & Reporting
 - ✅ Teacher & Student Profiles
 - ✅ Admin Dashboard & Analytics
+- ✅ **Admin Enrollment Center (Registrar)**
 - ✅ Hybrid Search (BM25 + Vector)
 - ✅ AI Lesson Planner (Textbook Grounded)
 - ✅ Quiz & Flashcard Generation
@@ -252,3 +262,4 @@ MIT License - See LICENSE file
 - ✅ JWT Authentication & Security
 - ✅ File Upload (S3/Local)
 - ✅ AI Tutoring Chat
+- ✅ Password Visibility Toggle (Login)
