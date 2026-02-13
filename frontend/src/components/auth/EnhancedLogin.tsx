@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, ArrowRight, AlertCircle, Loader2, Building2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Loader2, Building2, Eye, EyeOff } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface Institution {
@@ -47,6 +47,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Fetch institutions on component mount
   useEffect(() => {
@@ -75,7 +76,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!credentials.username || !credentials.password) {
       setError('Please enter both username and password');
       return;
@@ -109,7 +110,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!forgotPasswordEmail) {
       setForgotPasswordMessage('Please enter your email address');
       return;
@@ -146,21 +147,18 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
             </div>
 
             {forgotPasswordMessage && (
-              <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 ${
-                forgotPasswordMessage.includes('sent') 
-                  ? 'bg-green-50 border-green-200' 
+              <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 ${forgotPasswordMessage.includes('sent')
+                  ? 'bg-green-50 border-green-200'
                   : 'bg-red-50 border-red-200'
-              }`}>
-                <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                  forgotPasswordMessage.includes('sent') 
-                    ? 'text-green-600' 
+                }`}>
+                <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${forgotPasswordMessage.includes('sent')
+                    ? 'text-green-600'
                     : 'text-red-600'
-                }`} />
-                <p className={`text-sm ${
-                  forgotPasswordMessage.includes('sent') 
-                    ? 'text-green-700' 
+                  }`} />
+                <p className={`text-sm ${forgotPasswordMessage.includes('sent')
+                    ? 'text-green-700'
                     : 'text-red-700'
-                }`}>{forgotPasswordMessage}</p>
+                  }`}>{forgotPasswordMessage}</p>
               </div>
             )}
 
@@ -297,14 +295,22 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
                   <Lock className="w-5 h-5 text-gray-400" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={credentials.password}
                   onChange={handleInputChange}
                   placeholder="Enter your password"
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
                   autoComplete="current-password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </div>
 
