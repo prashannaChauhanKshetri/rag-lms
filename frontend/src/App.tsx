@@ -24,15 +24,12 @@ import {
   UserPlus,
 } from 'lucide-react';
 import { InstructorHome } from './components/instructor/InstructorHome';
-import { CourseManager } from './components/instructor/CourseManager';
 import { QuizCreator } from './components/instructor/QuizCreator';
 import { LessonPlanner } from './components/instructor/LessonPlanner';
 import { FlashcardManager } from './components/instructor/FlashcardManager';
 import { AssignmentManager } from './components/instructor/AssignmentManager';
 import { AnalyticsDashboard } from './components/instructor/AnalyticsDashboard';
 import AttendanceManager from './components/instructor/AttendanceManager';
-// import EnhancedSectionManager from './components/instructor/EnhancedSectionManager'; // Replaced with EnhancedSectionManager
-import ClassManager from './components/instructor/ClassManager';
 import { StudentAssignments } from './components/student/StudentAssignments';
 import { StudentFlashcards } from './components/student/StudentFlashcards';
 import { StudentQuizzes } from './components/student/StudentQuizzes';
@@ -43,6 +40,9 @@ import { SectionOverview } from './components/student/EnhancedCourseOverview';
 import { EnhancedSectionManager } from './components/instructor/EnhancedSectionManager';
 import { AttendanceReportView } from './components/instructor/AttendanceReportView';
 import AdminEnrollmentCenter from './components/admin/AdminEnrollmentCenter';
+import AdminClassManager from './components/admin/AdminClassManager';
+import AdminCourseManager from './components/admin/AdminCourseManager';
+import AdminDashboard from './components/admin/AdminDashboard';
 
 interface User {
   id: string;
@@ -74,12 +74,10 @@ const studentTabs = [
 
 const instructorTabs = [
   { id: 'home', label: 'Home', icon: HomeIcon },
-  { id: 'sections', label: 'Sections', icon: Users },
-  { id: 'attendance-report', label: 'Reports', icon: BarChart3 },
+  { id: 'sections', label: 'My Sections', icon: Users },
   { id: 'attendance', label: 'Attendance', icon: Calendar },
+  { id: 'attendance-report', label: 'Reports', icon: BarChart3 },
   { id: 'assignments', label: 'Assignments', icon: FileText },
-  { id: 'classes', label: 'Classes', icon: BookOpen },
-  { id: 'courses', label: 'Course Manager', icon: Brain },
   { id: 'quizzes', label: 'Quiz Creator', icon: HelpCircle },
   { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
   { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard },
@@ -88,10 +86,10 @@ const instructorTabs = [
 
 const adminTabs = [
   { id: 'home', label: 'Dashboard', icon: HomeIcon },
+  { id: 'courses', label: 'Course Bots', icon: Brain },
+  { id: 'classes', label: 'Classes', icon: BookOpen },
   { id: 'teachers', label: 'Teachers', icon: Users },
-  { id: 'courses', label: 'Courses', icon: BookOpen },
   { id: 'enrollments', label: 'Enrollments', icon: UserPlus },
-  { id: 'users', label: 'Users', icon: Users },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -205,7 +203,6 @@ function App() {
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
               {activeTab === 'home' && <InstructorHome user={user} onNavigate={handleNavigate} />}
-              {activeTab === 'classes' && <ClassManager />}
               {activeTab === 'sections' && (
                 <EnhancedSectionManager
                   onSectionSelect={(sectionId) => {
@@ -218,7 +215,6 @@ function App() {
                 <AttendanceReportView />
               )}
               {activeTab === 'attendance' && <AttendanceManager sectionId={selectedSectionId || ""} />}
-              {activeTab === 'courses' && <CourseManager />}
               {activeTab === 'quizzes' && <QuizCreator />}
               {activeTab === 'flashcards' && <FlashcardManager />}
               {activeTab === 'lesson-plans' && <LessonPlanner />}
@@ -257,20 +253,12 @@ function App() {
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
               {activeTab === 'home' && (
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
-                  <p className="text-gray-600">Welcome to the admin panel</p>
-                </div>
+                <AdminDashboard onNavigate={handleNavigate} />
               )}
               {activeTab === 'teachers' && <AdminTeacherManager />}
-              {activeTab === 'courses' && <CourseManager />}
+              {activeTab === 'classes' && <AdminClassManager />}
+              {activeTab === 'courses' && <AdminCourseManager />}
               {activeTab === 'enrollments' && <AdminEnrollmentCenter />}
-              {activeTab === 'users' && (
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold">User Management</h1>
-                  <p className="text-gray-600">Coming soon...</p>
-                </div>
-              )}
               {activeTab === 'settings' && (
                 <div className="text-center">
                   <h1 className="text-2xl font-bold">Settings</h1>
