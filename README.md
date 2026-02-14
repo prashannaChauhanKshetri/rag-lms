@@ -11,9 +11,9 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 
 ## 🚀 Key Features
 
-### 1. Class & Section Management
-- Hierarchical organization: **Classes** → **Sections** → **Students**
-- Teachers create classes linked to courses
+### 1. Class & Subject Management
+- Hierarchical organization: **Classes** → **Subjects (Chatbots)** → **Sections**
+- Teachers are assigned to specific subjects within a class
 - **Admin-managed enrollment** — Admins (registrars) enroll/remove students via the Enrollment Center
 - Instructors have read-only access to their section rosters
 - Easy class cloning and archival
@@ -57,7 +57,7 @@ A modern, role-based educational platform powered by AI and RAG (Retrieval Augme
 | Role | Features |
 |------|----------|
 | **Admin** | Manage teachers, **enroll/remove students (registrar)**, view analytics, system configuration |
-| **Instructor** | Manage classes/sections, create assignments, track attendance, generate quizzes, **view student roster (read-only)** |
+| **Instructor** | View assigned classes/subjects, manage sections, create assignments, track attendance, generate quizzes |
 | **Student** | View enrolled sections, submit assignments, take quizzes, study with flashcards, chat with AI tutors |
 
 ## 🛠️ Tech Stack
