@@ -237,9 +237,7 @@ Pull requests welcome! Please ensure:
 - Tests pass
 - Database migrations included for schema changes
 
-## 📄 License
 
-MIT License - See LICENSE file
 
 ## 👤 Author
 
@@ -254,7 +252,7 @@ MIT License - See LICENSE file
 - ✅ Attendance Tracking & Reporting
 - ✅ Teacher & Student Profiles
 - ✅ Admin Dashboard & Analytics
-- ✅ **Admin Enrollment Center (Registrar)**
+- ✅ Admin Enrollment Center (Registrar)
 - ✅ Hybrid Search (BM25 + Vector)
 - ✅ AI Lesson Planner (Textbook Grounded)
 - ✅ Quiz & Flashcard Generation
