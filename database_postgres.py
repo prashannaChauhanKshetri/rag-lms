@@ -657,14 +657,14 @@ def grade_assignment_submission(submission_id: str, grade: float, feedback: str)
 
 # --- CLASSES (Course Management) ---
 
-def create_class(class_id: str, chatbot_id: str, name: str, teacher_id: str, description: Optional[str] = None, grade_level: Optional[str] = None):
-    """Create a new class"""
+def create_class(class_id: str, name: str, description: Optional[str] = None, grade_level: Optional[str] = None, institution_id: Optional[str] = None):
+    """Create a new class (no chatbot or teacher — those are added separately)"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO classes (id, chatbot_id, name, teacher_id, description, grade_level)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                (class_id, chatbot_id, name, teacher_id, description, grade_level)
+                """INSERT INTO classes (id, name, description, grade_level, institution_id)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (class_id, name, description, grade_level, institution_id)
             )
 
 def get_class(class_id: str) -> Optional[Dict]:
@@ -676,22 +676,31 @@ def get_class(class_id: str) -> Optional[Dict]:
     return dict(cls) if cls else None
 
 def list_classes_for_teacher(teacher_id: str) -> List[Dict]:
-    """List all classes taught by a teacher"""
+    """List all classes where the teacher has at least one subject assignment"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                "SELECT * FROM classes WHERE teacher_id = %s ORDER BY created_at DESC",
+                """SELECT DISTINCT c.*
+                   FROM classes c
+                   JOIN class_subjects cs ON cs.class_id = c.id
+                   JOIN teacher_assignments ta ON ta.class_subject_id = cs.id
+                   WHERE ta.teacher_id = %s
+                   ORDER BY c.created_at DESC""",
                 (teacher_id,)
             )
             classes = cur.fetchall()
     return [dict(c) for c in classes]
 
 def list_classes_for_chatbot(chatbot_id: str) -> List[Dict]:
-    """List all classes for a chatbot"""
+    """List all classes that have this chatbot as a subject"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                "SELECT * FROM classes WHERE chatbot_id = %s ORDER BY created_at DESC",
+                """SELECT c.*
+                   FROM classes c
+                   JOIN class_subjects cs ON cs.class_id = c.id
+                   WHERE cs.chatbot_id = %s
+                   ORDER BY c.created_at DESC""",
                 (chatbot_id,)
             )
             classes = cur.fetchall()
@@ -718,27 +727,127 @@ def update_class(class_id: str, name: Optional[str] = None, description: Optiona
                 cur.execute(f"UPDATE classes SET {', '.join(updates)} WHERE id = %s", params)
 
 def delete_class(class_id: str):
-    """Delete a class and all associated sections"""
+    """Delete a class and all associated sections, subjects, and teacher assignments (cascading)"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM classes WHERE id = %s", (class_id,))
 
-# --- SECTIONS (Course Management) ---
+# --- CLASS SUBJECTS (Many-to-Many: Class <-> Chatbot) ---
 
-def create_section(section_id: str, chatbot_id: str, name: str, teacher_id: str, class_id: Optional[str] = None, schedule: Optional[Dict] = None):
-    """Create a new section for a course"""
+def add_subject_to_class(cs_id: str, class_id: str, chatbot_id: str):
+    """Add a chatbot/subject to a class"""
     with get_db_connection() as conn:
-        with get_dict_cursor(conn) as cur:
-            # Get teacher's institution_id
-            cur.execute("SELECT institution_id FROM users WHERE id = %s", (teacher_id,))
-            teacher = cur.fetchone()
-            institution_id = teacher['institution_id'] if teacher else None
-        
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO sections (id, class_id, chatbot_id, name, teacher_id, institution_id, schedule)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                (section_id, class_id, chatbot_id, name, teacher_id, institution_id, psycopg2.extras.Json(schedule or {}))
+                """INSERT INTO class_subjects (id, class_id, chatbot_id)
+                   VALUES (%s, %s, %s)
+                   ON CONFLICT (class_id, chatbot_id) DO NOTHING""",
+                (cs_id, class_id, chatbot_id)
+            )
+
+def remove_subject_from_class(cs_id: str):
+    """Remove a subject from a class (cascading deletes teacher assignments)"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM class_subjects WHERE id = %s", (cs_id,))
+
+def list_class_subjects(class_id: str) -> List[Dict]:
+    """List all subjects (chatbots) for a class, with teacher info"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT cs.id as class_subject_id, cs.class_id, cs.chatbot_id, cs.created_at,
+                          cb.name as chatbot_name, cb.greeting
+                   FROM class_subjects cs
+                   JOIN chatbots cb ON cb.id = cs.chatbot_id
+                   WHERE cs.class_id = %s
+                   ORDER BY cs.created_at""",
+                (class_id,)
+            )
+            subjects = cur.fetchall()
+    return [dict(s) for s in subjects]
+
+# --- TEACHER ASSIGNMENTS (Many-to-Many: Teacher <-> Class Subject) ---
+
+def assign_teacher_to_subject(ta_id: str, class_subject_id: str, teacher_id: str):
+    """Assign a teacher to a specific class subject"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO teacher_assignments (id, class_subject_id, teacher_id)
+                   VALUES (%s, %s, %s)
+                   ON CONFLICT (class_subject_id, teacher_id) DO NOTHING""",
+                (ta_id, class_subject_id, teacher_id)
+            )
+
+def remove_teacher_assignment(ta_id: str):
+    """Remove a teacher assignment"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM teacher_assignments WHERE id = %s", (ta_id,))
+
+def list_teacher_assignments(class_id: str) -> List[Dict]:
+    """List all teacher assignments for a class"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT ta.id as assignment_id, ta.teacher_id, ta.class_subject_id, ta.created_at,
+                          u.full_name as teacher_name, u.username as teacher_username,
+                          cb.name as subject_name, cb.id as chatbot_id
+                   FROM teacher_assignments ta
+                   JOIN class_subjects cs ON cs.id = ta.class_subject_id
+                   JOIN chatbots cb ON cb.id = cs.chatbot_id
+                   JOIN users u ON u.id = ta.teacher_id
+                   WHERE cs.class_id = %s
+                   ORDER BY cb.name, u.full_name""",
+                (class_id,)
+            )
+            assignments = cur.fetchall()
+    return [dict(a) for a in assignments]
+
+def get_student_chatbots(student_id: str) -> List[Dict]:
+    """Get all chatbots a student has access to via enrollment -> section -> class -> class_subjects"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT DISTINCT cb.id, cb.name, cb.greeting, c.name as class_name, c.id as class_id
+                   FROM enrollments e
+                   JOIN sections s ON s.id = e.section_id
+                   JOIN classes c ON c.id = s.class_id
+                   JOIN class_subjects cs ON cs.class_id = c.id
+                   JOIN chatbots cb ON cb.id = cs.chatbot_id
+                   WHERE e.student_id = %s AND e.deleted_at IS NULL AND s.deleted_at IS NULL
+                   ORDER BY c.name, cb.name""",
+                (student_id,)
+            )
+            chatbots = cur.fetchall()
+    return [dict(cb) for cb in chatbots]
+
+def is_teacher_of_section(teacher_id: str, section_id: str) -> bool:
+    """Check if a teacher has any subject assignment in the parent class of this section"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT 1
+                   FROM sections s
+                   JOIN class_subjects cs ON cs.class_id = s.class_id
+                   JOIN teacher_assignments ta ON ta.class_subject_id = cs.id
+                   WHERE s.id = %s AND ta.teacher_id = %s AND s.deleted_at IS NULL
+                   LIMIT 1""",
+                (section_id, teacher_id)
+            )
+            return cur.fetchone() is not None
+
+# --- SECTIONS (Course Management) ---
+
+def create_section(section_id: str, name: str, class_id: str, institution_id: Optional[str] = None, schedule: Optional[Dict] = None):
+    """Create a new section under a class (no chatbot or teacher — inherited from class)"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO sections (id, class_id, name, institution_id, schedule)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (section_id, class_id, name, institution_id, psycopg2.extras.Json(schedule or {}))
             )
 
 def get_section(section_id: str) -> Optional[Dict]:
@@ -750,49 +859,66 @@ def get_section(section_id: str) -> Optional[Dict]:
     return dict(section) if section else None
 
 def list_sections_for_chatbot(chatbot_id: str) -> List[Dict]:
-    """List all sections for a chatbot (with institution context, excluding deleted)"""
+    """List all sections whose parent class has this chatbot as a subject"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            # Get chatbot's institution_id to ensure we only get relevant sections
-            cur.execute("SELECT institution_id FROM chatbots WHERE id = %s", (chatbot_id,))
-            chatbot = cur.fetchone()
-            institution_id = chatbot['institution_id'] if chatbot else None
-            
             cur.execute(
-                "SELECT * FROM sections WHERE chatbot_id = %s AND institution_id = %s AND deleted_at IS NULL ORDER BY created_at DESC",
-                (chatbot_id, institution_id)
+                """SELECT s.*
+                   FROM sections s
+                   JOIN classes c ON c.id = s.class_id
+                   JOIN class_subjects cs ON cs.class_id = c.id
+                   WHERE cs.chatbot_id = %s AND s.deleted_at IS NULL
+                   ORDER BY s.created_at DESC""",
+                (chatbot_id,)
             )
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
 def list_sections_for_teacher(teacher_id: str) -> List[Dict]:
-    """List all sections taught by a teacher (excluding deleted)"""
+    """List all sections where the teacher has at least one subject assignment in the parent class"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            # List ALL sections for this teacher (excluding soft-deleted)
-            # Note: We don't filter by institution_id here because a teacher may teach
-            # sections across multiple institutions or have legacy sections
             cur.execute(
-                "SELECT * FROM sections WHERE teacher_id = %s AND deleted_at IS NULL ORDER BY created_at DESC",
+                """SELECT DISTINCT s.*, c.name as class_name, c.grade_level
+                   FROM sections s
+                   JOIN classes c ON c.id = s.class_id
+                   JOIN class_subjects cs ON cs.class_id = c.id
+                   JOIN teacher_assignments ta ON ta.class_subject_id = cs.id
+                   WHERE ta.teacher_id = %s AND s.deleted_at IS NULL
+                   ORDER BY s.created_at DESC""",
                 (teacher_id,)
             )
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
 def list_all_sections() -> List[Dict]:
-    """List all sections across all teachers (Admin use, excluding deleted)"""
+    """List all sections across all classes (Admin use, excluding deleted)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                """SELECT s.*, u.full_name as teacher_name, u.username as teacher_username
+                """SELECT s.*, c.name as class_name, c.grade_level
                    FROM sections s
-                   LEFT JOIN users u ON s.teacher_id = u.id
+                   LEFT JOIN classes c ON c.id = s.class_id
                    WHERE s.deleted_at IS NULL
                    ORDER BY s.created_at DESC"""
             )
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
+
+def list_all_classes() -> List[Dict]:
+    """List all classes with subject count and section count (Admin use)"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT c.*,
+                          (SELECT COUNT(*) FROM sections s WHERE s.class_id = c.id AND s.deleted_at IS NULL) as section_count,
+                          (SELECT COUNT(*) FROM class_subjects cs WHERE cs.class_id = c.id) as subject_count
+                   FROM classes c
+                   ORDER BY c.created_at DESC"""
+            )
+            classes = cur.fetchall()
+    return [dict(c) for c in classes]
 
 def get_sections_by_class(class_id: str) -> List[Dict]:
     """Get all sections for a class (excluding soft-deleted)"""
