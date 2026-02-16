@@ -133,12 +133,12 @@ const AdminClassManager: React.FC = () => {
 
     const loadChatbots = useCallback(async () => {
         try {
-            const response = await api.get('/instructor/chatbots') as { chatbots: Chatbot[] };
+            const response = await api.get('/admin/chatbots') as { chatbots: Chatbot[] };
             setChatbots(response.chatbots || []);
         } catch {
             try {
-                const response = await api.get('/chatbots') as Chatbot[];
-                setChatbots(response || []);
+                const response = await api.get('/chatbots/list') as { chatbots: Chatbot[] };
+                setChatbots(response.chatbots || []);
             } catch (err: unknown) {
                 console.error('Failed to load chatbots', err);
             }
