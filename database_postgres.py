@@ -1577,7 +1577,25 @@ def get_all_teachers() -> List[Dict]:
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute("""
-                SELECT tp.*, u.email, u.full_name, u.username
+                SELECT 
+                    tp.user_id as id,
+                    tp.user_id,
+                    tp.institution_id,
+                    tp.first_name,
+                    tp.last_name,
+                    tp.phone,
+                    tp.bio,
+                    tp.qualifications,
+                    tp.specializations,
+                    tp.office_location,
+                    tp.office_hours,
+                    tp.department,
+                    tp.years_experience,
+                    tp.profile_picture_url,
+                    tp.last_updated,
+                    u.email, 
+                    u.full_name, 
+                    u.username
                 FROM teacher_profiles tp
                 JOIN users u ON tp.user_id = u.id
                 ORDER BY tp.last_name, tp.first_name
