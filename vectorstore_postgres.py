@@ -223,6 +223,22 @@ def hybrid_query(
                     "retrieval_method": "hybrid"
                 })
     
+    # Enrich results with chapter metadata from JSONB column
+    if results:
+        chunk_ids = [r['id'] for r in results]
+        with get_db_connection() as conn:
+            with get_dict_cursor(conn) as cur:
+                cur.execute(
+                    """SELECT id, metadata FROM document_chunks WHERE id = ANY(%s)""",
+                    (chunk_ids,)
+                )
+                meta_rows = {row['id']: row['metadata'] for row in cur.fetchall()}
+                
+                for result in results:
+                    meta = meta_rows.get(result['id']) or {}
+                    result['chapter'] = meta.get('chapter', '')
+                    result['section_type'] = meta.get('section_type', 'content')
+    
     return results
 
 
