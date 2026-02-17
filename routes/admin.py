@@ -107,7 +107,7 @@ async def get_teacher_assignments(user_id: str, user=Depends(utils_auth.get_curr
             # Get all subjects (chatbots) for this class
             subjects = db.list_class_subjects(cls["id"])
             for subj in subjects:
-                assignments = db.list_assignments(subj["chatbot_id"])
+                assignments = db.list_assignments_by_chatbot(subj["chatbot_id"])
                 all_assignments.extend(assignments)
         
         return {"assignments": all_assignments, "total": len(all_assignments)}

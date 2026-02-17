@@ -551,15 +551,6 @@ def delete_lesson_plan(plan_id: str):
 
 # --- Assignment Operations ---
 
-def create_assignment(assignment_id: str, chatbot_id: str, title: str, description: str, due_date: datetime):
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """INSERT INTO assignments (id, chatbot_id, title, description, due_date, status) 
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                (assignment_id, chatbot_id, title, description, due_date, 'draft')
-            )
-
 def list_assignments_by_chatbot(chatbot_id: str) -> List[Dict]:
     """RENAMED: was list_assignments(chatbot_id) - list assignments by chatbot ID"""
     with get_db_connection() as conn:
@@ -891,6 +882,30 @@ def list_sections_for_teacher(teacher_id: str) -> List[Dict]:
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
+def list_teacher_teaching_units(teacher_id: str) -> List[Dict]:
+    """List all (Section, Chatbot) pairs where the teacher teaches the chatbot's subject in that section's class"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT DISTINCT
+                    s.id as section_id,
+                    s.name as section_name,
+                    c.id as class_id,
+                    c.name as class_name,
+                    cb.id as chatbot_id,
+                    cb.name as chatbot_name
+                   FROM sections s
+                   JOIN classes c ON c.id = s.class_id
+                   JOIN class_subjects cs ON cs.class_id = c.id
+                   JOIN chatbots cb ON cb.id = cs.chatbot_id
+                   JOIN teacher_assignments ta ON ta.class_subject_id = cs.id
+                   WHERE ta.teacher_id = %s AND s.deleted_at IS NULL
+                   ORDER BY c.name, s.name, cb.name""",
+                (teacher_id,)
+            )
+            units = cur.fetchall()
+    return [dict(u) for u in units]
+
 def list_all_sections() -> List[Dict]:
     """List all sections across all classes (Admin use, excluding deleted)"""
     with get_db_connection() as conn:
@@ -1139,10 +1154,9 @@ def list_student_sections(student_id: str) -> List[Dict]:
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                """SELECT s.*, u.full_name as teacher_name
+                """SELECT s.*
                    FROM enrollments e
                    JOIN sections s ON e.section_id = s.id
-                   JOIN users u ON s.teacher_id = u.id
                    WHERE e.student_id = %s AND e.deleted_at IS NULL AND s.deleted_at IS NULL
                    ORDER BY s.created_at DESC""",
                 (student_id,)
@@ -1356,14 +1370,14 @@ def get_attendance_report(section_id: str, start_date: str, end_date: str) -> Di
 
 # --- ASSIGNMENTS ---
 
-def create_assignment(assignment_id: str, section_id: str, title: str, description: str = "", due_date: str = None, points: int = 0):
+def create_assignment(assignment_id: str, section_id: str, chatbot_id: str, title: str, description: str = "", due_date: str = None, points: int = 0, attachment_url: str = None):
     """Create an assignment"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO assignments (id, section_id, title, description, due_date, points)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                (assignment_id, section_id, title, description, due_date, points)
+                """INSERT INTO assignments (id, section_id, chatbot_id, title, description, due_date, points, attachment_url)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                (assignment_id, section_id, chatbot_id, title, description, due_date, points, attachment_url)
             )
 
 def get_assignment(assignment_id: str) -> Optional[Dict]:

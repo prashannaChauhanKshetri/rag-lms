@@ -92,7 +92,7 @@ async def list_student_assignments(chatbot_id: str, user=Depends(utils_auth.get_
     # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    assignments = db.list_assignments(chatbot_id)
+    assignments = db.list_assignments_by_chatbot(chatbot_id)
     # Filter only published assignments
     published = [a for a in assignments if a.get('status') == 'published']
     return {"assignments": published}
@@ -234,7 +234,7 @@ async def list_my_sections(user=Depends(utils_auth.get_current_user)):
                 
                 # Get pending assignments
                 try:
-                    assignments = db.list_assignments(section_id, published_only=True)
+                    assignments = db.list_assignments_by_section(section_id, published_only=True)
                     pending = 0
                     for assignment in assignments:
                         try:
@@ -278,7 +278,7 @@ async def get_section_overview(section_id: str, user=Depends(utils_auth.get_curr
             raise HTTPException(status_code=403, detail="Not enrolled in this section")
         
         # Gather section data
-        assignments = db.list_assignments(section_id, published_only=True)
+        assignments = db.list_assignments_by_section(section_id, published_only=True)
         resources = db.list_resources(section_id)
         attendance = db.get_student_attendance(section_id, user["id"])
         
@@ -354,7 +354,7 @@ async def get_section_assignments(section_id: str, user=Depends(utils_auth.get_c
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        assignments = db.list_assignments(section_id, published_only=True)
+        assignments = db.list_assignments_by_section(section_id, published_only=True)
         
         # Add submission status for student
         for assign in assignments:
@@ -461,7 +461,7 @@ async def list_student_assignments(user=Depends(utils_auth.get_current_user)):
         
         for enrollment in enrollments:
             section_id = enrollment.get("section_id")
-            assignments = db.list_assignments_for_section(section_id) if hasattr(db, 'list_assignments_for_section') else []
+            assignments = db.list_assignments_by_section(section_id) if hasattr(db, 'list_assignments_by_section') else []
             for assign in assignments:
                 assign["section_id"] = section_id
                 all_assignments.append(assign)
@@ -592,7 +592,7 @@ async def get_pending_assignments(user=Depends(utils_auth.get_current_user)):
         
         for enrollment in enrollments:
             section_id = enrollment.get("section_id")
-            assignments = db.list_assignments_for_section(section_id) if hasattr(db, 'list_assignments_for_section') else []
+            assignments = db.list_assignments_by_section(section_id) if hasattr(db, 'list_assignments_by_section') else []
             
             for assign in assignments:
                 # Check if student has submitted
@@ -669,7 +669,7 @@ async def get_student_progress(user=Depends(utils_auth.get_current_user)):
         
         for enrollment in enrollments:
             section_id = enrollment.get("section_id")
-            assignments = db.list_assignments_for_section(section_id) if hasattr(db, 'list_assignments_for_section') else []
+            assignments = db.list_assignments_by_section(section_id) if hasattr(db, 'list_assignments_by_section') else []
             
             section_completed = 0
             section_grades = []

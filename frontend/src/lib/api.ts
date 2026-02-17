@@ -5,6 +5,8 @@ interface RequestOptions extends RequestInit {
 }
 
 class ApiClient {
+    public static readonly BASE_URL = 'http://localhost:8000'; // Make this configurable or dynamic if needed
+
     private getHeaders(token?: string, isFormData: boolean = false): HeadersInit {
         const headers: HeadersInit = {};
 

@@ -602,4 +602,4 @@ CREATE INDEX IF NOT EXISTS idx_assignments_deleted ON assignments(deleted_at);
 DO $$ BEGIN RAISE NOTICE 'RAG-LMS PostgreSQL schema created successfully!';
 RAISE NOTICE 'pgvector extension enabled';
 RAISE NOTICE 'All tables, indexes, and functions created';
-END $$;
+END $$;ALTER TABLE assignments ADD COLUMN IF NOT EXISTS attachment_url TEXT;

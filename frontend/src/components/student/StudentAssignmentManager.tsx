@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { FileText, Upload, CheckCircle, Clock, AlertCircle, Download } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface Assignment {
@@ -9,6 +9,7 @@ interface Assignment {
   due_date: string;
   points?: number;
   section_id?: string;
+  attachment_url?: string;
 }
 
 interface Submission {
@@ -19,6 +20,7 @@ interface Submission {
   grade?: number;
   feedback?: string;
   score?: number;
+  text?: string;
 }
 
 export function StudentAssignmentManager() {
@@ -27,7 +29,7 @@ export function StudentAssignmentManager() {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [submissions, setSubmissions] = useState<Record<string, Submission[]>>({});
   const [error, setError] = useState<string | null>(null);
-  
+
   // Upload state
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadNotes, setUploadNotes] = useState('');
@@ -92,10 +94,10 @@ export function StudentAssignmentManager() {
       setError(null);
       setUploadFile(null);
       setUploadNotes('');
-      
+
       // Show success message
       alert(`Assignment submitted successfully!\nSubmission ID: ${data.submission_id}`);
-      
+
       // Refresh submissions
       await handleSelectAssignment(selectedAssignment);
     } catch (err) {
@@ -149,11 +151,10 @@ export function StudentAssignmentManager() {
                 <div
                   key={assignment.id}
                   onClick={() => handleSelectAssignment(assignment)}
-                  className={`p-3 rounded-lg cursor-pointer transition-all ${
-                    selectedAssignment?.id === assignment.id
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-white text-slate-800 border border-slate-200 hover:border-blue-400'
-                  }`}
+                  className={`p-3 rounded-lg cursor-pointer transition-all ${selectedAssignment?.id === assignment.id
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-white text-slate-800 border border-slate-200 hover:border-blue-400'
+                    }`}
                 >
                   <p className="font-medium truncate">{assignment.title}</p>
                   <div className="flex items-center gap-1 mt-1 text-xs opacity-75">
@@ -180,11 +181,10 @@ export function StudentAssignmentManager() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-2xl font-bold text-slate-800">{selectedAssignment.title}</h3>
-                    <div className={`flex items-center gap-2 mt-2 text-sm ${
-                      isOverdue(selectedAssignment.due_date)
-                        ? 'text-red-600'
-                        : 'text-blue-600'
-                    }`}>
+                    <div className={`flex items-center gap-2 mt-2 text-sm ${isOverdue(selectedAssignment.due_date)
+                      ? 'text-red-600'
+                      : 'text-blue-600'
+                      }`}>
                       {isOverdue(selectedAssignment.due_date) ? (
                         <AlertCircle className="w-4 h-4" />
                       ) : (
@@ -208,6 +208,21 @@ export function StudentAssignmentManager() {
                   <div className="mt-4 pt-4 border-t border-slate-200">
                     <h4 className="font-semibold text-slate-700 mb-2">Description</h4>
                     <p className="text-slate-700 text-sm leading-relaxed">{selectedAssignment.description}</p>
+                  </div>
+                )}
+
+                {selectedAssignment.attachment_url && (
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <h4 className="font-semibold text-slate-700 mb-2">Instructor Attachment</h4>
+                    <a
+                      href={`${(api.constructor as any).BASE_URL}/${selectedAssignment.attachment_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200 w-fit"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download Attachment</span>
+                    </a>
                   </div>
                 )}
               </div>
@@ -249,11 +264,10 @@ export function StudentAssignmentManager() {
                   <button
                     onClick={handleSubmit}
                     disabled={!uploadFile || isUploading}
-                    className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-                      uploadFile && !isUploading
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                    }`}
+                    className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${uploadFile && !isUploading
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                      }`}
                   >
                     {isUploading ? 'Uploading...' : 'Submit Assignment'}
                   </button>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
-import type { Chatbot } from '../../types';
 import {
     Plus,
     Trash2,
@@ -11,7 +10,6 @@ import {
     Clock,
     BarChart3,
     Eye,
-    Download,
     AlertCircle,
     CheckCircle2,
     Loader2
@@ -20,7 +18,6 @@ import { AssignmentSubmissions } from './AssignmentSubmissions';
 
 interface Assignment {
     id: string;
-    chatbot_id: string;
     title: string;
     description: string;
     due_date: string;
@@ -29,6 +26,9 @@ interface Assignment {
     created_at: string;
     submission_count?: number;
     submitted_count?: number;
+    // New fields
+    chatbot_id: string;
+    section_id?: string;
 }
 
 interface Submission {
@@ -44,12 +44,21 @@ interface Submission {
     status: 'submitted' | 'graded' | 'late';
 }
 
+interface TeachingUnit {
+    section_id: string;
+    section_name: string;
+    class_id: string;
+    class_name: string;
+    chatbot_id: string;
+    chatbot_name: string;
+}
+
 type TabType = 'assignments' | 'submissions' | 'grading' | 'stats';
 
 export function AssignmentManager() {
-    const [courses, setCourses] = useState<Chatbot[]>([]);
+    const [units, setUnits] = useState<TeachingUnit[]>([]);
+    const [selectedUnit, setSelectedUnit] = useState<TeachingUnit | null>(null);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
-    const [selectedCourseId, setSelectedCourseId] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<TabType>('assignments');
 
@@ -60,6 +69,7 @@ export function AssignmentManager() {
     const [newDesc, setNewDesc] = useState('');
     const [newDate, setNewDate] = useState('');
     const [newPoints, setNewPoints] = useState('100');
+    const [newFile, setNewFile] = useState<File | null>(null);
     const [isCreating, setIsCreating] = useState(false);
 
     // Submissions and grading states
@@ -70,20 +80,20 @@ export function AssignmentManager() {
     const [isGrading, setIsGrading] = useState(false);
 
     useEffect(() => {
-        fetchCourses();
+        fetchTeachingUnits();
     }, []);
 
     useEffect(() => {
-        if (selectedCourseId) {
+        if (selectedUnit) {
             fetchAssignments();
         }
-    }, [selectedCourseId]);
+    }, [selectedUnit]);
 
-    const fetchCourses = async () => {
+    const fetchTeachingUnits = async () => {
         try {
-            const data = await api.get<{ chatbots: Chatbot[] }>('/chatbots/list');
-            setCourses(data.chatbots);
-            if (data.chatbots.length > 0) setSelectedCourseId(data.chatbots[0].id);
+            const data = await api.get<{ units: TeachingUnit[] }>('/instructor/teaching-units');
+            setUnits(data.units);
+            if (data.units.length > 0) setSelectedUnit(data.units[0]);
         } catch (error) {
             console.error(error);
         } finally {
@@ -92,9 +102,15 @@ export function AssignmentManager() {
     };
 
     const fetchAssignments = async () => {
+        if (!selectedUnit) return;
         try {
-            const data = await api.get<{ assignments: Assignment[] }>(`/instructor/assignments/${selectedCourseId}`);
-            setAssignments(data.assignments);
+            // Fetch all assignments for the chatbot, then filter by section on client side
+            // Ideally backend should support filtering, but list_assignments_by_chatbot returns section_id
+            const data = await api.get<{ assignments: Assignment[] }>(`/instructor/assignments/${selectedUnit.chatbot_id}`);
+
+            // Filter assignments that belong to this section
+            const filtered = data.assignments.filter(a => a.section_id === selectedUnit.section_id);
+            setAssignments(filtered);
         } catch (error) {
             console.error(error);
         }
@@ -102,20 +118,28 @@ export function AssignmentManager() {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!selectedUnit) return;
+
         setIsCreating(true);
         try {
-            await api.post('/instructor/assignments/create', {
-                chatbot_id: selectedCourseId,
-                title: newTitle,
-                description: newDesc,
-                due_date: newDate,
-                points: parseInt(newPoints)
-            });
+            const formData = new FormData();
+            formData.append('chatbot_id', selectedUnit.chatbot_id);
+            formData.append('section_id', selectedUnit.section_id);
+            formData.append('title', newTitle);
+            formData.append('description', newDesc);
+            formData.append('due_date', newDate);
+            formData.append('points', newPoints);
+            if (newFile) {
+                formData.append('file', newFile);
+            }
+
+            await api.post('/instructor/assignments/create', formData);
             setShowForm(false);
             setNewTitle('');
             setNewDesc('');
             setNewDate('');
             setNewPoints('100');
+            setNewFile(null);
             await fetchAssignments();
         } catch {
             alert('Failed to create assignment');
@@ -148,7 +172,7 @@ export function AssignmentManager() {
             alert('Please enter a score');
             return;
         }
-        
+
         setIsGrading(true);
         try {
             await api.post(`/instructor/submissions/${selectedSubmission.id}/grade`, {
@@ -174,7 +198,7 @@ export function AssignmentManager() {
     const draftAssignments = assignments.filter(a => a.status === 'draft');
     const totalSubmissions = assignments.reduce((sum, a) => sum + (a.submitted_count || 0), 0);
     const totalToGrade = assignments.reduce((sum, a) => sum + ((a.submission_count || 0) - (a.submitted_count || 0)), 0);
-    
+
     return (
         <div className="h-full flex flex-col gap-6 p-4 md:p-6">
             {/* Header */}
@@ -186,11 +210,19 @@ export function AssignmentManager() {
                         <span className="sm:hidden">Assignments</span>
                     </h1>
                     <select
-                        value={selectedCourseId}
-                        onChange={(e) => setSelectedCourseId(e.target.value)}
+                        value={selectedUnit ? `${selectedUnit.chatbot_id}|${selectedUnit.section_id}` : ''}
+                        onChange={(e) => {
+                            const [cbId, secId] = e.target.value.split('|');
+                            const unit = units.find(u => u.chatbot_id === cbId && u.section_id === secId);
+                            setSelectedUnit(unit || null);
+                        }}
                         className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
                     >
-                        {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        {units.map(u => (
+                            <option key={`${u.chatbot_id}|${u.section_id}`} value={`${u.chatbot_id}|${u.section_id}`}>
+                                {u.class_name} - {u.section_name} ({u.chatbot_name})
+                            </option>
+                        ))}
                     </select>
                 </div>
                 <button
@@ -207,44 +239,40 @@ export function AssignmentManager() {
                 <div className="flex gap-6">
                     <button
                         onClick={() => setActiveTab('assignments')}
-                        className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${
-                            activeTab === 'assignments'
-                                ? 'text-blue-600 border-blue-600'
-                                : 'text-gray-600 border-transparent hover:text-gray-900'
-                        }`}
+                        className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'assignments'
+                            ? 'text-blue-600 border-blue-600'
+                            : 'text-gray-600 border-transparent hover:text-gray-900'
+                            }`}
                     >
                         <FileText className="inline w-5 h-5 mr-2" />
                         Assignments
                     </button>
                     <button
                         onClick={() => setActiveTab('submissions')}
-                        className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${
-                            activeTab === 'submissions'
-                                ? 'text-blue-600 border-blue-600'
-                                : 'text-gray-600 border-transparent hover:text-gray-900'
-                        }`}
+                        className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'submissions'
+                            ? 'text-blue-600 border-blue-600'
+                            : 'text-gray-600 border-transparent hover:text-gray-900'
+                            }`}
                     >
                         <Users className="inline w-5 h-5 mr-2" />
                         Submissions {submissions.length > 0 && <span className="ml-1 badge">{submissions.length}</span>}
                     </button>
                     <button
                         onClick={() => setActiveTab('grading')}
-                        className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${
-                            activeTab === 'grading'
-                                ? 'text-blue-600 border-blue-600'
-                                : 'text-gray-600 border-transparent hover:text-gray-900'
-                        }`}
+                        className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'grading'
+                            ? 'text-blue-600 border-blue-600'
+                            : 'text-gray-600 border-transparent hover:text-gray-900'
+                            }`}
                     >
                         <Check className="inline w-5 h-5 mr-2" />
                         Grading {totalToGrade > 0 && <span className="ml-1 text-red-600 font-bold">({totalToGrade})</span>}
                     </button>
                     <button
                         onClick={() => setActiveTab('stats')}
-                        className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${
-                            activeTab === 'stats'
-                                ? 'text-blue-600 border-blue-600'
-                                : 'text-gray-600 border-transparent hover:text-gray-900'
-                        }`}
+                        className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'stats'
+                            ? 'text-blue-600 border-blue-600'
+                            : 'text-gray-600 border-transparent hover:text-gray-900'
+                            }`}
                     >
                         <BarChart3 className="inline w-5 h-5 mr-2" />
                         Statistics
@@ -297,6 +325,14 @@ export function AssignmentManager() {
                                 onChange={e => setNewDesc(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 h-24"
                                 placeholder="Instructions for students..."
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Attachment (Optional)</label>
+                            <input
+                                type="file"
+                                onChange={e => setNewFile(e.target.files?.[0] || null)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                             />
                         </div>
                         <div className="flex justify-end gap-2">
@@ -526,7 +562,7 @@ function SubmissionsTab({ assignments, onSelectAssignment }: SubmissionsTabProps
 
 interface GradingTabProps {
     assignments: Assignment[];
-    onSelectSubmission: (submission: Submission) => void;
+    onSelectSubmission: (submission: Submission | null) => void;
     selectedSubmission: Submission | null;
     gradingScore: string;
     setGradingScore: (score: string) => void;
@@ -595,7 +631,7 @@ function GradingTab({
                                 </div>
                                 <div className="flex gap-2 pt-2 border-t">
                                     <button
-                                        onClick={() => setSelectedSubmission(null)}
+                                        onClick={() => onSelectSubmission(null)}
                                         className="flex-1 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
                                     >
                                         Cancel
