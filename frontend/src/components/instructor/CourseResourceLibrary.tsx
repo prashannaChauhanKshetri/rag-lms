@@ -52,6 +52,9 @@ const CourseResourceLibrary: React.FC = () => {
   });
 
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [courses, setCourses] = useState<{ id: string; name: string }[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+
   const [uploadData, setUploadData] = useState<{
     title: string;
     description: string;
@@ -66,24 +69,49 @@ const CourseResourceLibrary: React.FC = () => {
     file: null,
   });
 
+  useEffect(() => {
+    // Fetch courses/chatbots first
+    const fetchCourses = async () => {
+      try {
+        const data = await api.get<{ chatbots: { id: string; name: string }[] }>('/chatbots/list');
+        setCourses(data.chatbots);
+        if (data.chatbots.length > 0) setSelectedCourseId(data.chatbots[0].id);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchCourses();
+  }, []);
+
   const loadResources = useCallback(async () => {
+    if (!selectedCourseId) return;
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await api.get('/instructor/resources') as { resources: CourseResource[] };
+      // Create a new endpoint or reuse list logic. 
+      // Current backend `list_resources` takes `section_id`.
+      // We need `list_resources_by_chatbot` or iterate sections.
+      // For now, let's assume we implement a new endpoint or update logic.
+      // But we haven't implemented `list_resources_by_chatbot` in backend yet!
+      // Let's rely on finding sections for now or assume UI has `sections` state.
+      // Simplified: Instructor usually thinks in terms of "Courses" (Chatbots) or "Sections".
+      // Let's list ALL resources for the selected chatbot (across all its sections).
+      const response = await api.get(`/instructor/resources/${selectedCourseId}`) as { resources: CourseResource[] };
       setResources(response.resources || []);
     } catch (err: unknown) {
+      // ... handled below
       const error = err as { response?: { data?: { detail?: string } } };
       setError(error.response?.data?.detail || 'Failed to load resources');
+      setResources([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedCourseId]);
 
   useEffect(() => {
-    loadResources();
-  }, [loadResources]);
+    if (selectedCourseId) loadResources();
+  }, [selectedCourseId, loadResources]);
 
   // Apply filters and sorting
   useEffect(() => {
@@ -96,7 +124,7 @@ const CourseResourceLibrary: React.FC = () => {
         (r) =>
           r.title.toLowerCase().includes(term) ||
           r.description.toLowerCase().includes(term) ||
-          r.section_name.toLowerCase().includes(term)
+          (r.section_name && r.section_name.toLowerCase().includes(term))
       );
     }
 
@@ -140,19 +168,25 @@ const CourseResourceLibrary: React.FC = () => {
     }
 
     try {
-      const formData = new FormData();
-      formData.append('title', uploadData.title);
-      formData.append('description', uploadData.description);
-      formData.append('type', uploadData.type);
-
-      if (uploadData.file) {
-        formData.append('file', uploadData.file);
+      if (uploadData.type === 'document') {
+        const formData = new FormData();
+        formData.append('title', uploadData.title);
+        formData.append('description', uploadData.description);
+        formData.append('chatbot_id', selectedCourseId);
+        if (uploadData.file) {
+          formData.append('file', uploadData.file);
+        }
+        await api.post('/instructor/resources/upload', formData);
+      } else {
+        // Link creation
+        await api.post('/instructor/resources/create', {
+          chatbot_id: selectedCourseId,
+          title: uploadData.title,
+          url: uploadData.url,
+          resource_type: uploadData.type,
+        });
       }
-      if (uploadData.url) {
-        formData.append('url', uploadData.url);
-      }
 
-      await api.post('/instructor/resources', formData);
       setSuccess('Resource uploaded successfully');
       setShowUploadForm(false);
       setUploadData({ title: '', description: '', type: 'document', url: '', file: null });
@@ -218,14 +252,24 @@ const CourseResourceLibrary: React.FC = () => {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Course Resources</h1>
               <p className="text-sm sm:text-base text-gray-600 mt-1">Organize and share course materials with students</p>
             </div>
-            <button
-              onClick={() => setShowUploadForm(!showUploadForm)}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium"
-            >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Add Resource</span>
-              <span className="sm:hidden">Add</span>
-            </button>
+            <div className="flex items-center gap-4">
+              <select
+                value={selectedCourseId}
+                onChange={(e) => setSelectedCourseId(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+
+              <button
+                onClick={() => setShowUploadForm(!showUploadForm)}
+                className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium"
+              >
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Add Resource</span>
+                <span className="sm:hidden">Add</span>
+              </button>
+            </div>
           </div>
         </div>
 

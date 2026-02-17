@@ -21,6 +21,7 @@ import { api } from '../../lib/api';
 interface Section {
     id: string;
     name: string;
+    class_name?: string; // Added from backend join
     chatbot_id: string;
     teacher_id: string;
     teacher_name?: string;
@@ -277,7 +278,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                         <option value="">— Choose a section —</option>
                         {sections.map((s) => (
                             <option key={s.id} value={s.id}>
-                                {s.name} — {s.teacher_name || s.teacher_username || 'Unknown Teacher'} ({s.student_count ?? '?'} students)
+                                {s.class_name ? `${s.class_name} — ` : ''}{s.name} ({s.student_count ?? '?'} students)
                             </option>
                         ))}
                     </select>
