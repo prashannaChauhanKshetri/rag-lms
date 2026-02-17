@@ -30,7 +30,6 @@ import { FlashcardManager } from './components/instructor/FlashcardManager';
 import { AssignmentManager } from './components/instructor/AssignmentManager';
 import { AnalyticsDashboard } from './components/instructor/AnalyticsDashboard';
 import AttendanceManager from './components/instructor/AttendanceManager';
-import { StudentAssignments } from './components/student/StudentAssignments';
 import { StudentFlashcards } from './components/student/StudentFlashcards';
 import { StudentQuizzes } from './components/student/StudentQuizzes';
 import { StudentAssignmentManager } from './components/student/StudentAssignmentManager';
@@ -66,7 +65,6 @@ const studentTabs = [
   { id: 'enrolled-sections', label: 'Enrolled Sections', icon: BookOpen },
   { id: 'course-overview', label: 'Course Details', icon: LayoutDashboard },
   { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
-  { id: 'assignments', label: 'Assignments', icon: FileText },
   { id: 'assignment-manager', label: 'My Submissions', icon: CheckSquare },
   { id: 'quiz', label: 'Quizzes', icon: Brain },
   { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
@@ -170,7 +168,6 @@ function App() {
                   onNavigate={handleNavigate}
                 />
               )}
-              {activeTab === 'assignments' && <StudentAssignments />}
               {activeTab === 'assignment-manager' && <StudentAssignmentManager />}
               {activeTab === 'flashcards' && <StudentFlashcards />}
               {activeTab === 'quiz' && <StudentQuizzes />}
