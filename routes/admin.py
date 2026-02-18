@@ -27,10 +27,11 @@ class TeacherProfileRequest(BaseModel):
     years_experience: Optional[int] = None
 
 @router.get("/users")
-async def list_users():
+async def list_users(user=Depends(utils_auth.get_current_user)):
     """List all users (Admin only)"""
     try:
-        users = db.list_users()
+        institution_id = user.get("institution_id")
+        users = db.list_users(institution_id)
         return {"users": users}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -44,7 +45,8 @@ async def get_all_teachers(user=Depends(utils_auth.get_current_user)):
         if user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Only admins can view all teachers")
         
-        teachers = db.get_all_teachers()
+        institution_id = user.get("institution_id")
+        teachers = db.get_all_teachers(institution_id)
         return {"teachers": teachers}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -150,7 +152,8 @@ async def list_all_classes_admin(user=Depends(utils_auth.get_current_user)):
         if user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Only admins can list all classes")
         
-        classes = db.list_all_classes()
+        institution_id = user.get("institution_id")
+        classes = db.list_all_classes(institution_id)
         return {"classes": classes}
     except HTTPException:
         raise
@@ -390,7 +393,8 @@ async def list_all_sections_admin(user=Depends(utils_auth.get_current_user)):
         if user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Only admins can list all sections")
         
-        sections = db.list_all_sections()
+        institution_id = user.get("institution_id")
+        sections = db.list_all_sections(institution_id)
         
         # Enrich with student count and teacher info
         for section in sections:
@@ -495,8 +499,9 @@ async def get_available_students_admin(section_id: str, search: str = None, user
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        # Get all students
-        all_users = db.list_users()
+        # Get all students (filtered by institution)
+        institution_id = user.get("institution_id")
+        all_users = db.list_users(institution_id)
         students = [u for u in all_users if u.get("role") == "student"]
         
         # Get currently enrolled students
@@ -571,10 +576,12 @@ async def create_chatbot_admin(
 
 @router.get("/chatbots")
 async def list_chatbots_admin(user=Depends(utils_auth.get_current_user)):
-    """List all course bots (Admin only)"""
+    """List all course bots (Admin only, filtered by institution via class usage)"""
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Only admins can list course bots")
-    chatbots = db.list_chatbots()
+    
+    institution_id = user.get("institution_id")
+    chatbots = db.list_chatbots(institution_id)
     return {"chatbots": chatbots}
 
 @router.put("/chatbots/{chatbot_id}")
@@ -693,11 +700,18 @@ async def get_dashboard_stats(user=Depends(utils_auth.get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Only admins can view dashboard stats")
     try:
-        all_users = db.list_users()
+        institution_id = user.get("institution_id")
+        
+        # Filter users by institution
+        all_users = db.list_users(institution_id)
         teachers = [u for u in all_users if u.get("role") == "instructor"]
         students = [u for u in all_users if u.get("role") == "student"]
-        chatbots = db.list_chatbots()
-        classes = db.list_all_classes()
+        
+        # Filter chatbots by institution (via class usage)
+        chatbots = db.list_chatbots(institution_id)
+        
+        # Filter classes by institution
+        classes = db.list_all_classes(institution_id)
         
         return {
             "total_teachers": len(teachers),
