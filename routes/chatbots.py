@@ -34,9 +34,17 @@ async def create_chatbot_endpoint(
     return {"message": "Chatbot created", "id": chatbot_id, "name": name}
 
 @router.get("/list")
-async def list_chatbots_endpoint():
-    """List all chatbots (accessible to all authenticated users)"""
-    chatbots = db.list_chatbots()
+async def list_chatbots_endpoint(user=Depends(utils_auth.get_current_user)):
+    """List all chatbots (filtered by user role)"""
+    role = user.get("role")
+    
+    if role == "student":
+        chatbots = db.list_student_chatbots(user.get("sub") or user.get("id"))
+    else:
+        # Admin / Instructor / Super Admin
+        # Instructors see institution-wide for now to allow course creation flexibility
+        chatbots = db.list_chatbots(user.get("institution_id"))
+        
     return {"chatbots": chatbots}
 
 @router.put("/{chatbot_id}")

@@ -249,6 +249,23 @@ def list_chatbots(institution_id: str = None) -> List[Dict]:
             
     return unique_chatbots
 
+def list_student_chatbots(student_id: str) -> List[Dict]:
+    """List chatbots for sections the student is enrolled in"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            query = """
+                SELECT DISTINCT cb.* 
+                FROM chatbots cb
+                JOIN class_subjects cs ON cs.chatbot_id = cb.id
+                JOIN sections s ON s.class_id = cs.class_id
+                JOIN enrollments e ON e.section_id = s.id
+                WHERE e.student_id = %s AND e.deleted_at IS NULL
+                ORDER BY cb.created_at DESC
+            """
+            cur.execute(query, (student_id,))
+            chatbots = cur.fetchall()
+    return [dict(c) for c in chatbots]
+
 def update_chatbot(chatbot_id: str, name: str = None, greeting: str = None, ratio: float = None):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -358,12 +375,12 @@ def add_feedback(conversation_id: str, original_answer: str, corrected_answer: s
 
 # --- Quiz Operations ---
 
-def create_quiz(quiz_id: str, chatbot_id: str, title: str, description: str = ""):
+def create_quiz(quiz_id: str, chatbot_id: str, title: str, description: str = "", is_published: bool = False):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO quizzes (id, chatbot_id, title, description) VALUES (%s, %s, %s, %s)",
-                (quiz_id, chatbot_id, title, description)
+                "INSERT INTO quizzes (id, chatbot_id, title, description, is_published, published_at) VALUES (%s, %s, %s, %s, %s, %s)",
+                (quiz_id, chatbot_id, title, description, is_published, datetime.now() if is_published else None)
             )
 
 def add_question(question_id: str, quiz_id: str, question_text: str, question_type: str, 

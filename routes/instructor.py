@@ -320,7 +320,7 @@ async def create_quiz_endpoint(request: CreateQuizRequest):
         # Define allowed types in the DB
         ALLOWED_TYPES = {'mcq', 'true_false', 'short_answer', 'long_answer'}
         
-        db.create_quiz(quiz_id, request.chatbot_id, request.title, request.description)
+        db.create_quiz(quiz_id, request.chatbot_id, request.title, request.description, is_published=True)
         for idx, q in enumerate(request.questions):
             question_id = str(uuid.uuid4())
             
