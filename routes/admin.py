@@ -570,8 +570,10 @@ async def create_chatbot_admin(
     """Create a new course bot (Admin only)"""
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Only admins can create course bots")
+    
+    institution_id = user.get("institution_id")
     chatbot_id = str(uuid.uuid4())
-    db.create_chatbot(chatbot_id, name, greeting, external_knowledge_ratio)
+    db.create_chatbot(chatbot_id, name, greeting, external_knowledge_ratio, institution_id)
     return {"message": "Course bot created", "id": chatbot_id, "name": name}
 
 @router.get("/chatbots")

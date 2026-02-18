@@ -82,8 +82,10 @@ CREATE TABLE IF NOT EXISTS chatbots (
     name TEXT NOT NULL,
     greeting TEXT,
     external_knowledge_ratio REAL DEFAULT 0.5,
+    institution_id TEXT REFERENCES institutions(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX idx_chatbots_institution_id ON chatbots(institution_id);
 CREATE INDEX idx_chatbots_created ON chatbots(created_at DESC);
 -- ============================================
 -- DOCUMENTS
@@ -602,4 +604,6 @@ CREATE INDEX IF NOT EXISTS idx_assignments_deleted ON assignments(deleted_at);
 DO $$ BEGIN RAISE NOTICE 'RAG-LMS PostgreSQL schema created successfully!';
 RAISE NOTICE 'pgvector extension enabled';
 RAISE NOTICE 'All tables, indexes, and functions created';
-END $$;ALTER TABLE assignments ADD COLUMN IF NOT EXISTS attachment_url TEXT;
+END $$;
+ALTER TABLE assignments
+ADD COLUMN IF NOT EXISTS attachment_url TEXT;

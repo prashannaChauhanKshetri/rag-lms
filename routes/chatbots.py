@@ -29,7 +29,8 @@ async def create_chatbot_endpoint(
     """Create a new chatbot (Admin only — prefer /admin/chatbots)"""
     _require_admin(user)
     chatbot_id = str(uuid.uuid4())
-    db.create_chatbot(chatbot_id, name, greeting, external_knowledge_ratio)
+    institution_id = user.get("institution_id")
+    db.create_chatbot(chatbot_id, name, greeting, external_knowledge_ratio, institution_id)
     return {"message": "Chatbot created", "id": chatbot_id, "name": name}
 
 @router.get("/list")

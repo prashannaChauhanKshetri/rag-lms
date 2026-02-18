@@ -203,13 +203,13 @@ def list_users(institution_id: str = None) -> List[Dict]:
 
 # --- Chatbot Operations ---
 
-def create_chatbot(chatbot_id: str, name: str, greeting: str = "Hello! How can I help you?", ratio: float = 0.5):
+def create_chatbot(chatbot_id: str, name: str, greeting: str = "Hello! How can I help you?", ratio: float = 0.5, institution_id: str = None):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO chatbots (id, name, greeting, external_knowledge_ratio) 
-                   VALUES (%s, %s, %s, %s)""",
-                (chatbot_id, name, greeting, ratio)
+                """INSERT INTO chatbots (id, name, greeting, external_knowledge_ratio, institution_id) 
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (chatbot_id, name, greeting, ratio, institution_id)
             )
 
 def get_chatbot(chatbot_id: str) -> Optional[Dict]:
@@ -220,27 +220,34 @@ def get_chatbot(chatbot_id: str) -> Optional[Dict]:
     return dict(chatbot) if chatbot else None
 
 def list_chatbots(institution_id: str = None) -> List[Dict]:
-    """List all chatbots (optionally filtered by institution via class usage)"""
+    """List all chatbots (optionally filtered by institution)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             if institution_id:
-                # If filtering by institution, only show chatbots used in that institution's classes
-                # OR chatbots that are not assigned to ANY class (optional, but safer to hide)
-                # For this specific requirement, we'll show chatbots linked to the institution's classes.
+                # Show chatbots that belong to the institution OR are used in its classes
                 query = """
                     SELECT DISTINCT cb.* 
                     FROM chatbots cb
-                    JOIN class_subjects cs ON cs.chatbot_id = cb.id
-                    JOIN classes c ON c.id = cs.class_id
-                    WHERE c.institution_id = %s
+                    LEFT JOIN class_subjects cs ON cs.chatbot_id = cb.id
+                    LEFT JOIN classes c ON c.id = cs.class_id
+                    WHERE cb.institution_id = %s OR c.institution_id = %s
                     ORDER BY cb.created_at DESC
                 """
-                cur.execute(query, (institution_id,))
+                cur.execute(query, (institution_id, institution_id))
             else:
                 cur.execute("SELECT * FROM chatbots ORDER BY created_at DESC")
             
             chatbots = cur.fetchall()
-    return [dict(c) for c in chatbots]
+            
+    # Deduplicate in case of multiple joins returning same row (DISTINCT helps but good to be safe)
+    seen = set()
+    unique_chatbots = []
+    for c in chatbots:
+        if c['id'] not in seen:
+            unique_chatbots.append(dict(c))
+            seen.add(c['id'])
+            
+    return unique_chatbots
 
 def update_chatbot(chatbot_id: str, name: str = None, greeting: str = None, ratio: float = None):
     with get_db_connection() as conn:
@@ -1630,6 +1637,7 @@ def get_all_teachers(institution_id: str = None) -> List[Dict]:
             query = """
                 SELECT 
                     tp.*,
+                    u.id as id,
                     u.email,
                     u.username,
                     i.name as institution_name
