@@ -184,11 +184,20 @@ def update_user_password(user_id: str, password_hash: str) -> bool:
                        (password_hash, user_id))
     return True
 
-def list_users() -> List[Dict]:
-    """List all users"""
+def list_users(institution_id: str = None) -> List[Dict]:
+    """List all users (optionally filtered by institution)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute("SELECT id, username, email, full_name, role, institution_id, created_at FROM users ORDER BY created_at DESC")
+            query = "SELECT id, username, email, full_name, role, institution_id, created_at FROM users"
+            params = []
+            
+            if institution_id:
+                query += " WHERE institution_id = %s"
+                params.append(institution_id)
+            
+            query += " ORDER BY created_at DESC"
+            
+            cur.execute(query, params)
             users = cur.fetchall()
     return [dict(u) for u in users]
 
@@ -210,10 +219,26 @@ def get_chatbot(chatbot_id: str) -> Optional[Dict]:
             chatbot = cur.fetchone()
     return dict(chatbot) if chatbot else None
 
-def list_chatbots() -> List[Dict]:
+def list_chatbots(institution_id: str = None) -> List[Dict]:
+    """List all chatbots (optionally filtered by institution via class usage)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute("SELECT * FROM chatbots ORDER BY created_at DESC")
+            if institution_id:
+                # If filtering by institution, only show chatbots used in that institution's classes
+                # OR chatbots that are not assigned to ANY class (optional, but safer to hide)
+                # For this specific requirement, we'll show chatbots linked to the institution's classes.
+                query = """
+                    SELECT DISTINCT cb.* 
+                    FROM chatbots cb
+                    JOIN class_subjects cs ON cs.chatbot_id = cb.id
+                    JOIN classes c ON c.id = cs.class_id
+                    WHERE c.institution_id = %s
+                    ORDER BY cb.created_at DESC
+                """
+                cur.execute(query, (institution_id,))
+            else:
+                cur.execute("SELECT * FROM chatbots ORDER BY created_at DESC")
+            
             chatbots = cur.fetchall()
     return [dict(c) for c in chatbots]
 
@@ -906,32 +931,44 @@ def list_teacher_teaching_units(teacher_id: str) -> List[Dict]:
             units = cur.fetchall()
     return [dict(u) for u in units]
 
-def list_all_sections() -> List[Dict]:
-    """List all sections across all classes (Admin use, excluding deleted)"""
+def list_all_sections(institution_id: str = None) -> List[Dict]:
+    """List all sections across all classes (Admin use, excluding deleted, optionally filtered by institution)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute(
-                """SELECT s.*, c.name as class_name, c.grade_level
+            query = """SELECT s.*, c.name as class_name, c.grade_level
                    FROM sections s
                    LEFT JOIN classes c ON c.id = s.class_id
-                   WHERE s.deleted_at IS NULL
-                   ORDER BY s.created_at DESC"""
-            )
+                   WHERE s.deleted_at IS NULL"""
+            params = []
+            
+            if institution_id:
+                query += " AND c.institution_id = %s"
+                params.append(institution_id)
+                
+            query += " ORDER BY s.created_at DESC"
+            
+            cur.execute(query, params)
             sections = cur.fetchall()
     return [dict(s) for s in sections]
 
 
-def list_all_classes() -> List[Dict]:
-    """List all classes with subject count and section count (Admin use)"""
+def list_all_classes(institution_id: str = None) -> List[Dict]:
+    """List all classes with subject count and section count (Admin use, optionally filtered by institution)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute(
-                """SELECT c.*,
+            query = """SELECT c.*,
                           (SELECT COUNT(*) FROM sections s WHERE s.class_id = c.id AND s.deleted_at IS NULL) as section_count,
                           (SELECT COUNT(*) FROM class_subjects cs WHERE cs.class_id = c.id) as subject_count
-                   FROM classes c
-                   ORDER BY c.created_at DESC"""
-            )
+                   FROM classes c"""
+            params = []
+            
+            if institution_id:
+                query += " WHERE c.institution_id = %s"
+                params.append(institution_id)
+            
+            query += " ORDER BY c.created_at DESC"
+            
+            cur.execute(query, params)
             classes = cur.fetchall()
     return [dict(c) for c in classes]
 
@@ -1586,34 +1623,29 @@ def get_teacher_profile(user_id: str) -> Optional[Dict]:
             profile = cur.fetchone()
     return dict(profile) if profile else None
 
-def get_all_teachers() -> List[Dict]:
-    """Get all teacher profiles with user details"""
+def get_all_teachers(institution_id: str = None) -> List[Dict]:
+    """Get all teacher profiles with user details (optionally filtered by institution)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute("""
+            query = """
                 SELECT 
-                    tp.user_id as id,
-                    tp.user_id,
-                    tp.institution_id,
-                    tp.first_name,
-                    tp.last_name,
-                    tp.phone,
-                    tp.bio,
-                    tp.qualifications,
-                    tp.specializations,
-                    tp.office_location,
-                    tp.office_hours,
-                    tp.department,
-                    tp.years_experience,
-                    tp.profile_picture_url,
-                    tp.last_updated,
-                    u.email, 
-                    u.full_name, 
-                    u.username
+                    tp.*,
+                    u.email,
+                    u.username,
+                    i.name as institution_name
                 FROM teacher_profiles tp
-                JOIN users u ON tp.user_id = u.id
-                ORDER BY tp.last_name, tp.first_name
-            """)
+                JOIN users u ON u.id = tp.user_id
+                LEFT JOIN institutions i ON i.id = tp.institution_id
+            """
+            
+            params = []
+            if institution_id:
+                query += " WHERE tp.institution_id = %s"
+                params.append(institution_id)
+            
+            query += " ORDER BY tp.last_name, tp.first_name"
+            
+            cur.execute(query, params)
             teachers = cur.fetchall()
     return [dict(t) for t in teachers]
 
