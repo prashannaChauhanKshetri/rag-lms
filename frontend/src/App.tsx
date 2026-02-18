@@ -72,7 +72,7 @@ const studentTabs = [
 
 const instructorTabs = [
   { id: 'home', label: 'Home', icon: HomeIcon },
-  { id: 'sections', label: 'My Sections', icon: Users },
+  { id: 'sections', label: 'My Classes', icon: Users },
   { id: 'attendance', label: 'Attendance', icon: Calendar },
   { id: 'attendance-report', label: 'Reports', icon: BarChart3 },
   { id: 'assignments', label: 'Assignments', icon: FileText },

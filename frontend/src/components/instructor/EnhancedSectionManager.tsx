@@ -25,6 +25,7 @@ interface Section {
   description?: string;
   max_students?: number;
   status?: string;
+  class_name?: string;
   students?: EnrolledStudent[];
 }
 
@@ -134,7 +135,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                       }`}
                   >
                     <p className="font-medium text-gray-900 dark:text-white text-sm">
-                      {section.name}
+                      {section.class_name ? `${section.class_name} - ${section.name}` : section.name}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       {section.chatbot_id}
@@ -162,7 +163,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                 <div className="flex items-start justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {selectedSection.name}
+                      {selectedSection.class_name ? `${selectedSection.class_name} - ${selectedSection.name}` : selectedSection.name}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                       {selectedSection.chatbot_id} • Created{' '}
