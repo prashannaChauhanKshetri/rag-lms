@@ -11,11 +11,14 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-interface Section {
-  id: string;
-  name: string;
+interface EnrolledClass {
+  section_id: string;
+  section_name: string;
+  class_name: string;
   chatbot_id: string;
+  subject_name: string;
   teacher_name: string;
+  teacher_email?: string;
   created_at: string;
   student_count?: number;
   attendance_percentage?: number;
@@ -23,21 +26,21 @@ interface Section {
 }
 
 interface EnrolledSectionsProps {
-  onSectionSelect?: (sectionId: string, sectionName?: string) => void;
+  onSectionSelect?: (sectionId: string, sectionName?: string, chatbotId?: string) => void;
 }
 
 export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
-  const [sections, setSections] = useState<Section[]>([]);
+  const [classes, setClasses] = useState<EnrolledClass[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSections = async () => {
       try {
-        const data = await api.get<{ sections: Section[]; count?: number }>(
+        const data = await api.get<{ sections: EnrolledClass[]; count?: number }>(
           '/student/sections'
         );
-        setSections(data.sections || []);
+        setClasses(data.sections || []);
       } catch (err) {
         console.error(err);
         setError(
@@ -78,17 +81,17 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            My Sections
+            My Subjects
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {sections.length === 0
-              ? 'No enrolled sections'
-              : `You're enrolled in ${sections.length} section${sections.length === 1 ? '' : 's'}`}
+            {classes.length === 0
+              ? 'No enrolled classes'
+              : `You have ${classes.length} active class${classes.length === 1 ? '' : 'es'}`}
           </p>
         </div>
       </div>
 
-      {sections.length === 0 ? (
+      {classes.length === 0 ? (
         <div className="text-center py-16 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
           <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <BookOpen className="h-8 w-8 text-gray-400 dark:text-gray-600" />
@@ -102,12 +105,12 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {sections.map((section) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {classes.map((item) => (
             <div
-              key={section.id}
-              className="group relative bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-emerald-950/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden"
-              onClick={() => onSectionSelect?.(section.id, section.name)}
+              key={`${item.section_id}-${item.chatbot_id}`}
+              className="group relative bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-emerald-950/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col"
+              onClick={() => onSectionSelect?.(item.section_id, item.section_name)}
             >
               {/* Gradient accent bar */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -122,14 +125,16 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
               </div>
 
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">
-                {section.name}
+                {item.subject_name}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Taught by{' '}
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {section.teacher_name || 'Unknown'}
-                </span>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {item.class_name && `${item.class_name} • `}{item.section_name}
               </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Instructor: <span className="font-medium text-gray-900 dark:text-white">{item.teacher_name || 'Assigned Teacher'}</span>
+              </p>
+
+
 
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
@@ -138,7 +143,7 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
                     <BarChart3 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                    {section.attendance_percentage?.toFixed(1) || 0}%
+                    {item.attendance_percentage?.toFixed(1) || 0}%
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Attendance
@@ -149,7 +154,7 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
                     <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                    {section.pending_assignments || 0}
+                    {item.pending_assignments || 0}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Pending
@@ -160,10 +165,10 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
                     <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                    {section.student_count || 0}
+                    {item.student_count || 0}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Students
+                    Classmates
                   </p>
                 </div>
               </div>
@@ -174,13 +179,13 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
                   <Clock className="h-3.5 w-3.5" />
                   <span>
                     Started{' '}
-                    {new Date(section.created_at).toLocaleDateString()}
+                    {new Date(item.created_at).toLocaleDateString()}
                   </span>
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-
+                    onSectionSelect?.(item.section_id, item.section_name, item.chatbot_id);
                   }}
                   className="flex items-center gap-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform"
                 >
