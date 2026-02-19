@@ -62,8 +62,8 @@ interface AuthUser {
 
 const studentTabs = [
   { id: 'home', label: 'Home', icon: HomeIcon },
-  { id: 'enrolled-sections', label: 'Enrolled Sections', icon: BookOpen },
-  { id: 'course-overview', label: 'Course Details', icon: LayoutDashboard },
+  { id: 'enrolled-sections', label: 'Enrolled Subject', icon: BookOpen },
+  // { id: 'course-overview', label: 'Course Details', icon: LayoutDashboard },
   { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
   { id: 'assignment-manager', label: 'My Submissions', icon: CheckSquare },
   { id: 'quiz', label: 'Quizzes', icon: Brain },
@@ -114,6 +114,7 @@ function App() {
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | undefined>(undefined);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
 
   const handleNavigate = (tabId: string, courseId?: string) => {
     setActiveTab(tabId);
@@ -156,11 +157,20 @@ function App() {
 
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
               {activeTab === 'home' && <StudentHome onNavigate={handleNavigate} />}
-              {activeTab === 'enrolled-sections' && <EnrolledSections onSectionSelect={(sectionId) => {
-                setSelectedSectionId(sectionId);
-              }} />}
+              {activeTab === 'enrolled-sections' && (
+                <EnrolledSections
+                  onSectionSelect={(sectionId, _, chatbotId) => {
+                    setSelectedSectionId(sectionId);
+                    setSelectedSubjectId(chatbotId || null);
+                    setActiveTab('course-overview');
+                  }}
+                />
+              )}
               {activeTab === 'course-overview' && selectedSectionId && (
-                <SectionOverview sectionId={selectedSectionId} />
+                <SectionOverview
+                  sectionId={selectedSectionId}
+                  chatbotId={selectedSubjectId || undefined}
+                />
               )}
               {activeTab === 'chat' && (
                 <ChatInterface
