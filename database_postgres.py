@@ -891,12 +891,123 @@ def create_section(section_id: str, name: str, class_id: str, institution_id: Op
             )
 
 def get_section(section_id: str) -> Optional[Dict]:
-    """Get section by ID"""
+    """Get section by ID with class name"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute("SELECT * FROM sections WHERE id = %s", (section_id,))
+            cur.execute(
+                """SELECT s.*, c.name as class_name 
+                   FROM sections s 
+                   JOIN classes c ON s.class_id = c.id 
+                   WHERE s.id = %s""",
+                (section_id,)
+            )
             section = cur.fetchone()
     return dict(section) if section else None
+
+def list_student_subjects(student_id: str) -> List[Dict]:
+    """List all subjects (chatbots) a student is enrolled in via sections"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT 
+                    s.id as section_id,
+                    s.name as section_name,
+                    c.name as class_name,
+                    cb.id as chatbot_id,
+                    cb.name as subject_name,
+                    string_agg(DISTINCT u.full_name, ', ') as teacher_name,
+                    string_agg(DISTINCT u.email, ', ') as teacher_email,
+                    s.created_at
+                   FROM enrollments e
+                   JOIN sections s ON e.section_id = s.id
+                   JOIN classes c ON s.class_id = c.id
+                   JOIN class_subjects cs ON c.id = cs.class_id
+                   JOIN chatbots cb ON cs.chatbot_id = cb.id
+                   LEFT JOIN teacher_assignments ta ON cs.id = ta.class_subject_id
+                   LEFT JOIN users u ON ta.teacher_id = u.id
+                   WHERE e.student_id = %s
+                   AND e.deleted_at IS NULL
+                   AND s.deleted_at IS NULL
+                   GROUP BY s.id, c.id, cb.id
+                   ORDER BY s.created_at DESC, cb.name""",
+                (student_id,)
+            )
+            subjects = cur.fetchall()
+            
+    return [dict(sub) for sub in subjects]
+
+
+def get_subject_teacher(section_id: str, chatbot_id: str) -> Optional[Dict]:
+    """Get subject name and teacher for a specific section and chatbot"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT 
+                    cb.name as subject_name,
+                    string_agg(DISTINCT u.full_name, ', ') as teacher_name,
+                    string_agg(DISTINCT u.email, ', ') as teacher_email
+                   FROM sections s
+                   JOIN classes c ON s.class_id = c.id
+                   JOIN class_subjects cs ON c.id = cs.class_id
+                   JOIN chatbots cb ON cs.chatbot_id = cb.id
+                   LEFT JOIN teacher_assignments ta ON cs.id = ta.class_subject_id
+                   LEFT JOIN users u ON ta.teacher_id = u.id
+                   WHERE s.id = %s AND cb.id = %s
+                   GROUP BY cb.name""",
+                (section_id, chatbot_id)
+            )
+            subject = cur.fetchone()
+    return dict(subject) if subject else None
+
+def list_student_sections(student_id: str) -> List[Dict]:
+    """List all sections a student is enrolled in (excluding soft-deleted) with class, subject, and teacher info"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT s.*, c.name as class_name,
+                   (
+                       SELECT string_agg(DISTINCT u.full_name, ', ')
+                       FROM teacher_assignments ta
+                       JOIN class_subjects cs ON cs.id = ta.class_subject_id
+                       JOIN users u ON u.id = ta.teacher_id
+                       WHERE cs.class_id = s.class_id
+                   ) as teacher_name,
+                   (
+                       SELECT string_agg(DISTINCT cb.name, ', ')
+                       FROM class_subjects cs
+                       JOIN chatbots cb ON cs.chatbot_id = cb.id
+                       WHERE cs.class_id = s.class_id
+                   ) as subjects,
+                   (
+                       SELECT COUNT(*) 
+                       FROM enrollments e2 
+                       WHERE e2.section_id = s.id AND e2.deleted_at IS NULL
+                   ) as student_count
+                   FROM enrollments e
+                   JOIN sections s ON e.section_id = s.id
+                   JOIN classes c ON s.class_id = c.id
+                   WHERE e.student_id = %s AND e.deleted_at IS NULL AND s.deleted_at IS NULL
+                   ORDER BY s.created_at DESC""",
+                (student_id,)
+            )
+            sections = cur.fetchall()
+    return [dict(s) for s in sections]
+
+def get_section_teachers(section_id: str) -> List[Dict]:
+    """Get teachers for a section (via class subjects)"""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT DISTINCT u.id, u.full_name, u.email
+                   FROM sections s
+                   JOIN class_subjects cs ON cs.class_id = s.class_id
+                   JOIN teacher_assignments ta ON ta.class_subject_id = cs.id
+                   JOIN users u ON u.id = ta.teacher_id
+                   WHERE s.id = %s""",
+                (section_id,)
+            )
+            teachers = cur.fetchall()
+    return [dict(t) for t in teachers]
 
 def list_sections_for_chatbot(chatbot_id: str) -> List[Dict]:
     """List all sections whose parent class has this chatbot as a subject"""
@@ -1193,7 +1304,7 @@ def can_student_access_section(student_id: str, section_id: str) -> bool:
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                "SELECT can_student_access_section(%s, %s) as can_access",
+                "SELECT can_student_access_section(%s::text, %s::text) as can_access",
                 (student_id, section_id)
             )
             result = cur.fetchone()
@@ -1210,20 +1321,7 @@ def can_teacher_manage_section(teacher_id: str, section_id: str) -> bool:
             result = cur.fetchone()
             return result['can_manage'] if result else False
 
-def list_student_sections(student_id: str) -> List[Dict]:
-    """List all sections a student is enrolled in (excluding soft-deleted)"""
-    with get_db_connection() as conn:
-        with get_dict_cursor(conn) as cur:
-            cur.execute(
-                """SELECT s.*
-                   FROM enrollments e
-                   JOIN sections s ON e.section_id = s.id
-                   WHERE e.student_id = %s AND e.deleted_at IS NULL AND s.deleted_at IS NULL
-                   ORDER BY s.created_at DESC""",
-                (student_id,)
-            )
-            sections = cur.fetchall()
-    return [dict(s) for s in sections]
+
 
 def remove_enrollment(section_id: str, student_id: str, performed_by: str = None, reason: str = None):
     """Soft delete an enrollment (preserve audit trail)"""
