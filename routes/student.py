@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form, Query
 from pydantic import BaseModel
 import os
@@ -207,56 +207,57 @@ async def list_my_sections(user=Depends(utils_auth.get_current_user)):
         if not user_id:
             raise HTTPException(status_code=400, detail="Cannot determine user ID from token")
         
-        # Get student's sections
+        # Get student's subjects (classes)
         try:
-            sections = db.list_student_sections(user_id)
+            subjects = db.list_student_subjects(user_id)
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Database error fetching sections: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Database error fetching subjects: {str(e)}")
         
-        # Enrich sections with attendance and assignment counts
-        enriched_sections = []
-        for idx, section in enumerate(sections):
+        # Enrich subjects with attendance and assignment counts
+        enriched_subjects = []
+        for idx, sub in enumerate(subjects):
             try:
-                section_id = section.get("id")
-                if not section_id:
-                    continue  # Skip malformed sections
+                section_id = sub.get("section_id")
+                chatbot_id = sub.get("chatbot_id")
                 
-                # Get attendance percentage
+                if not section_id or not chatbot_id:
+                    continue
+                
+                # Get attendance percentage (Currently per section, so shared across subjects in same section)
                 try:
                     attendance = db.get_student_attendance(section_id, user_id)
                     present_count = sum(1 for a in attendance if a.get("status") == "present")
                     attendance_pct = (present_count / len(attendance) * 100) if attendance else 0
-                    section["attendance_percentage"] = round(attendance_pct, 2)
+                    sub["attendance_percentage"] = round(attendance_pct, 2)
                 except Exception as e:
-                    # Log but don't fail - set default values
-                    section["attendance_percentage"] = 0
-                    print(f"Warning: Failed to get attendance for section {section_id}: {str(e)}")
+                    sub["attendance_percentage"] = 0
+                    # print(f"Warning: Failed to get attendance for section {section_id}: {str(e)}")
                 
-                # Get pending assignments
+                # Get pending assignments (Specific to this subject/chatbot)
                 try:
+                    # Fetch all assignments for section, then filter by chatbot_id
                     assignments = db.list_assignments_by_section(section_id, published_only=True)
+                    subject_assignments = [a for a in assignments if a.get("chatbot_id") == chatbot_id]
+                    
                     pending = 0
-                    for assignment in assignments:
+                    for assignment in subject_assignments:
                         try:
                             submission = db.get_student_submission(assignment.get("id"), user_id)
                             if not submission:
                                 pending += 1
                         except Exception:
-                            # If we can't check submission, assume it's pending
                             pending += 1
-                    section["pending_assignments"] = pending
+                    sub["pending_assignments"] = pending
                 except Exception as e:
-                    # Log but don't fail - set default
-                    section["pending_assignments"] = 0
-                    print(f"Warning: Failed to get assignments for section {section_id}: {str(e)}")
+                    sub["pending_assignments"] = 0
+                    # print(f"Warning: Failed to get assignments for subject {chatbot_id}: {str(e)}")
                 
-                enriched_sections.append(section)
+                enriched_subjects.append(sub)
             except Exception as e:
-                # Log error but continue processing other sections
-                print(f"Error processing section at index {idx}: {str(e)}")
+                print(f"Error processing subject at index {idx}: {str(e)}")
                 continue
         
-        return {"sections": enriched_sections, "count": len(enriched_sections)}
+        return {"sections": enriched_subjects, "count": len(enriched_subjects)}
     except HTTPException:
         raise
     except Exception as e:
@@ -266,24 +267,66 @@ async def list_my_sections(user=Depends(utils_auth.get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/sections/{section_id}")
-async def get_section_overview(section_id: str, user=Depends(utils_auth.get_current_user)):
-    """Get section overview with assignments, resources, and attendance"""
+async def get_section_overview(
+    section_id: str, 
+    chatbot_id: Optional[str] = None,
+    user=Depends(utils_auth.get_current_user)
+):
+    """Get section overview with assignments, resources, and attendance. Optional chatbot_id filters by subject."""
     try:
         section = db.get_section(section_id)
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
+        student_id = utils_auth.get_user_id(user)
+        
         # Verify student is enrolled using database function for authorization
-        if not db.can_student_access_section(user["id"], section_id):
+        if not db.can_student_access_section(student_id, section_id):
             raise HTTPException(status_code=403, detail="Not enrolled in this section")
         
         # Gather section data
         assignments = db.list_assignments_by_section(section_id, published_only=True)
+        
+        # Filter assignments if chatbot_id provided
+        if chatbot_id:
+            assignments = [a for a in assignments if a.get("chatbot_id") == chatbot_id]
+            
         resources = db.list_resources(section_id)
-        attendance = db.get_student_attendance(section_id, user["id"])
+        attendance = db.get_student_attendance(section_id, student_id)
         
         # Get teacher info
-        teacher = db.get_user_by_id(section["teacher_id"]) if hasattr(db, 'get_user_by_id') else None
+        if chatbot_id:
+            # Get specific subject teacher
+            subject_details = db.get_subject_teacher(section_id, chatbot_id)
+            if subject_details:
+                # Add subject specific info
+                section["subject_name"] = subject_details.get("subject_name")
+                
+                # Create teacher object from subject details
+                if subject_details.get("teacher_name"):
+                    teacher_obj = {
+                        "full_name": subject_details["teacher_name"],
+                        "email": subject_details.get("teacher_email")
+                    }
+                    return {
+                        "section": section,
+                        "teacher": teacher_obj,
+                        "assignments": assignments,
+                        "resources": resources,
+                        "attendance": attendance
+                    }
+        
+        # Default: all teachers for the section
+        teachers = db.get_section_teachers(section_id)
+        
+        # Default: all teachers for the section
+        teachers = db.get_section_teachers(section_id)
+        if teachers:
+            full_name = ", ".join([t["full_name"] for t in teachers if t.get("full_name")])
+            email = teachers[0].get("email") # Use first email for contact
+            teacher = {"full_name": full_name, "email": email}
+        else:
+            teacher = None
         
         # Calculate attendance percentage
         present_count = sum(1 for a in attendance if a["status"] == "present")
@@ -291,7 +334,7 @@ async def get_section_overview(section_id: str, user=Depends(utils_auth.get_curr
         
         # Add submission status to assignments
         for assign in assignments:
-            submission = db.get_student_submission(assign["id"], user["id"])
+            submission = db.get_student_submission(assign["id"], student_id)
             assign["submitted"] = submission is not None
             assign["score"] = submission["score"] if submission else None
         
@@ -320,7 +363,7 @@ async def get_my_attendance(section_id: str, user=Depends(utils_auth.get_current
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        attendance = db.get_student_attendance(section_id, user["id"])
+        attendance = db.get_student_attendance(section_id, utils_auth.get_user_id(user))
         
         # Calculate stats
         total = len(attendance)
@@ -358,7 +401,7 @@ async def get_section_assignments(section_id: str, user=Depends(utils_auth.get_c
         
         # Add submission status for student
         for assign in assignments:
-            submission = db.get_student_submission(assign["id"], user["id"]) if hasattr(db, 'get_student_submission') else None
+            submission = db.get_student_submission(assign["id"], utils_auth.get_user_id(user)) if hasattr(db, 'get_student_submission') else None
             assign["submitted"] = submission is not None
             assign["score"] = submission.get("score") if submission else None
         
@@ -420,14 +463,14 @@ async def submit_assignment(
             upload_dir = f"uploads/{section_id}/assignments"
             os.makedirs(upload_dir, exist_ok=True)
             
-            safe_filename = f"{assignment_id}_{user['id']}{file_ext}"
+            safe_filename = f"{assignment_id}_{utils_auth.get_user_id(user)}{file_ext}"
             file_path = f"{upload_dir}/{safe_filename}"
             
             with open(file_path, "wb") as f:
                 f.write(await file.read())
         
         submission_id = str(uuid.uuid4())
-        db.submit_assignment(submission_id, assignment_id, user["id"], text, file_path)
+        db.submit_assignment(submission_id, assignment_id, utils_auth.get_user_id(user), text, file_path)
         
         return {"message": "Assignment submitted", "submission_id": submission_id}
     except HTTPException:
