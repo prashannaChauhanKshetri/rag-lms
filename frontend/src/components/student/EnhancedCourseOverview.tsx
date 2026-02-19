@@ -52,9 +52,10 @@ interface Attendance {
 
 export interface SectionOverviewProps {
   sectionId: string;
+  chatbotId?: string;
 }
 
-export function SectionOverview({ sectionId }: SectionOverviewProps) {
+export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) {
   const [section, setSection] = useState<Section | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
@@ -64,7 +65,7 @@ export function SectionOverview({ sectionId }: SectionOverviewProps) {
   const [activeTab, setActiveTab] = useState<
     'overview' | 'assignments' | 'resources' | 'attendance'
   >('overview');
-  const [teacher, setTeacher] = useState<{full_name?: string; email?: string} | null>(null);
+  const [teacher, setTeacher] = useState<{ full_name?: string; email?: string } | null>(null);
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(
     null
   );
@@ -77,12 +78,12 @@ export function SectionOverview({ sectionId }: SectionOverviewProps) {
         // Fetch section overview
         const sectionRes = await api.get<{
           section: Section;
-          teacher: {full_name?: string; email?: string};
+          teacher: { full_name?: string; email?: string };
           assignments: Assignment[];
           resources: Resource[];
           attendance: Attendance;
         }>(
-          `/student/sections/${sectionId}`
+          `/student/sections/${sectionId}${chatbotId ? `?chatbot_id=${chatbotId}` : ''}`
         );
 
         setSection(sectionRes.section);
@@ -236,11 +237,10 @@ export function SectionOverview({ sectionId }: SectionOverviewProps) {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
                 ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
                 : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -369,9 +369,8 @@ export function SectionOverview({ sectionId }: SectionOverviewProps) {
                       </p>
                     </div>
                     <ChevronDown
-                      className={`h-5 w-5 text-gray-400 transition-transform ${
-                        expandedAssignment === assignment.id ? 'rotate-180' : ''
-                      }`}
+                      className={`h-5 w-5 text-gray-400 transition-transform ${expandedAssignment === assignment.id ? 'rotate-180' : ''
+                        }`}
                     />
                   </button>
 
@@ -500,13 +499,12 @@ export function SectionOverview({ sectionId }: SectionOverviewProps) {
                         {new Date(record.date).toLocaleDateString()}
                       </span>
                       <span
-                        className={`font-medium ${
-                          record.status === 'present'
+                        className={`font-medium ${record.status === 'present'
                             ? 'text-emerald-600 dark:text-emerald-400'
                             : record.status === 'absent'
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-amber-600 dark:text-amber-400'
-                        }`}
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-amber-600 dark:text-amber-400'
+                          }`}
                       >
                         {record.status.charAt(0).toUpperCase() +
                           record.status.slice(1)}
