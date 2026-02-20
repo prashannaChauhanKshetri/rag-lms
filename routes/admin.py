@@ -144,6 +144,7 @@ class AddSubjectRequest(BaseModel):
 
 class AssignTeacherRequest(BaseModel):
     teacher_id: str
+    section_id: Optional[str] = None
 
 @router.get("/classes")
 async def list_all_classes_admin(user=Depends(utils_auth.get_current_user)):
@@ -302,7 +303,7 @@ async def assign_teacher_to_subject_admin(class_id: str, cs_id: str, request: As
             raise HTTPException(status_code=403, detail="Admin only")
         
         ta_id = str(uuid.uuid4())
-        db.assign_teacher_to_subject(ta_id, cs_id, request.teacher_id)
+        db.assign_teacher_to_subject(ta_id, cs_id, request.teacher_id, request.section_id)
         return {"message": "Teacher assigned", "assignment_id": ta_id}
     except HTTPException:
         raise

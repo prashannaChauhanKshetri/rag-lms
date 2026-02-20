@@ -40,6 +40,8 @@ interface TeacherAssignment {
     assignment_id: string;
     teacher_id: string;
     class_subject_id: string;
+    section_id?: string;
+    section_name?: string;
     teacher_name: string;
     teacher_username: string;
     subject_name: string;
@@ -103,6 +105,7 @@ const AdminClassManager: React.FC = () => {
     const [showAssignTeacher, setShowAssignTeacher] = useState(false);
     const [assignTeacherId, setAssignTeacherId] = useState('');
     const [assignSubjectId, setAssignSubjectId] = useState('');
+    const [assignSectionId, setAssignSectionId] = useState('');
 
     // Form state - Create Section
     const [showCreateSection, setShowCreateSection] = useState(false);
@@ -294,11 +297,15 @@ const AdminClassManager: React.FC = () => {
         setIsSaving(true);
         setError('');
         try {
-            await api.post(`/admin/classes/${selectedClass.id}/subjects/${assignSubjectId}/teacher`, { teacher_id: assignTeacherId });
+            await api.post(`/admin/classes/${selectedClass.id}/subjects/${assignSubjectId}/teacher`, {
+                teacher_id: assignTeacherId,
+                section_id: assignSectionId || undefined
+            });
             setSuccess('Teacher assigned');
             setShowAssignTeacher(false);
             setAssignTeacherId('');
             setAssignSubjectId('');
+            setAssignSectionId('');
             loadClassDetail(selectedClass.id);
         } catch (err: unknown) {
             const error = err as { message?: string };
@@ -544,7 +551,7 @@ const AdminClassManager: React.FC = () => {
                         {showAssignTeacher && (
                             <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
                                 <form onSubmit={handleAssignTeacher} className="space-y-3">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                         <div className="relative">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
                                             <select
@@ -571,6 +578,20 @@ const AdminClassManager: React.FC = () => {
                                                 <option value="">— Select Teacher —</option>
                                                 {teachers.map(t => (
                                                     <option key={t.id} value={t.id}>{t.full_name || t.username}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
+                                        </div>
+                                        <div className="relative">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Section (Optional)</label>
+                                            <select
+                                                value={assignSectionId}
+                                                onChange={(e) => setAssignSectionId(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                            >
+                                                <option value="">— All Sections —</option>
+                                                {(selectedClass.sections || []).map(s => (
+                                                    <option key={s.id} value={s.id}>{s.name}</option>
                                                 ))}
                                             </select>
                                             <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
@@ -611,6 +632,7 @@ const AdminClassManager: React.FC = () => {
                                                     <p className="text-sm font-medium text-gray-900 truncate">{ta.teacher_name || ta.teacher_username}</p>
                                                     <p className="text-xs text-gray-500">
                                                         Teaches <span className="text-indigo-600 font-medium">{ta.subject_name}</span>
+                                                        {ta.section_name && <span className="text-gray-500"> ({ta.section_name})</span>}
                                                     </p>
                                                 </div>
                                             </div>
