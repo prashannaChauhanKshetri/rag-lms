@@ -265,16 +265,22 @@ CREATE TABLE IF NOT EXISTS class_subjects (
 );
 CREATE INDEX idx_class_subjects_class ON class_subjects(class_id);
 CREATE INDEX idx_class_subjects_chatbot ON class_subjects(chatbot_id);
--- Many-to-many: which teachers are assigned to which class-subjects
+-- Many-to-many: which teachers are assigned to which class-subjects (and optionally specific sections)
 CREATE TABLE IF NOT EXISTS teacher_assignments (
     id TEXT PRIMARY KEY,
     class_subject_id TEXT NOT NULL REFERENCES class_subjects(id) ON DELETE CASCADE,
     teacher_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(class_subject_id, teacher_id)
+    section_id TEXT REFERENCES sections(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_teacher_assignments_cs ON teacher_assignments(class_subject_id);
 CREATE INDEX idx_teacher_assignments_teacher ON teacher_assignments(teacher_id);
+CREATE INDEX idx_teacher_assignments_section ON teacher_assignments(section_id);
+CREATE UNIQUE INDEX idx_teacher_assignments_unique ON teacher_assignments (
+    class_subject_id,
+    teacher_id,
+    COALESCE(section_id, 'ALL_SECTIONS')
+);
 -- ============================================
 -- COURSE MANAGEMENT: SECTIONS & ENROLLMENT
 -- ============================================
