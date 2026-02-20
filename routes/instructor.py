@@ -570,16 +570,11 @@ async def create_assignment_endpoint(
                  raise HTTPException(status_code=403, detail="Not authorized for this section")
             target_sections.append(section_id)
         else:
-            # Find all sections for this chatbot taught by this teacher
-            classes = db.list_classes_for_teacher(teacher_id)
-            for cls in classes:
-                subjects = db.list_class_subjects(cls["id"])
-                has_subject = any(s["chatbot_id"] == chatbot_id for s in subjects)
-                
-                if has_subject:
-                    sections = db.get_sections_by_class(cls["id"])
-                    for sec in sections:
-                        target_sections.append(sec["id"])
+            # Find all sections for this chatbot explicitly taught by this teacher
+            units = db.list_teacher_teaching_units(teacher_id)
+            for unit in units:
+                if unit["chatbot_id"] == chatbot_id:
+                    target_sections.append(unit["section_id"])
 
         if not target_sections:
             raise HTTPException(status_code=404, detail="No valid sections found for this assignment. Ensure you are assigned to teach this subject.")
@@ -704,14 +699,11 @@ async def create_resource_endpoint(request: CreateResourceRequest, user=Depends(
             raise HTTPException(status_code=403, detail="Not authorized for this section")
         target_sections.append(request.section_id)
     elif request.chatbot_id:
-        # Find all sections for this chatbot taught by this teacher
-        classes = db.list_classes_for_teacher(teacher_id)
-        for cls in classes:
-            subjects = db.list_class_subjects(cls["id"])
-            if any(s["chatbot_id"] == request.chatbot_id for s in subjects):
-                sections = db.get_sections_by_class(cls["id"])
-                for sec in sections:
-                    target_sections.append(sec["id"])
+        # Find all sections for this chatbot explicitly taught by this teacher
+        units = db.list_teacher_teaching_units(teacher_id)
+        for unit in units:
+            if unit["chatbot_id"] == request.chatbot_id:
+                target_sections.append(unit["section_id"])
         
         if not target_sections:
              raise HTTPException(status_code=404, detail="No sections found for this subject/teacher")
@@ -764,14 +756,11 @@ async def upload_resource_endpoint(
             raise HTTPException(status_code=403, detail="Not authorized for this section")
         target_sections.append(section_id)
     elif chatbot_id:
-        # Find all sections for this chatbot taught by this teacher
-        classes = db.list_classes_for_teacher(teacher_id)
-        for cls in classes:
-            subjects = db.list_class_subjects(cls["id"])
-            if any(s["chatbot_id"] == chatbot_id for s in subjects):
-                sections = db.get_sections_by_class(cls["id"])
-                for sec in sections:
-                    target_sections.append(sec["id"])
+        # Find all sections for this chatbot explicitly taught by this teacher
+        units = db.list_teacher_teaching_units(teacher_id)
+        for unit in units:
+            if unit["chatbot_id"] == chatbot_id:
+                target_sections.append(unit["section_id"])
         
         if not target_sections:
              raise HTTPException(status_code=404, detail="No sections found for this subject/teacher")
@@ -1372,16 +1361,13 @@ async def list_course_resources(chatbot_id: str, user=Depends(utils_auth.get_cur
     try:
         # 1. Find all sections needed
         target_sections = []
-        classes = db.list_classes_for_teacher(teacher_id)
-        for cls in classes:
-            subjects = db.list_class_subjects(cls["id"])
-            if any(s["chatbot_id"] == chatbot_id for s in subjects):
-                sections = db.get_sections_by_class(cls["id"])
-                for sec in sections:
-                    target_sections.append({
-                        "id": sec["id"],
-                        "name": sec["name"]
-                    })
+        units = db.list_teacher_teaching_units(teacher_id)
+        for unit in units:
+            if unit["chatbot_id"] == chatbot_id:
+                target_sections.append({
+                    "id": unit["section_id"],
+                    "name": unit["section_name"]
+                })
         
         if not target_sections:
             return {"resources": []}
