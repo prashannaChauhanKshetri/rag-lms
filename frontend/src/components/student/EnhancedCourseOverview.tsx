@@ -15,6 +15,7 @@ import {
 interface Section {
   id: string;
   name: string;
+  subject_name?: string;
   chatbot_id: string;
   teacher_name: string;
   created_at: string;
@@ -131,7 +132,7 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {section?.name}
+              {section?.subject_name || section?.name}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
               Started{' '}
@@ -238,8 +239,8 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
-                ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+              ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
+              : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
               }`}
           >
             {tab.label}
@@ -500,10 +501,10 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
                       </span>
                       <span
                         className={`font-medium ${record.status === 'present'
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : record.status === 'absent'
-                              ? 'text-red-600 dark:text-red-400'
-                              : 'text-amber-600 dark:text-amber-400'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : record.status === 'absent'
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-amber-600 dark:text-amber-400'
                           }`}
                       >
                         {record.status.charAt(0).toUpperCase() +

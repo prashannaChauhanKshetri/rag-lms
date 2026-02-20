@@ -110,7 +110,7 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
             <div
               key={`${item.section_id}-${item.chatbot_id}`}
               className="group relative bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-emerald-950/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col"
-              onClick={() => onSectionSelect?.(item.section_id, item.section_name)}
+              onClick={() => onSectionSelect?.(item.section_id, item.section_name, item.chatbot_id)}
             >
               {/* Gradient accent bar */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity" />

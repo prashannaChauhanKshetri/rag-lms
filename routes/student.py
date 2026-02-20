@@ -295,6 +295,7 @@ async def get_section_overview(
         attendance = db.get_student_attendance(section_id, student_id)
         
         # Get teacher info
+        teacher = None
         if chatbot_id:
             # Get specific subject teacher
             subject_details = db.get_subject_teacher(section_id, chatbot_id)
@@ -304,29 +305,18 @@ async def get_section_overview(
                 
                 # Create teacher object from subject details
                 if subject_details.get("teacher_name"):
-                    teacher_obj = {
+                    teacher = {
                         "full_name": subject_details["teacher_name"],
                         "email": subject_details.get("teacher_email")
                     }
-                    return {
-                        "section": section,
-                        "teacher": teacher_obj,
-                        "assignments": assignments,
-                        "resources": resources,
-                        "attendance": attendance
-                    }
         
-        # Default: all teachers for the section
-        teachers = db.get_section_teachers(section_id)
-        
-        # Default: all teachers for the section
-        teachers = db.get_section_teachers(section_id)
-        if teachers:
-            full_name = ", ".join([t["full_name"] for t in teachers if t.get("full_name")])
-            email = teachers[0].get("email") # Use first email for contact
-            teacher = {"full_name": full_name, "email": email}
-        else:
-            teacher = None
+        # Default: all teachers for the section if teacher wasn't set by chatbot_id
+        if not teacher:
+            teachers = db.get_section_teachers(section_id)
+            if teachers:
+                full_name = ", ".join([t["full_name"] for t in teachers if t.get("full_name")])
+                email = teachers[0].get("email") # Use first email for contact
+                teacher = {"full_name": full_name, "email": email}
         
         # Calculate attendance percentage
         present_count = sum(1 for a in attendance if a["status"] == "present")
