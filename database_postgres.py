@@ -809,15 +809,15 @@ def list_class_subjects(class_id: str) -> List[Dict]:
 
 # --- TEACHER ASSIGNMENTS (Many-to-Many: Teacher <-> Class Subject) ---
 
-def assign_teacher_to_subject(ta_id: str, class_subject_id: str, teacher_id: str):
-    """Assign a teacher to a specific class subject"""
+def assign_teacher_to_subject(ta_id: str, class_subject_id: str, teacher_id: str, section_id: Optional[str] = None):
+    """Assign a teacher to a specific class subject and optionally a specific section"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO teacher_assignments (id, class_subject_id, teacher_id)
-                   VALUES (%s, %s, %s)
-                   ON CONFLICT (class_subject_id, teacher_id) DO NOTHING""",
-                (ta_id, class_subject_id, teacher_id)
+                """INSERT INTO teacher_assignments (id, class_subject_id, teacher_id, section_id)
+                   VALUES (%s, %s, %s, %s)
+                   ON CONFLICT (class_subject_id, teacher_id, COALESCE(section_id, 'ALL_SECTIONS')) DO NOTHING""",
+                (ta_id, class_subject_id, teacher_id, section_id)
             )
 
 def remove_teacher_assignment(ta_id: str):
@@ -831,13 +831,15 @@ def list_teacher_assignments(class_id: str) -> List[Dict]:
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                """SELECT ta.id as assignment_id, ta.teacher_id, ta.class_subject_id, ta.created_at,
+                """SELECT ta.id as assignment_id, ta.teacher_id, ta.class_subject_id, ta.section_id, ta.created_at,
                           u.full_name as teacher_name, u.username as teacher_username,
-                          cb.name as subject_name, cb.id as chatbot_id
+                          cb.name as subject_name, cb.id as chatbot_id,
+                          s.name as section_name
                    FROM teacher_assignments ta
                    JOIN class_subjects cs ON cs.id = ta.class_subject_id
                    JOIN chatbots cb ON cb.id = cs.chatbot_id
                    JOIN users u ON u.id = ta.teacher_id
+                   LEFT JOIN sections s ON s.id = ta.section_id
                    WHERE cs.class_id = %s
                    ORDER BY cb.name, u.full_name""",
                 (class_id,)
@@ -864,7 +866,7 @@ def get_student_chatbots(student_id: str) -> List[Dict]:
     return [dict(cb) for cb in chatbots]
 
 def is_teacher_of_section(teacher_id: str, section_id: str) -> bool:
-    """Check if a teacher has any subject assignment in the parent class of this section"""
+    """Check if a teacher has a subject assignment in this section specifically OR the class entirely"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
@@ -872,7 +874,9 @@ def is_teacher_of_section(teacher_id: str, section_id: str) -> bool:
                    FROM sections s
                    JOIN class_subjects cs ON cs.class_id = s.class_id
                    JOIN teacher_assignments ta ON ta.class_subject_id = cs.id
-                   WHERE s.id = %s AND ta.teacher_id = %s AND s.deleted_at IS NULL
+                   WHERE s.id = %s AND ta.teacher_id = %s 
+                   AND (ta.section_id IS NULL OR ta.section_id = s.id)
+                   AND s.deleted_at IS NULL
                    LIMIT 1""",
                 (section_id, teacher_id)
             )
@@ -950,7 +954,8 @@ def get_subject_teacher(section_id: str, chatbot_id: str) -> Optional[Dict]:
                    JOIN classes c ON s.class_id = c.id
                    JOIN class_subjects cs ON c.id = cs.class_id
                    JOIN chatbots cb ON cs.chatbot_id = cb.id
-                   LEFT JOIN teacher_assignments ta ON cs.id = ta.class_subject_id
+                   LEFT JOIN teacher_assignments ta ON cs.id = ta.class_subject_id 
+                        AND (ta.section_id IS NULL OR ta.section_id = s.id)
                    LEFT JOIN users u ON ta.teacher_id = u.id
                    WHERE s.id = %s AND cb.id = %s
                    GROUP BY cb.name""",
@@ -1026,7 +1031,7 @@ def list_sections_for_chatbot(chatbot_id: str) -> List[Dict]:
     return [dict(s) for s in sections]
 
 def list_sections_for_teacher(teacher_id: str) -> List[Dict]:
-    """List all sections where the teacher has at least one subject assignment in the parent class"""
+    """List all sections where the teacher has at least one subject assignment (filtered by section_id if applicable)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
@@ -1035,7 +1040,9 @@ def list_sections_for_teacher(teacher_id: str) -> List[Dict]:
                    JOIN classes c ON c.id = s.class_id
                    JOIN class_subjects cs ON cs.class_id = c.id
                    JOIN teacher_assignments ta ON ta.class_subject_id = cs.id
-                   WHERE ta.teacher_id = %s AND s.deleted_at IS NULL
+                   WHERE ta.teacher_id = %s 
+                   AND (ta.section_id IS NULL OR ta.section_id = s.id)
+                   AND s.deleted_at IS NULL
                    ORDER BY s.created_at DESC""",
                 (teacher_id,)
             )
@@ -1043,7 +1050,7 @@ def list_sections_for_teacher(teacher_id: str) -> List[Dict]:
     return [dict(s) for s in sections]
 
 def list_teacher_teaching_units(teacher_id: str) -> List[Dict]:
-    """List all (Section, Chatbot) pairs where the teacher teaches the chatbot's subject in that section's class"""
+    """List all (Section, Chatbot) pairs where the teacher specifically teaches that subject"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
@@ -1060,6 +1067,7 @@ def list_teacher_teaching_units(teacher_id: str) -> List[Dict]:
                    JOIN chatbots cb ON cb.id = cs.chatbot_id
                    JOIN teacher_assignments ta ON ta.class_subject_id = cs.id
                    WHERE ta.teacher_id = %s AND s.deleted_at IS NULL
+                   AND (ta.section_id IS NULL OR ta.section_id = s.id)
                    ORDER BY c.name, s.name, cb.name""",
                 (teacher_id,)
             )
