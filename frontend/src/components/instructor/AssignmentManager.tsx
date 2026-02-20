@@ -22,13 +22,14 @@ interface Assignment {
     description: string;
     due_date: string;
     points: number;
-    status: 'draft' | 'published';
+    status?: 'draft' | 'published';
     created_at: string;
     submission_count?: number;
     submitted_count?: number;
     // New fields
     chatbot_id: string;
     section_id?: string;
+    is_published?: boolean;
 }
 
 interface Submission {
@@ -194,8 +195,8 @@ export function AssignmentManager() {
         }
     };
 
-    const publishedAssignments = assignments.filter(a => a.status === 'published');
-    const draftAssignments = assignments.filter(a => a.status === 'draft');
+    const publishedAssignments = assignments.filter(a => a.is_published);
+    const draftAssignments = assignments.filter(a => !a.is_published);
     const totalSubmissions = assignments.reduce((sum, a) => sum + (a.submitted_count || 0), 0);
     const totalToGrade = assignments.reduce((sum, a) => sum + ((a.submission_count || 0) - (a.submitted_count || 0)), 0);
 
@@ -460,8 +461,8 @@ function AssignmentCard({ assignment, onPublish, onDelete, onView }: AssignmentC
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{assignment.title}</h3>
-                <span className={`text-xs px-2 py-1 rounded-full ${assignment.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                    {assignment.status}
+                <span className={`text-xs px-2 py-1 rounded-full ${assignment.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {assignment.is_published ? 'Published' : 'Draft'}
                 </span>
             </div>
             <p className="text-sm text-gray-600 mb-4 line-clamp-2">{assignment.description}</p>
@@ -470,7 +471,7 @@ function AssignmentCard({ assignment, onPublish, onDelete, onView }: AssignmentC
                 Due: {new Date(assignment.due_date).toLocaleDateString()}
             </div>
             <div className="flex gap-2 pt-2 border-t flex-wrap">
-                {assignment.status === 'draft' ? (
+                {!assignment.is_published ? (
                     <button
                         onClick={() => onPublish(assignment.id)}
                         className="flex-1 min-w-24 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"

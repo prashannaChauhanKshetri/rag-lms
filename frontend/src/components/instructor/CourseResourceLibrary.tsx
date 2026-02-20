@@ -38,6 +38,15 @@ interface ResourceFilter {
   sortBy: 'recent' | 'popular' | 'name';
 }
 
+interface TeachingUnit {
+  section_id: string;
+  section_name: string;
+  class_id: string;
+  class_name: string;
+  chatbot_id: string;
+  chatbot_name: string;
+}
+
 const CourseResourceLibrary: React.FC = () => {
   const [resources, setResources] = useState<CourseResource[]>([]);
   const [filteredResources, setFilteredResources] = useState<CourseResource[]>([]);
@@ -52,8 +61,8 @@ const CourseResourceLibrary: React.FC = () => {
   });
 
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [courses, setCourses] = useState<{ id: string; name: string }[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [units, setUnits] = useState<TeachingUnit[]>([]);
+  const [selectedUnit, setSelectedUnit] = useState<TeachingUnit | null>(null);
 
   const [uploadData, setUploadData] = useState<{
     title: string;
@@ -70,48 +79,42 @@ const CourseResourceLibrary: React.FC = () => {
   });
 
   useEffect(() => {
-    // Fetch courses/chatbots first
-    const fetchCourses = async () => {
+    // Fetch teaching units instead of chatbots
+    const fetchUnits = async () => {
       try {
-        const data = await api.get<{ chatbots: { id: string; name: string }[] }>('/chatbots/list');
-        setCourses(data.chatbots);
-        if (data.chatbots.length > 0) setSelectedCourseId(data.chatbots[0].id);
+        const data = await api.get<{ units: TeachingUnit[] }>('/instructor/teaching-units');
+        setUnits(data.units);
+        if (data.units.length > 0) setSelectedUnit(data.units[0]);
       } catch (error) {
         console.error(error);
       }
     };
-    fetchCourses();
+    fetchUnits();
   }, []);
 
   const loadResources = useCallback(async () => {
-    if (!selectedCourseId) return;
+    if (!selectedUnit) return;
     setIsLoading(true);
     setError('');
 
     try {
-      // Create a new endpoint or reuse list logic. 
-      // Current backend `list_resources` takes `section_id`.
-      // We need `list_resources_by_chatbot` or iterate sections.
-      // For now, let's assume we implement a new endpoint or update logic.
-      // But we haven't implemented `list_resources_by_chatbot` in backend yet!
-      // Let's rely on finding sections for now or assume UI has `sections` state.
-      // Simplified: Instructor usually thinks in terms of "Courses" (Chatbots) or "Sections".
-      // Let's list ALL resources for the selected chatbot (across all its sections).
-      const response = await api.get(`/instructor/resources/${selectedCourseId}`) as { resources: CourseResource[] };
-      setResources(response.resources || []);
+      // The backend will filter by explicit sections taught
+      const response = await api.get(`/instructor/resources/${selectedUnit.chatbot_id}`) as { resources: CourseResource[] };
+      // Filter out sections not equivalent to the specific selected unit
+      const unitResources = (response.resources || []).filter(r => r.section_id === selectedUnit.section_id);
+      setResources(unitResources);
     } catch (err: unknown) {
-      // ... handled below
       const error = err as { response?: { data?: { detail?: string } } };
       setError(error.response?.data?.detail || 'Failed to load resources');
       setResources([]);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedCourseId]);
+  }, [selectedUnit]);
 
   useEffect(() => {
-    if (selectedCourseId) loadResources();
-  }, [selectedCourseId, loadResources]);
+    if (selectedUnit) loadResources();
+  }, [selectedUnit, loadResources]);
 
   // Apply filters and sorting
   useEffect(() => {
@@ -167,12 +170,15 @@ const CourseResourceLibrary: React.FC = () => {
       return;
     }
 
+    if (!selectedUnit) return;
+
     try {
       if (uploadData.type === 'document') {
         const formData = new FormData();
         formData.append('title', uploadData.title);
         formData.append('description', uploadData.description);
-        formData.append('chatbot_id', selectedCourseId);
+        formData.append('chatbot_id', selectedUnit.chatbot_id);
+        formData.append('section_id', selectedUnit.section_id);
         if (uploadData.file) {
           formData.append('file', uploadData.file);
         }
@@ -180,7 +186,8 @@ const CourseResourceLibrary: React.FC = () => {
       } else {
         // Link creation
         await api.post('/instructor/resources/create', {
-          chatbot_id: selectedCourseId,
+          chatbot_id: selectedUnit.chatbot_id,
+          section_id: selectedUnit.section_id,
           title: uploadData.title,
           url: uploadData.url,
           resource_type: uploadData.type,
@@ -254,11 +261,19 @@ const CourseResourceLibrary: React.FC = () => {
             </div>
             <div className="flex items-center gap-4">
               <select
-                value={selectedCourseId}
-                onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                value={selectedUnit ? `${selectedUnit.chatbot_id}|${selectedUnit.section_id}` : ''}
+                onChange={(e) => {
+                  const [cbId, secId] = e.target.value.split('|');
+                  const unit = units.find(u => u.chatbot_id === cbId && u.section_id === secId);
+                  setSelectedUnit(unit || null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 w-full sm:w-auto overflow-hidden text-ellipsis whitespace-nowrap"
               >
-                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {units.map(u => (
+                  <option key={`${u.chatbot_id}|${u.section_id}`} value={`${u.chatbot_id}|${u.section_id}`}>
+                    {u.class_name} - {u.section_name} ({u.chatbot_name})
+                  </option>
+                ))}
               </select>
 
               <button

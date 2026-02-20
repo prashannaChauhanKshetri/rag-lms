@@ -86,15 +86,15 @@ async def list_student_flashcards(chatbot_id: str, user=Depends(utils_auth.get_c
     flashcards = db.list_flashcards(chatbot_id, published_only=True)
     return {"flashcards": flashcards}
 
-@router.get("/assignments/{chatbot_id}")
-async def list_student_assignments(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
+@router.get("/assignments/chatbot/{chatbot_id}")
+async def list_student_assignments_by_chatbot(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List published assignments for students"""
-    # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
+    # Validate user is authenticated
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     assignments = db.list_assignments_by_chatbot(chatbot_id)
     # Filter only published assignments
-    published = [a for a in assignments if a.get('status') == 'published']
+    published = [a for a in assignments if a.get('is_published') == True]
     return {"assignments": published}
 
 @router.post("/assignments/submit")
@@ -167,12 +167,11 @@ async def submit_assignment_endpoint(
     
     # Save to database
     db.submit_assignment(
-        submission_id, 
-        assignment_id, 
-        student_id, 
-        student_name, 
-        file_path, 
-        file.filename
+        submission_id=submission_id, 
+        assignment_id=assignment_id, 
+        student_id=student_id, 
+        text="", 
+        file_path=file_path
     )
     
     return {
@@ -483,7 +482,7 @@ async def get_section_resources(section_id: str, user=Depends(utils_auth.get_cur
 # --- STUDENT ASSIGNMENT SUBMISSION ---
 
 @router.get("/assignments")
-async def list_student_assignments(user=Depends(utils_auth.get_current_user)):
+async def list_student_assignments_all(user=Depends(utils_auth.get_current_user)):
     """Get all assignments for enrolled sections"""
     try:
         student_id = utils_auth.get_user_id(user)
@@ -494,7 +493,10 @@ async def list_student_assignments(user=Depends(utils_auth.get_current_user)):
         
         for enrollment in enrollments:
             section_id = enrollment.get("section_id")
-            assignments = db.list_assignments_by_section(section_id) if hasattr(db, 'list_assignments_by_section') else []
+            if hasattr(db, 'list_assignments_by_section'):
+                assignments = db.list_assignments_by_section(section_id, published_only=True)
+            else:
+                assignments = []
             for assign in assignments:
                 assign["section_id"] = section_id
                 all_assignments.append(assign)
@@ -576,13 +578,12 @@ async def submit_assignment(
         
         # Create submission record
         submission_id = str(uuid.uuid4())
-        db.create_assignment_submission(
+        db.submit_assignment(
             submission_id=submission_id,
             assignment_id=assignment_id,
             student_id=student_id,
-            file_path=file_path,
-            file_name=file.filename,
-            notes=notes
+            text=notes,
+            file_path=file_path
         )
         
         return {

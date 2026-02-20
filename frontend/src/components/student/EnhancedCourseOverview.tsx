@@ -10,6 +10,7 @@ import {
   Download,
   User,
   Mail,
+  CheckCircle,
 } from 'lucide-react';
 
 interface Section {
@@ -63,6 +64,7 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
   const [attendance, setAttendance] = useState<Attendance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null); // Added
   const [activeTab, setActiveTab] = useState<
     'overview' | 'assignments' | 'resources' | 'attendance'
   >('overview');
@@ -71,10 +73,17 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
     null
   );
 
+  // Added for submission
+  const [submissionFile, setSubmissionFile] = useState<File | null>(null);
+  const [submissionText, setSubmissionText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        setError(null); // Clear previous errors on new fetch
+        setSuccess(null); // Clear previous success on new fetch
 
         // Fetch section overview
         const sectionRes = await api.get<{
@@ -92,16 +101,72 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
         setResources(sectionRes.resources || []);
         setAttendance(sectionRes.attendance || null);
         setTeacher(sectionRes.teacher);
-        setError(null);
-      } catch (err) {
-        setError(`Failed to load section: ${err}`);
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { detail?: string } } };
+        setError(error.response?.data?.detail || `Failed to load section: ${err}`);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [sectionId]);
+  }, [sectionId, chatbotId]); // Added chatbotId to dependency array
+
+  const handleTabChange = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    setExpandedAssignment(null);
+    setError(null); // Clear errors when changing tabs
+    setSuccess(null); // Clear success when changing tabs
+  };
+
+  const handleSubmission = async (e: React.FormEvent, assignmentId: string) => {
+    e.preventDefault();
+    if (!submissionFile && !submissionText) {
+      setError('Please provide a file or text submission');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const formData = new FormData();
+      if (submissionFile) formData.append('file', submissionFile);
+      if (submissionText) formData.append('text', submissionText);
+
+      await api.post(`/student/sections/${sectionId}/assignments/${assignmentId}/submit`, formData);
+      setSuccess('Assignment submitted successfully');
+
+      // Update local state to reflect submission
+      setAssignments(prev =>
+        prev.map(a => a.id === assignmentId ? { ...a, submitted: true } : a)
+      );
+
+      setSubmissionFile(null);
+      setSubmissionText('');
+      setExpandedAssignment(null); // Close the expansion
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      setError(error.response?.data?.detail || 'Failed to submit assignment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResourceDownload = (resource: Resource) => {
+    if (resource.url) {
+      // It's a link
+      window.open(resource.url, '_blank');
+    } else if (resource.file_path) {
+      // In a real app we'd construct a signed URL or proxy URL for download
+      // For this example we'll assume the URL points to a backend endpoint or raw asset
+      // Let's use a proxy endpoint for resource downloads or directly navigate
+      window.open(`http://localhost:8000/${resource.file_path}`, '_blank');
+    } else {
+      setError('Resource link is missing or invalid');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -116,7 +181,8 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
     );
   }
 
-  if (error) {
+  // Initial error display (before tabs)
+  if (error && !section) { // Only show this if there's an error and no section data loaded yet
     return (
       <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
         <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
@@ -225,6 +291,20 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
         </div>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl flex items-start gap-3 dark:bg-red-900/30 dark:border-red-800">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5 dark:text-red-400" />
+          <p className="text-sm sm:text-base text-red-700 dark:text-red-200">{error}</p>
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg sm:rounded-xl flex items-start gap-3 dark:bg-green-900/30 dark:border-green-800">
+          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5 dark:text-green-400" />
+          <p className="text-sm sm:text-base text-green-700 dark:text-green-200">{success}</p>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-800 flex gap-1 bg-white dark:bg-gray-900 rounded-t-xl">
         {(
@@ -237,7 +317,7 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
         ).map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)} // Updated to use handleTabChange
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
               ? 'border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400'
               : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
@@ -397,9 +477,39 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
                           </p>
                         </div>
                       )}
-                      <button className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
-                        View Details →
-                      </button>
+
+                      {!assignment.submitted && (
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                          <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Submit Assignment</h5>
+                          <form onSubmit={(e) => handleSubmission(e, assignment.id)} className="space-y-4">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Text Response (Optional)</label>
+                              <textarea
+                                value={submissionText}
+                                onChange={(e) => setSubmissionText(e.target.value)}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                                rows={3}
+                                placeholder="Type your answer here..."
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">File Upload (Optional)</label>
+                              <input
+                                type="file"
+                                onChange={(e) => setSubmissionFile(e.target.files?.[0] || null)}
+                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-300"
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              disabled={isSubmitting || (!submissionFile && !submissionText)}
+                              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isSubmitting ? 'Submitting...' : 'Submit'}
+                            </button>
+                          </form>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -436,7 +546,10 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
                         ` • ${new Date(resource.created_at).toLocaleDateString()}`}
                     </p>
                   </div>
-                  <button className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 p-2">
+                  <button
+                    onClick={() => handleResourceDownload(resource)}
+                    className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 p-2"
+                  >
                     <Download className="h-5 w-5" />
                   </button>
                 </div>

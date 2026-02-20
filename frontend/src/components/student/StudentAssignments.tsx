@@ -8,7 +8,7 @@ interface Assignment {
     title: string;
     description: string;
     due_date: string;
-    status: 'draft' | 'published';
+    is_published: boolean;
     created_at: string;
 }
 
@@ -55,8 +55,8 @@ export function StudentAssignments() {
         const fetchAssignments = async () => {
             if (!selectedCourseId) return;
             try {
-                const data = await api.get<{ assignments: Assignment[] }>(`/student/assignments/${selectedCourseId}`);
-                const published = data.assignments.filter(a => a.status === 'published');
+                const data = await api.get<{ assignments: Assignment[] }>(`/student/assignments/chatbot/${selectedCourseId}`);
+                const published = data.assignments.filter(a => a.is_published !== false); // Backend already filters, but safety fallback
                 setAssignments(published);
 
                 // Check submission status for each assignment

@@ -686,61 +686,87 @@ async def grade_submission_endpoint(request: GradeSubmissionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- Resource Management ---
+# ============================================
+# PHASE 5: RESOURCE MANAGEMENT
+# ============================================
 
-@router.post("/resources/create")
-async def create_resource_endpoint(request: CreateResourceRequest, user=Depends(utils_auth.get_current_user)):
-    """Add a resource link. If section_id missing, infers from chatbot_id (Subject)."""
-    teacher_id = user.get("sub") or user.get("id")
-    target_sections = []
-    
-    if request.section_id:
-        if not db.is_teacher_of_section(teacher_id, request.section_id) and user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Not authorized for this section")
-        target_sections.append(request.section_id)
-    elif request.chatbot_id:
-        # Find all sections for this chatbot explicitly taught by this teacher
+@router.get("/resources/{chatbot_id}")
+async def list_instructor_resources(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
+    """List resources uploaded by this instructor for a specific chatbot"""
+    try:
+        teacher_id = user.get("sub") or user.get("id")
+        teacher_name = user.get("name") or user.get("full_name", "Unknown")
+        
+        # 1. Authorize explicitly taught sections
+        target_sections = []
         units = db.list_teacher_teaching_units(teacher_id)
         for unit in units:
-            if unit["chatbot_id"] == request.chatbot_id:
+            if unit["chatbot_id"] == chatbot_id:
                 target_sections.append(unit["section_id"])
         
         if not target_sections:
-             raise HTTPException(status_code=404, detail="No sections found for this subject/teacher")
-    else:
-         raise HTTPException(status_code=400, detail="section_id or chatbot_id is required")
-
-    created_ids = []
-    try:
-        base_resource_id = str(uuid.uuid4())
-        # If multiple sections, the first is 'primary', others are shared?
-        # Or just create separate resources?
-        # Let's create separate resources but maybe link them? Not supported by schema yet.
-        # Just creating separate rows is fine, but duplication.
-        # For links it's cheap.
-        
-        for i, sec_id in enumerate(target_sections):
-            resource_id = str(uuid.uuid4()) if i > 0 else base_resource_id
-            db.create_resource(
-                resource_id, 
-                sec_id, 
-                request.title, 
-                request.resource_type, 
-                request.url, 
-                None, 
-                {"created_by": teacher_id, "shared_from": base_resource_id if i > 0 else None}
-            )
-            created_ids.append(resource_id)
+            return {"resources": []}
             
-        return {"message": f"Resource created for {len(created_ids)} sections", "resource_ids": created_ids}
+        # 2. Fetch resources for valid sections
+        all_resources = []
+        for section_id in target_sections:
+            resources = db.list_resources(section_id)
+            for r in resources:
+                # Add section ID to identify where it belongs
+                r["section_id"] = section_id
+                all_resources.append(r)
+                
+        # Filter to only show resources uploaded by this teacher (or we can show all if desired)
+        my_resources = [r for r in all_resources if getattr(r, 'uploaded_by', teacher_name) == teacher_name]
+        return {"resources": my_resources}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/resources/create")
+async def create_link_resource(request: CreateResourceRequest, user=Depends(utils_auth.get_current_user)):
+    """Create a link/video resource (no file upload)"""
+    try:
+        teacher_id = user.get("sub") or user.get("id")
+        teacher_name = user.get("name") or user.get("full_name") or "Instructor"
+        
+        section_id = request.section_id
+        
+        # Validation
+        if not section_id:
+            if not request.chatbot_id:
+                 raise HTTPException(status_code=400, detail="Must provide section_id")
+            
+            # Infer a section if only chatbot_id provided (backward compat)
+            units = db.list_teacher_teaching_units(teacher_id)
+            valid_units = [u for u in units if u["chatbot_id"] == request.chatbot_id]
+            if not valid_units:
+                 raise HTTPException(status_code=403, detail="Not authorized to teach this course")
+            section_id = valid_units[0]["section_id"]
+        else:
+            # Validate exact section_id
+            if not db.is_teacher_of_section(teacher_id, section_id):
+                raise HTTPException(status_code=403, detail="Not authorized to teach this section")
+        
+        resource_id = str(uuid.uuid4())
+        db.create_resource(
+            resource_id=resource_id,
+            section_id=section_id,
+            title=request.title,
+            description=request.description or "",
+            resource_type=request.resource_type,
+            url=request.url,
+            uploaded_by=teacher_name
+        )
+        return {"message": "Resource created successfully", "resource_id": resource_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/resources/upload")
-async def upload_resource_endpoint(
-    section_id: Optional[str] = Form(None),
-    chatbot_id: Optional[str] = Form(None),
+async def upload_resource(
     title: str = Form(...),
+    description: str = Form(default=""),
+    chatbot_id: str = Form(None), # Backward compatibility
+    section_id: str = Form(None), 
     file: UploadFile = File(...),
     user=Depends(utils_auth.get_current_user)
 ):
@@ -749,23 +775,23 @@ async def upload_resource_endpoint(
     import shutil
     
     teacher_id = user.get("sub") or user.get("id")
-    target_sections = []
+    teacher_name = user.get("name") or user.get("full_name") or "Instructor"
 
-    if section_id:
-        if not db.is_teacher_of_section(teacher_id, section_id) and user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Not authorized for this section")
-        target_sections.append(section_id)
-    elif chatbot_id:
-        # Find all sections for this chatbot explicitly taught by this teacher
-        units = db.list_teacher_teaching_units(teacher_id)
-        for unit in units:
-            if unit["chatbot_id"] == chatbot_id:
-                target_sections.append(unit["section_id"])
+    # Validation
+    if not section_id:
+        if not chatbot_id:
+             raise HTTPException(status_code=400, detail="Must provide section_id")
         
-        if not target_sections:
-             raise HTTPException(status_code=404, detail="No sections found for this subject/teacher")
+        # Infer a section if only chatbot_id provided (backward compat)
+        units = db.list_teacher_teaching_units(teacher_id)
+        valid_units = [u for u in units if u["chatbot_id"] == chatbot_id]
+        if not valid_units:
+             raise HTTPException(status_code=403, detail="Not authorized to teach this course")
+        section_id = valid_units[0]["section_id"]
     else:
-        raise HTTPException(status_code=400, detail="Either section_id or chatbot_id is required")
+        # Validate exact section_id
+        if not db.is_teacher_of_section(teacher_id, section_id):
+            raise HTTPException(status_code=403, detail="Not authorized to teach this section")
 
     try:
         # Validate file size (e.g. 50MB)
@@ -778,15 +804,11 @@ async def upload_resource_endpoint(
             raise HTTPException(status_code=413, detail="File too large (max 50MB)")
             
         # Determine paths
-        # If multiple sections, we just pick the first one for storage folder, or a generic 'shared' folder?
-        # Let's use the first section_id for folder structure to keep it clean.
-        primary_section_id = target_sections[0]
-        upload_dir = f"uploads/resources/{primary_section_id}"
+        upload_dir = f"uploads/resources/{section_id}"
         os.makedirs(upload_dir, exist_ok=True)
         
-        file_ext = os.path.splitext(file.filename)[1]
-        base_resource_id = str(uuid.uuid4())
-        safe_filename = f"{base_resource_id}_{file.filename}"
+        resource_id = str(uuid.uuid4())
+        safe_filename = f"{resource_id}_{file.filename}"
         file_path = f"{upload_dir}/{safe_filename}"
         
         with open(file_path, "wb") as buffer:
@@ -798,28 +820,22 @@ async def upload_resource_endpoint(
         if mime.startswith("image/"): res_type = "image"
         elif mime.startswith("video/"): res_type = "video"
         elif mime.startswith("audio/"): res_type = "audio"
+        db.create_resource(
+            resource_id,
+            section_id,
+            title,
+            res_type,
+            None,
+            file_path,
+            {
+                "filename": file.filename, 
+                "size": size, 
+                "mime_type": mime,
+                "created_by": teacher_id
+            }
+        )
         
-        created_ids = []
-        for sec_id in target_sections:
-            res_id = str(uuid.uuid4())
-            db.create_resource(
-                res_id,
-                sec_id,
-                title,
-                res_type,
-                None,
-                file_path, # Reuse same file path
-                {
-                    "filename": file.filename, 
-                    "size": size, 
-                    "mime_type": mime,
-                    "created_by": teacher_id,
-                    "shared_from": base_resource_id if sec_id != primary_section_id else None
-                }
-            )
-            created_ids.append(res_id)
-        
-        return {"message": f"Resource uploaded to {len(created_ids)} sections", "resource_ids": created_ids}
+        return {"message": "Resource uploaded successfully", "resource_id": resource_id}
     except HTTPException:
         raise
     except Exception as e:

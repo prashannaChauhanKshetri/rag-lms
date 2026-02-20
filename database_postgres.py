@@ -611,13 +611,7 @@ def list_assignments_by_chatbot(chatbot_id: str) -> List[Dict]:
             assigns = cur.fetchall()
     return [dict(a) for a in assigns]
 
-def publish_assignment(assignment_id: str):
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "UPDATE assignments SET status = 'published' WHERE id = %s",
-                (assignment_id,)
-            )
+# Duplicate removed
 
 def delete_assignment(assignment_id: str):
     """Delete an assignment"""
@@ -627,42 +621,17 @@ def delete_assignment(assignment_id: str):
 
 # --- Assignment Submission Functions ---
 
-def create_assignment_submission_table():
-    """Create assignment submissions table if it doesn't exist"""
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS assignment_submissions (
-                    id TEXT PRIMARY KEY,
-                    assignment_id TEXT NOT NULL,
-                    student_id TEXT NOT NULL,
-                    student_name TEXT,
-                    file_path TEXT,
-                    file_name TEXT,
-                    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    grade FLOAT,
-                    feedback TEXT
-                );
-            """)
-            cur.execute("""
-                CREATE INDEX IF NOT EXISTS idx_assignment_submissions_assignment 
-                ON assignment_submissions(assignment_id);
-            """)
-            cur.execute("""
-                CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student 
-                ON assignment_submissions(student_id);
-            """)
-
-def submit_assignment(submission_id: str, assignment_id: str, student_id: str, 
-                     student_name: str, file_path: str, file_name: str):
+def submit_assignment(submission_id: str, assignment_id: str, student_id: str, text: str = "", file_path: str = None):
     """Submit an assignment"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO assignment_submissions 
-                (id, assignment_id, student_id, student_name, file_path, file_name)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (submission_id, assignment_id, student_id, student_name, file_path, file_name))
+            cur.execute(
+                """INSERT INTO assignment_submissions (id, assignment_id, student_id, text, file_path)
+                   VALUES (%s, %s, %s, %s, %s)
+                   ON CONFLICT (assignment_id, student_id) DO UPDATE
+                   SET text = EXCLUDED.text, file_path = EXCLUDED.file_path, submitted_at = CURRENT_TIMESTAMP""",
+                (submission_id, assignment_id, student_id, text, file_path)
+            )
 
 def get_assignment_submissions(assignment_id: str):
     """Get all submissions for an assignment"""
@@ -1657,17 +1626,7 @@ def get_assignment_submissions_summary(assignment_id: str) -> Dict:
 
 # --- ASSIGNMENT SUBMISSIONS ---
 
-def submit_assignment(submission_id: str, assignment_id: str, student_id: str, text: str = "", file_path: str = None):
-    """Submit an assignment"""
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """INSERT INTO assignment_submissions (id, assignment_id, student_id, text, file_path)
-                   VALUES (%s, %s, %s, %s, %s)
-                   ON CONFLICT (assignment_id, student_id) DO UPDATE
-                   SET text = %s, file_path = %s, submitted_at = CURRENT_TIMESTAMP""",
-                (submission_id, assignment_id, student_id, text, file_path, text, file_path)
-            )
+# (function replaced above)
 
 def get_submission(submission_id: str) -> Optional[Dict]:
     """Get a submission by ID"""
@@ -1804,16 +1763,6 @@ def get_assignment_submission(submission_id: str) -> Optional[Dict]:
             submission = cur.fetchone()
     return dict(submission) if submission else None
 
-def create_assignment_submission(submission_id: str, assignment_id: str, student_id: str, 
-                                 file_path: str, file_name: str, notes: str = ""):
-    """Create assignment submission"""
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, file_name, notes)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                (submission_id, assignment_id, student_id, file_path, file_name, notes)
-            )
 
 def get_student_enrollments(student_id: str) -> List[Dict]:
     """Get all sections a student is enrolled in"""
@@ -2318,6 +2267,6 @@ def update_student_profile(user_id: str, **kwargs) -> bool:
 # Initialize on import
 try:
     init_db()
-    create_assignment_submission_table()
+    pass
 except Exception as e:
     logger.warning(f"Database initialization skipped: {e}")
