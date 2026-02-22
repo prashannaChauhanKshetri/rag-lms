@@ -1,4 +1,4 @@
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Sparkles } from 'lucide-react';
 import ThemeToggle from '../ThemeToggle';
 
 interface HeaderProps {
@@ -12,7 +12,7 @@ export function Header({ userName, userRole, institutionName }: HeaderProps) {
         <header className="h-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-8 flex items-center justify-between sticky top-0 z-10">
             <div className="flex items-center gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">Welcome back, {userName.split(' ')[0]}! 👋</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">Welcome back, {userName.split(' ')[0]}! <Sparkles className="w-5 h-5 text-amber-400" /></h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{institutionName}</p>
                 </div>
             </div>
