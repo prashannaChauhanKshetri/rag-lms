@@ -21,8 +21,6 @@ import {
     TrendingUp,
     BarChart3,
     ChevronRight,
-    Sparkles,
-    Target,
     Loader2,
     AlertCircle,
     Calendar,
@@ -222,7 +220,7 @@ export function StudentHome({ onNavigate }: StudentHomeProps) {
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 dark:from-green-900 dark:via-emerald-900 dark:to-teal-900 p-8 md:p-10 text-white shadow-xl shadow-green-600/20">
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-2">
-                        <Sparkles className="w-6 h-6 text-green-200" />
+                        <GraduationCap className="w-6 h-6 text-green-200" />
                         <span className="text-green-200 text-sm font-medium tracking-wide uppercase">Your Learning Hub</span>
                     </div>
                     <h1 className="text-2xl md:text-3xl font-bold mb-2">
@@ -256,9 +254,6 @@ export function StudentHome({ onNavigate }: StudentHomeProps) {
                 {/* decorative shapes */}
                 <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
-                <div className="absolute top-1/2 right-12 hidden lg:block">
-                    <Target className="w-24 h-24 text-white/10" />
-                </div>
             </div>
 
             {/* ──────────────────── MAIN GRID ──────────────────── */}
@@ -359,10 +354,10 @@ export function StudentHome({ onNavigate }: StudentHomeProps) {
                                         <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full rounded-full transition-all duration-1000 ${c.completion_percentage >= 75
-                                                        ? 'bg-green-500'
-                                                        : c.completion_percentage >= 40
-                                                            ? 'bg-amber-500'
-                                                            : 'bg-red-400'
+                                                    ? 'bg-green-500'
+                                                    : c.completion_percentage >= 40
+                                                        ? 'bg-amber-500'
+                                                        : 'bg-red-400'
                                                     }`}
                                                 style={{ width: `${Math.min(c.completion_percentage, 100)}%` }}
                                             />
@@ -376,7 +371,7 @@ export function StudentHome({ onNavigate }: StudentHomeProps) {
                     {/* ---- Quick Actions ---- */}
                     <section>
                         <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-green-600" />
+                            <BarChart3 className="w-5 h-5 text-green-600" />
                             Quick Actions
                         </h2>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -410,7 +405,7 @@ export function StudentHome({ onNavigate }: StudentHomeProps) {
                     {/* ---- Overall completion ring ---- */}
                     <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl">
                         <h3 className="font-bold text-gray-800 dark:text-white mb-5 flex items-center gap-2">
-                            <Target className="w-5 h-5 text-green-600" />
+                            <TrendingUp className="w-5 h-5 text-green-600" />
                             Overall Progress
                         </h3>
                         <div className="flex items-center justify-center relative w-40 h-40 mx-auto mb-4">
@@ -498,7 +493,7 @@ export function StudentHome({ onNavigate }: StudentHomeProps) {
                                         onClick={() => onNavigate('assignment-manager')}
                                     >
                                         <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${urgencyColor(a.due_date).includes('red') ? 'bg-red-500' :
-                                                urgencyColor(a.due_date).includes('orange') ? 'bg-orange-500' : 'bg-gray-400'
+                                            urgencyColor(a.due_date).includes('orange') ? 'bg-orange-500' : 'bg-gray-400'
                                             }`} />
                                         <div className="flex-1 min-w-0">
                                             <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{a.title}</h4>

@@ -66,14 +66,14 @@ export function AnalyticsDashboard() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                    <Activity className="w-6 h-6 text-indigo-600" />
+                <h1 className="text-2xl font-bold flex items-center gap-2 dark:text-white">
+                    <Activity className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                     Course Analytics
                 </h1>
                 <select
                     value={selectedCourseId}
                     onChange={(e) => setSelectedCourseId(e.target.value)}
-                    className="px-3 py-1 border rounded-lg bg-white"
+                    className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                     {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -83,49 +83,49 @@ export function AnalyticsDashboard() {
                 <>
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4">
+                            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
                                 <BookOpen className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Total Quizzes</p>
-                                <p className="text-2xl font-bold">{data.total_quizzes}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Quizzes</p>
+                                <p className="text-2xl font-bold dark:text-white">{data.total_quizzes}</p>
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                            <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4">
+                            <div className="p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
                                 <Users className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Total Submissions</p>
-                                <p className="text-2xl font-bold">{data.total_submissions}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Submissions</p>
+                                <p className="text-2xl font-bold dark:text-white">{data.total_submissions}</p>
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4">
+                            <div className="p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
                                 <Award className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Average Score</p>
-                                <p className="text-2xl font-bold">{data.average_score.toFixed(1)}%</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Average Score</p>
+                                <p className="text-2xl font-bold dark:text-white">{data.average_score.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Chart */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 className="font-bold mb-6">Score Distribution</h3>
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h3 className="font-bold mb-6 dark:text-white">Score Distribution</h3>
                         <div className="h-64 w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={scoreData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                    <YAxis axisLine={false} tickLine={false} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(107,114,128,0.3)" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 12 }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 12 }} />
                                     <Tooltip
-                                        cursor={{ fill: '#F3F4F6' }}
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        cursor={{ fill: 'rgba(107,114,128,0.1)' }}
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: 'var(--tt-bg, #fff)' }}
                                     />
                                     <Bar dataKey="count" fill="#4F46E5" radius={[4, 4, 0, 0]} />
                                 </BarChart>
@@ -136,7 +136,7 @@ export function AnalyticsDashboard() {
             )}
 
             {!data && !isLoading && (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-gray-400 dark:text-gray-500">
                     No data available for this course.
                 </div>
             )}

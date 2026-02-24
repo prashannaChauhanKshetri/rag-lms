@@ -9,7 +9,6 @@ import {
     ArrowRight,
     UserPlus,
     Layers,
-    Sparkles,
 } from 'lucide-react';
 import { api } from '../../lib/api';
 
@@ -69,7 +68,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 p-8 text-white shadow-xl shadow-indigo-500/20">
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-5 h-5 text-indigo-200" />
                         <span className="text-indigo-200 text-sm font-medium">Admin Dashboard</span>
                     </div>
                     <h1 className="text-3xl font-bold mb-2">Welcome to RAG-LMS</h1>
