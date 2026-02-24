@@ -15,6 +15,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { AssignmentSubmissions } from './AssignmentSubmissions';
+import { ConfirmDialog } from '../shared/ConfirmDialog';
 
 interface Assignment {
     id: string;
@@ -79,6 +80,9 @@ export function AssignmentManager() {
     const [gradingScore, setGradingScore] = useState('');
     const [gradingFeedback, setGradingFeedback] = useState('');
     const [isGrading, setIsGrading] = useState(false);
+    const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [actionError, setActionError] = useState('');
 
     useEffect(() => {
         fetchTeachingUnits();
@@ -143,7 +147,7 @@ export function AssignmentManager() {
             setNewFile(null);
             await fetchAssignments();
         } catch {
-            alert('Failed to create assignment');
+            setActionError('Failed to create assignment');
         } finally {
             setIsCreating(false);
         }
@@ -154,17 +158,25 @@ export function AssignmentManager() {
             await api.post(`/instructor/assignments/${id}/publish`, {});
             await fetchAssignments();
         } catch {
-            alert('Failed to publish');
+            setActionError('Failed to publish assignment');
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure?')) return;
+    const handleDelete = (id: string) => {
+        setPendingDelete(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!pendingDelete) return;
+        setIsDeleting(true);
         try {
-            await api.delete(`/instructor/assignments/${id}`);
+            await api.delete(`/instructor/assignments/${pendingDelete}`);
             await fetchAssignments();
         } catch {
-            alert('Failed to delete');
+            setActionError('Failed to delete assignment');
+        } finally {
+            setIsDeleting(false);
+            setPendingDelete(null);
         }
     };
 
@@ -202,6 +214,18 @@ export function AssignmentManager() {
 
     return (
         <div className="h-full flex flex-col gap-6 p-4 md:p-6">
+            <ConfirmDialog
+                isOpen={!!pendingDelete}
+                title="Delete Assignment"
+                body="Delete this assignment? This cannot be undone."
+                confirmLabel="Delete"
+                isLoading={isDeleting}
+                onConfirm={confirmDelete}
+                onCancel={() => setPendingDelete(null)}
+            />
+            {actionError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{actionError}</div>
+            )}
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex flex-col md:flex-row md:items-center gap-4">

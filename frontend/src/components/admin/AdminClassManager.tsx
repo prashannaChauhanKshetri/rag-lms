@@ -17,6 +17,7 @@ import {
     UserPlus,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { ConfirmDialog } from '../shared/ConfirmDialog';
 
 // --- Interfaces ---
 
@@ -122,6 +123,12 @@ const AdminClassManager: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [pendingAction, setPendingAction] = useState<{
+        title: string;
+        body: string;
+        onConfirm: () => Promise<void>;
+    } | null>(null);
+    const [pendingActionLoading, setPendingActionLoading] = useState(false);
 
     // --- Data Loading ---
 
@@ -233,17 +240,24 @@ const AdminClassManager: React.FC = () => {
     };
 
     const handleDeleteClass = async (classId: string, className: string) => {
-        if (!confirm(`Delete class "${className}"? This will also remove all subjects, teacher assignments, and sections.`)) return;
-        setError('');
-        try {
-            await api.delete(`/admin/classes/${classId}`);
-            setSuccess(`Class "${className}" deleted`);
-            if (selectedClass?.id === classId) setSelectedClass(null);
-            loadClasses();
-        } catch (err: unknown) {
-            const error = err as { message?: string };
-            setError(error.message || 'Failed to delete class');
-        }
+        setPendingAction({
+            title: 'Delete Class',
+            body: `Delete class "${className}"? This will also remove all subjects, teacher assignments, and sections.`,
+            onConfirm: async () => {
+                setError('');
+                try {
+                    await api.delete(`/admin/classes/${classId}`);
+                    setSuccess(`Class "${className}" deleted`);
+                    if (selectedClass?.id === classId) setSelectedClass(null);
+                    loadClasses();
+                } catch (err: unknown) {
+                    const error = err as { message?: string };
+                    setError(error.message || 'Failed to delete class');
+                } finally {
+                    setPendingAction(null);
+                }
+            },
+        });
     };
 
     const startEditClass = (cls: ClassItem) => {
@@ -276,17 +290,25 @@ const AdminClassManager: React.FC = () => {
     };
 
     const handleRemoveSubject = async (csId: string, name: string) => {
-        if (!selectedClass || !confirm(`Remove subject "${name}"? This will also remove teacher assignments for this subject.`)) return;
-        setError('');
-        try {
-            await api.delete(`/admin/classes/${selectedClass.id}/subjects/${csId}`);
-            setSuccess(`Subject "${name}" removed`);
-            loadClassDetail(selectedClass.id);
-            loadClasses();
-        } catch (err: unknown) {
-            const error = err as { message?: string };
-            setError(error.message || 'Failed to remove subject');
-        }
+        if (!selectedClass) return;
+        setPendingAction({
+            title: 'Remove Subject',
+            body: `Remove subject "${name}"? This will also remove teacher assignments for this subject.`,
+            onConfirm: async () => {
+                setError('');
+                try {
+                    await api.delete(`/admin/classes/${selectedClass.id}/subjects/${csId}`);
+                    setSuccess(`Subject "${name}" removed`);
+                    loadClassDetail(selectedClass.id);
+                    loadClasses();
+                } catch (err: unknown) {
+                    const error = err as { message?: string };
+                    setError(error.message || 'Failed to remove subject');
+                } finally {
+                    setPendingAction(null);
+                }
+            },
+        });
     };
 
     // --- Teacher Assignment Actions ---
@@ -316,16 +338,24 @@ const AdminClassManager: React.FC = () => {
     };
 
     const handleRemoveTeacherAssignment = async (taId: string, teacherName: string, subjectName: string) => {
-        if (!selectedClass || !confirm(`Remove ${teacherName} from ${subjectName}?`)) return;
-        setError('');
-        try {
-            await api.delete(`/admin/teacher-assignments/${taId}`);
-            setSuccess(`Teacher removed from subject`);
-            loadClassDetail(selectedClass.id);
-        } catch (err: unknown) {
-            const error = err as { message?: string };
-            setError(error.message || 'Failed to remove teacher assignment');
-        }
+        if (!selectedClass) return;
+        setPendingAction({
+            title: 'Remove Teacher Assignment',
+            body: `Remove ${teacherName} from ${subjectName}?`,
+            onConfirm: async () => {
+                setError('');
+                try {
+                    await api.delete(`/admin/teacher-assignments/${taId}`);
+                    setSuccess('Teacher removed from subject');
+                    loadClassDetail(selectedClass.id);
+                } catch (err: unknown) {
+                    const error = err as { message?: string };
+                    setError(error.message || 'Failed to remove teacher assignment');
+                } finally {
+                    setPendingAction(null);
+                }
+            },
+        });
     };
 
     // --- Section Actions ---
@@ -354,17 +384,25 @@ const AdminClassManager: React.FC = () => {
     };
 
     const handleDeleteSection = async (sectionId: string, sectionName: string) => {
-        if (!selectedClass || !confirm(`Delete section "${sectionName}"?`)) return;
-        setError('');
-        try {
-            await api.delete(`/admin/sections/${sectionId}`);
-            setSuccess(`Section "${sectionName}" deleted`);
-            loadClassDetail(selectedClass.id);
-            loadClasses();
-        } catch (err: unknown) {
-            const error = err as { message?: string };
-            setError(error.message || 'Failed to delete section');
-        }
+        if (!selectedClass) return;
+        setPendingAction({
+            title: 'Delete Section',
+            body: `Delete section "${sectionName}"? This action cannot be undone.`,
+            onConfirm: async () => {
+                setError('');
+                try {
+                    await api.delete(`/admin/sections/${sectionId}`);
+                    setSuccess(`Section "${sectionName}" deleted`);
+                    loadClassDetail(selectedClass.id);
+                    loadClasses();
+                } catch (err: unknown) {
+                    const error = err as { message?: string };
+                    setError(error.message || 'Failed to delete section');
+                } finally {
+                    setPendingAction(null);
+                }
+            },
+        });
     };
 
     // --- Filtering ---
@@ -737,6 +775,20 @@ const AdminClassManager: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            <ConfirmDialog
+                isOpen={!!pendingAction}
+                title={pendingAction?.title || ''}
+                body={pendingAction?.body || ''}
+                confirmLabel="Yes, proceed"
+                isLoading={pendingActionLoading}
+                onConfirm={async () => {
+                    if (!pendingAction) return;
+                    setPendingActionLoading(true);
+                    await pendingAction.onConfirm();
+                    setPendingActionLoading(false);
+                }}
+                onCancel={() => setPendingAction(null)}
+            />
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">

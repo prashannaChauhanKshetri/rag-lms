@@ -19,9 +19,9 @@ import {
     ChevronDown,
     ChevronUp,
     BookOpen,
-    Sparkles,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { ConfirmDialog } from '../shared/ConfirmDialog';
 
 // --- Interfaces ---
 
@@ -91,6 +91,8 @@ const AdminCourseManager: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // --- Data Loading ---
 
@@ -155,17 +157,25 @@ const AdminCourseManager: React.FC = () => {
     };
 
     const handleDelete = async (botId: string) => {
-        if (!window.confirm('Delete this course bot? All associated documents, quizzes, flashcards, and lesson plans will be permanently removed.')) return;
+        setPendingDelete(botId);
+    };
+
+    const confirmDelete = async () => {
+        if (!pendingDelete) return;
+        setIsDeleting(true);
         try {
-            await api.delete(`/admin/chatbots/${botId}`);
+            await api.delete(`/admin/chatbots/${pendingDelete}`);
             setSuccess('Course bot deleted');
-            if (selectedBot?.id === botId) {
+            if (selectedBot?.id === pendingDelete) {
                 setViewMode('list');
                 setSelectedBot(null);
             }
             loadBots();
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to delete course bot');
+        } finally {
+            setIsDeleting(false);
+            setPendingDelete(null);
         }
     };
 
@@ -267,6 +277,15 @@ const AdminCourseManager: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ConfirmDialog
+                isOpen={!!pendingDelete}
+                title="Delete Course Bot"
+                body="Delete this course bot? All associated documents, quizzes, flashcards, and lesson plans will be permanently removed."
+                confirmLabel="Delete Bot"
+                isLoading={isDeleting}
+                onConfirm={confirmDelete}
+                onCancel={() => setPendingDelete(null)}
+            />
             {/* Toast Messages */}
             {success && (
                 <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 animate-in slide-in-from-top-2">
@@ -525,8 +544,8 @@ const AdminCourseManager: React.FC = () => {
                             <div
                                 onClick={() => !isUploading && fileInputRef.current?.click()}
                                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${isUploading
-                                        ? 'border-indigo-300 bg-indigo-50'
-                                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50'
+                                    ? 'border-indigo-300 bg-indigo-50'
+                                    : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50'
                                     }`}
                             >
                                 <input
@@ -619,7 +638,6 @@ const AdminCourseManager: React.FC = () => {
                                     <Bot className="w-4 h-4 text-emerald-600" />
                                     <span className="text-sm font-medium text-gray-700">{selectedBot.name}</span>
                                     <span className="ml-auto flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                                        <Sparkles className="w-3 h-3" />
                                         Test Mode
                                     </span>
                                 </div>
@@ -645,8 +663,8 @@ const AdminCourseManager: React.FC = () => {
                                                     </div>
                                                 )}
                                                 <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${msg.role === 'user'
-                                                        ? 'bg-indigo-600 text-white rounded-tr-sm'
-                                                        : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'
+                                                    ? 'bg-indigo-600 text-white rounded-tr-sm'
+                                                    : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'
                                                     }`}>
                                                     <p className="whitespace-pre-wrap">{msg.content}</p>
                                                     {msg.sources && msg.sources.length > 0 && (

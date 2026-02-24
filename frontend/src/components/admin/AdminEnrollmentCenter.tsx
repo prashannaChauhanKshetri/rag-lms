@@ -15,6 +15,7 @@ import {
     X,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { ConfirmDialog } from '../shared/ConfirmDialog';
 
 // --- Interfaces ---
 
@@ -87,6 +88,8 @@ const AdminEnrollmentCenter: React.FC = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [bulkResult, setBulkResult] = useState<BulkEnrollResult | null>(null);
+    const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null);
+    const [isRemoving, setIsRemoving] = useState(false);
 
     // --- Data Loading ---
 
@@ -216,17 +219,25 @@ const AdminEnrollmentCenter: React.FC = () => {
         }
     };
 
-    const handleRemoveStudent = async (studentId: string, studentName: string) => {
-        if (!confirm(`Remove ${studentName} from this section?`)) return;
+    const handleRemoveStudent = (studentId: string, studentName: string) => {
+        setPendingRemove({ id: studentId, name: studentName });
+    };
+
+    const confirmRemoveStudent = async () => {
+        if (!pendingRemove) return;
+        setIsRemoving(true);
         setError('');
         setSuccess('');
         try {
-            await api.delete(`/admin/sections/${selectedSectionId}/students/${studentId}`);
-            setSuccess(`${studentName} removed from section`);
+            await api.delete(`/admin/sections/${selectedSectionId}/students/${pendingRemove.id}`);
+            setSuccess(`${pendingRemove.name} removed from section`);
             loadEnrolledStudents();
         } catch (err: unknown) {
             const error = err as { response?: { data?: { detail?: string } } };
             setError(error.response?.data?.detail || 'Failed to remove student');
+        } finally {
+            setIsRemoving(false);
+            setPendingRemove(null);
         }
     };
 
@@ -234,6 +245,15 @@ const AdminEnrollmentCenter: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            <ConfirmDialog
+                isOpen={!!pendingRemove}
+                title="Remove Student"
+                body={pendingRemove ? `Remove ${pendingRemove.name} from this section?` : ''}
+                confirmLabel="Remove"
+                isLoading={isRemoving}
+                onConfirm={confirmRemoveStudent}
+                onCancel={() => setPendingRemove(null)}
+            />
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-lg flex items-center justify-center flex-shrink-0">

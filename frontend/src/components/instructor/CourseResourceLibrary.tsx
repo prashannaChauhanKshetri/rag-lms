@@ -16,6 +16,7 @@ import {
   User,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { ConfirmDialog } from '../shared/ConfirmDialog';
 
 interface CourseResource {
   id: string;
@@ -53,6 +54,8 @@ const CourseResourceLibrary: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [filter, setFilter] = useState<ResourceFilter>({
     searchTerm: '',
@@ -204,16 +207,23 @@ const CourseResourceLibrary: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this resource?')) return;
+  const handleDelete = (id: string) => {
+    setPendingDelete(id);
+  };
 
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
     try {
-      await api.delete(`/instructor/resources/${id}`);
+      await api.delete(`/instructor/resources/${pendingDelete}`);
       setSuccess('Resource deleted successfully');
       await loadResources();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } };
       setError(error.response?.data?.detail || 'Failed to delete resource');
+    } finally {
+      setIsDeleting(false);
+      setPendingDelete(null);
     }
   };
 
@@ -251,6 +261,15 @@ const CourseResourceLibrary: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+      <ConfirmDialog
+        isOpen={!!pendingDelete}
+        title="Delete Resource"
+        body="Delete this resource? This cannot be undone."
+        confirmLabel="Delete"
+        isLoading={isDeleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
