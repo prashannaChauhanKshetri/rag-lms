@@ -50,14 +50,17 @@ interface User {
   full_name: string;
   email: string;
   institution?: string;
+  institution_name?: string;
 }
 
 interface AuthUser {
   id: string;
   username: string;
   email: string;
+  full_name: string;
   role: string;
   institution_id: string;
+  institution_name?: string;
 }
 
 const studentTabs = [
@@ -101,9 +104,10 @@ function App() {
       id: userData.id,
       username: userData.username,
       role: userData.role as 'student' | 'instructor' | 'admin' | 'super_admin',
-      full_name: userData.username,
+      full_name: userData.full_name || userData.username,
       email: userData.email,
       institution: userData.institution_id,
+      institution_name: userData.institution_name || userData.institution_id,
     });
   };
 
@@ -152,7 +156,11 @@ function App() {
             <Header
               userName={user.full_name}
               userRole={user.role}
-              institutionName={user.institution || 'Institution'}
+              institutionName={user.institution_name || user.institution || 'Gyana Learning'}
+              userEmail={user.email}
+              userId={user.id}
+              canEditProfile={true}
+              onLogout={handleLogout}
             />
 
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
@@ -206,7 +214,11 @@ function App() {
             <Header
               userName={user.full_name}
               userRole={user.role}
-              institutionName={user.institution || 'Institution'}
+              institutionName={user.institution_name || user.institution || 'Gyana Learning'}
+              userEmail={user.email}
+              userId={user.id}
+              canEditProfile={true}
+              onLogout={handleLogout}
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
               {activeTab === 'home' && <InstructorHome user={user} onNavigate={handleNavigate} />}
@@ -256,7 +268,11 @@ function App() {
             <Header
               userName={user.full_name}
               userRole={user.role}
-              institutionName={user.institution || "Gyana University"}
+              institutionName={user.institution_name || user.institution || 'Gyana Learning'}
+              userEmail={user.email}
+              userId={user.id}
+              canEditProfile={true}
+              onLogout={handleLogout}
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
               {activeTab === 'home' && (

@@ -264,6 +264,13 @@ async def login(response: Response, login_data: LoginRequest):
     }
     access_token = utils_auth.create_access_token(data=token_data)
     
+    # Look up institution name for display
+    institution_name = ''
+    if user.get('institution_id'):
+        inst = db.get_institution(user['institution_id'])
+        if inst:
+            institution_name = inst.get('name', '')
+    
     res_data = {
         "message": "Login successful",
         "user": {
@@ -271,7 +278,9 @@ async def login(response: Response, login_data: LoginRequest):
             "username": user['username'],
             "role": user['role'],
             "full_name": user['full_name'],
-            "email": user['email']
+            "email": user['email'],
+            "institution_id": user['institution_id'],
+            "institution_name": institution_name
         },
         "access_token": access_token
     }
