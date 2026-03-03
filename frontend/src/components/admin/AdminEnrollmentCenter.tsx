@@ -33,6 +33,7 @@ interface Section {
 interface EnrolledStudent {
     enrollment_id: string;
     student_id: string;
+    display_id?: string;
     username: string;
     full_name: string;
     email: string;
@@ -44,6 +45,7 @@ interface EnrolledStudent {
 
 interface AvailableStudent {
     id: string;
+    display_id: string;
     username: string;
     full_name: string;
     email: string;
@@ -54,6 +56,8 @@ interface AuditEntry {
     action: string;
     performed_by: string;
     student_id: string;
+    student_display_id?: string;
+    student_name?: string;
     section_id: string;
     reason?: string;
     created_at: string;
@@ -380,8 +384,13 @@ const AdminEnrollmentCenter: React.FC = () => {
                                                     {enrolledStudents.map((student) => (
                                                         <tr key={student.enrollment_id} className="hover:bg-gray-50">
                                                             <td className="px-4 py-3">
-                                                                <p className="text-sm font-medium text-gray-900">{student.full_name || student.username}</p>
-                                                                <p className="text-xs text-gray-500">@{student.username}</p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-mono flex-shrink-0">{student.display_id || student.student_id.slice(0, 6)}</span>
+                                                                    <div>
+                                                                        <p className="text-sm font-medium text-gray-900">{student.full_name || student.username}</p>
+                                                                        <p className="text-xs text-gray-500">@{student.username}</p>
+                                                                    </div>
+                                                                </div>
                                                             </td>
                                                             <td className="px-4 py-3 text-sm text-gray-600">{student.email}</td>
                                                             <td className="px-4 py-3 text-sm text-gray-600">{student.roll_number || '—'}</td>
@@ -477,7 +486,10 @@ const AdminEnrollmentCenter: React.FC = () => {
                                                 className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
                                             >
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-medium text-gray-900">{student.full_name}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-mono">{student.display_id}</span>
+                                                        <p className="text-sm font-medium text-gray-900">{student.full_name}</p>
+                                                    </div>
                                                     <p className="text-xs text-gray-500">{student.email} · @{student.username}</p>
                                                 </div>
                                                 <button
@@ -599,7 +611,8 @@ const AdminEnrollmentCenter: React.FC = () => {
                                                     }`} />
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm text-gray-900">
-                                                        Student <span className="font-mono text-xs bg-gray-100 px-1 rounded">{entry.student_id.slice(0, 12)}...</span>
+                                                        <span className="font-mono text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded">{entry.student_display_id || entry.student_id.slice(0, 8)}</span>
+                                                        {' '}<span className="text-gray-600">{entry.student_name ? `(${entry.student_name})` : ''}</span>
                                                         {' '}<span className={entry.action === 'enrolled' ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>
                                                             {entry.action}
                                                         </span>

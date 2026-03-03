@@ -4,6 +4,7 @@ import { api } from '../../lib/api';
 
 interface ProfileUser {
     id: string;
+    display_id?: string;
     username: string;
     full_name: string;
     email: string;
@@ -96,6 +97,13 @@ export function ProfileModal({ user, isOpen, onClose, canEdit = false }: Profile
                         <span className={`inline-block mt-1 text-xs font-semibold px-2.5 py-0.5 rounded-full ${roleColor[user.role] ?? 'bg-gray-100 text-gray-700'}`}>
                             {roleLabel[user.role] ?? user.role}
                         </span>
+                        {user.display_id && (
+                            <div className="mt-2">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold font-mono bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 py-1 rounded-full">
+                                    <span className="text-gray-400">#</span>{user.display_id}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 

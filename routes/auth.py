@@ -275,6 +275,7 @@ async def login(response: Response, login_data: LoginRequest):
         "message": "Login successful",
         "user": {
             "id": user['id'],
+            "display_id": user.get('display_id') or user['id'][:8],
             "username": user['username'],
             "role": user['role'],
             "full_name": user['full_name'],
@@ -318,8 +319,11 @@ async def get_session(request: Request):
         raise HTTPException(status_code=401, detail="Invalid session")
     
     # Return user info (mapping 'sub' back to 'user_id' for frontend compatibility)
+    # Also fetch fresh display_id from DB
+    user_record = db.get_user_by_id(user_data.get("sub"))
     return {
         "user_id": user_data.get("sub"),
+        "display_id": (user_record or {}).get("display_id") or user_data.get("sub", "")[:8],
         "username": user_data.get("username"),
         "role": user_data.get("role"),
         "full_name": user_data.get("full_name"),

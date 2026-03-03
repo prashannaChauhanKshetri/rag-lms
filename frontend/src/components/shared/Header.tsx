@@ -9,6 +9,7 @@ interface HeaderProps {
     institutionName: string;
     userEmail?: string;
     userId?: string;
+    userDisplayId?: string;
     onLogout?: () => void;
     canEditProfile?: boolean;
 }
@@ -19,6 +20,7 @@ export function Header({
     institutionName,
     userEmail = '',
     userId = '',
+    userDisplayId = '',
     onLogout,
     canEditProfile = false,
 }: HeaderProps) {
@@ -95,6 +97,7 @@ export function Header({
                 canEdit={canEditProfile}
                 user={{
                     id: userId,
+                    display_id: userDisplayId || undefined,
                     username: userName,
                     full_name: userName,
                     email: userEmail,

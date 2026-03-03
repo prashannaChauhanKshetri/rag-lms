@@ -17,7 +17,10 @@ import {
 import { api } from '../../lib/api';
 
 interface Section {
-  id: string;
+  id: string; // Will contain the raw PK or Section display ID
+  display_id?: string;
+  chatbot_display_id?: string;
+  teacher_display_id?: string;
   name: string;
   teacher_name: string;
   student_count: number;
@@ -49,7 +52,7 @@ const StudentDashboard: React.FC = () => {
   const [sections, setSections] = useState<Section[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [stats, setStats] = useState<StudentStats | null>(null);
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -84,7 +87,7 @@ const StudentDashboard: React.FC = () => {
 
   const filteredAssignments = assignments.filter(
     (a) => a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           a.section_name.toLowerCase().includes(searchTerm.toLowerCase())
+      a.section_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const pendingAssignments = assignments.filter((a) => a.status === 'pending');
@@ -119,11 +122,10 @@ const StudentDashboard: React.FC = () => {
           <div className="flex gap-4 sm:gap-8 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === 'overview'
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'overview'
                   ? 'text-blue-600 border-blue-600'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+                }`}
             >
               <TrendingUp className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Overview</span>
@@ -131,11 +133,10 @@ const StudentDashboard: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('assignments')}
-              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === 'assignments'
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'assignments'
                   ? 'text-blue-600 border-blue-600'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+                }`}
             >
               <FileText className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               Assignments
@@ -147,22 +148,20 @@ const StudentDashboard: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('courses')}
-              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === 'courses'
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'courses'
                   ? 'text-blue-600 border-blue-600'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+                }`}
             >
               <BookOpen className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               Courses
             </button>
             <button
               onClick={() => setActiveTab('progress')}
-              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === 'progress'
+              className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'progress'
                   ? 'text-blue-600 border-blue-600'
                   : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
+                }`}
             >
               <Award className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               Progress
@@ -310,13 +309,12 @@ const StudentDashboard: React.FC = () => {
                             <h3 className="text-sm sm:text-lg font-bold text-gray-900 truncate">{assignment.title}</h3>
                             <p className="text-xs sm:text-sm text-gray-600 mt-1">{assignment.section_name}</p>
                           </div>
-                          <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full flex-shrink-0 ${
-                            assignment.status === 'pending'
+                          <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full flex-shrink-0 ${assignment.status === 'pending'
                               ? 'bg-orange-100 text-orange-800'
                               : assignment.status === 'submitted'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}>
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}>
                             {assignment.status === 'pending' ? 'Pending' : assignment.status === 'submitted' ? 'Submitted' : 'Graded'}
                           </span>
                         </div>
@@ -375,8 +373,23 @@ const StudentDashboard: React.FC = () => {
                             <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                           </div>
                         </div>
-                        <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-1 line-clamp-2">{section.name}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Taught by {section.teacher_name}</p>
+                        <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-1 line-clamp-2">
+                          {section.name}
+                          {section.display_id && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-xs font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full whitespace-nowrap align-middle">
+                              <span className="text-blue-400">#</span>{section.display_id}
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 flex items-center gap-1.5 flex-wrap">
+                          Taught by
+                          <span className="font-semibold">{section.teacher_name}</span>
+                          {section.teacher_display_id && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold font-mono bg-gray-100 text-gray-600 border border-gray-200 px-2 py-0.5 rounded-full align-middle whitespace-nowrap">
+                              <span className="text-gray-400">#</span>{section.teacher_display_id.split(',')[0]}
+                            </span>
+                          )}
+                        </p>
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                           <span className="flex items-center gap-1">
                             <Users className="w-4 h-4" />
@@ -399,7 +412,7 @@ const StudentDashboard: React.FC = () => {
               <div>
                 <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
                   <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-6">Your Progress</h2>
-                  
+
                   {/* Grade Distribution */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                     <div className="p-4 sm:p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl border border-green-200">

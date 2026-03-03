@@ -5,6 +5,7 @@ import { api } from '../../lib/api';
 interface Teacher {
   id: string;
   user_id: string;
+  display_id?: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -25,7 +26,7 @@ export function AdminTeacherManager() {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Edit form state
   const [editData, setEditData] = useState({
     first_name: '',
@@ -118,18 +119,22 @@ export function AdminTeacherManager() {
                 <div
                   key={teacher.user_id}
                   onClick={() => handleSelectTeacher(teacher)}
-                  className={`p-3 rounded-lg cursor-pointer transition-all ${
-                    selectedTeacher?.user_id === teacher.user_id
+                  className={`p-3 rounded-lg cursor-pointer transition-all ${selectedTeacher?.user_id === teacher.user_id
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-white text-slate-800 border border-slate-200 hover:border-purple-400'
-                  }`}
+                    }`}
                 >
                   <p className="font-medium">
-                    {teacher.first_name || teacher.last_name 
+                    {teacher.first_name || teacher.last_name
                       ? `${teacher.first_name} ${teacher.last_name}`.trim()
                       : teacher.full_name || teacher.username}
                   </p>
-                  <p className="text-xs opacity-75">{teacher.department || 'No department'}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {teacher.display_id && (
+                      <span className="text-[10px] font-bold font-mono bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">{teacher.display_id}</span>
+                    )}
+                    <p className="text-xs opacity-75">{teacher.department || 'No department'}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -149,7 +154,12 @@ export function AdminTeacherManager() {
                         ? `${selectedTeacher.first_name} ${selectedTeacher.last_name}`
                         : selectedTeacher.full_name || selectedTeacher.username}
                     </h3>
-                    <p className="text-sm text-slate-600 mt-1">@{selectedTeacher.username}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {selectedTeacher.display_id && (
+                        <span className="text-xs font-bold font-mono bg-purple-100 text-purple-700 px-2 py-0.5 rounded">{selectedTeacher.display_id}</span>
+                      )}
+                      <p className="text-sm text-slate-600">@{selectedTeacher.username}</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => setEditMode(!editMode)}

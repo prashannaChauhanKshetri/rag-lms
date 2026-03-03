@@ -134,6 +134,27 @@ def create_demo_users():
 
 # --- User Authentication ---
 
+def _next_display_id(cur, role: str) -> str:
+    """Generate the next readable display_id for a role (e.g. STU007)."""
+    prefix_map = {
+        'student': 'STU',
+        'instructor': 'TCH',
+        'admin': 'ADM',
+        'super_admin': 'SYS',
+    }
+    prefix = prefix_map.get(role, 'USR')
+    cur.execute(
+        "SELECT COUNT(*) FROM users WHERE role = %s", (role,)
+    )
+    count = cur.fetchone()[0] + 1
+    # Keep incrementing until we find a free slot (handles gaps from deletes)
+    while True:
+        candidate = f"{prefix}{str(count).zfill(3)}"
+        cur.execute("SELECT 1 FROM users WHERE display_id = %s", (candidate,))
+        if not cur.fetchone():
+            return candidate
+        count += 1
+
 def create_user(username: str, password: str, role: str, email: str = None, full_name: str = None,
                 institution_id: str = None, is_email_verified: bool = False) -> str:
     """Create a new user with institution support"""
@@ -144,13 +165,15 @@ def create_user(username: str, password: str, role: str, email: str = None, full
     
     with get_db_connection() as conn:
         with conn.cursor() as cur:
+            display_id = _next_display_id(cur, role)
             cur.execute(
-                """INSERT INTO users (id, username, password_hash, role, email, full_name, institution_id, is_email_verified) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-                (user_id, username, password_hash, role, email, full_name, institution_id, is_email_verified)
+                """INSERT INTO users (id, username, password_hash, role, email, full_name, institution_id, is_email_verified, display_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (user_id, username, password_hash, role, email, full_name, institution_id, is_email_verified, display_id)
             )
     
     return user_id
+
 
 def get_user_by_id(user_id: str) -> Optional[Dict]:
     """Get user by ID"""
@@ -868,7 +891,7 @@ def get_section(section_id: str) -> Optional[Dict]:
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                """SELECT s.*, c.name as class_name 
+                """SELECT s.*, c.name as class_name, c.display_id as class_display_id 
                    FROM sections s 
                    JOIN classes c ON s.class_id = c.id 
                    WHERE s.id = %s""",
@@ -884,13 +907,21 @@ def list_student_subjects(student_id: str) -> List[Dict]:
             cur.execute(
                 """SELECT 
                     s.id as section_id,
+                    s.display_id as section_display_id,
                     s.name as section_name,
                     c.name as class_name,
+                    c.display_id as class_display_id,
                     cb.id as chatbot_id,
+                    cb.display_id as chatbot_display_id,
                     cb.name as subject_name,
                     string_agg(DISTINCT u.full_name, ', ') as teacher_name,
+                    string_agg(DISTINCT CASE WHEN u.display_id IS NOT NULL THEN u.display_id ELSE SUBSTRING(u.id::text, 1, 8) END, ', ') as teacher_display_id,
                     string_agg(DISTINCT u.email, ', ') as teacher_email,
-                    s.created_at
+                    s.created_at,
+                    (SELECT COUNT(DISTINCT e2.student_id)
+                     FROM enrollments e2
+                     WHERE e2.section_id = s.id AND e2.deleted_at IS NULL
+                    ) as student_count
                    FROM enrollments e
                    JOIN sections s ON e.section_id = s.id
                    JOIN classes c ON s.class_id = c.id
@@ -1255,6 +1286,7 @@ def list_enrollments(section_id: str) -> List[Dict]:
                     u.username,
                     u.full_name,
                     u.email,
+                    u.display_id,
                     e.enrolled_at,
                     sp.roll_number,
                     sp.department,
@@ -1269,7 +1301,7 @@ def list_enrollments(section_id: str) -> List[Dict]:
                    LEFT JOIN student_profiles sp ON e.student_id = sp.user_id
                    LEFT JOIN attendance a ON e.section_id = a.section_id AND e.student_id = a.student_id
                    WHERE e.section_id = %s AND e.deleted_at IS NULL
-                   GROUP BY e.id, e.student_id, u.username, u.full_name, u.email, e.enrolled_at, sp.roll_number, sp.department, sp.profile_picture_url
+                   GROUP BY e.id, e.student_id, u.username, u.full_name, u.email, u.display_id, e.enrolled_at, sp.roll_number, sp.department, sp.profile_picture_url
                    ORDER BY u.full_name""",
                 (section_id,)
             )
@@ -1720,6 +1752,7 @@ def get_all_teachers(institution_id: str = None) -> List[Dict]:
                 SELECT 
                     tp.*,
                     u.id as id,
+                    u.display_id,
                     u.email,
                     u.username,
                     i.name as institution_name

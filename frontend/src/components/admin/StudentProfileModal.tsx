@@ -5,6 +5,7 @@ import { api } from '../../lib/api';
 interface StudentProfile {
   id: string;
   user_id: string;
+  display_id?: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -65,7 +66,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
     present: attendance.filter(a => a.status === 'present').length,
     absent: attendance.filter(a => a.status === 'absent').length,
     late: attendance.filter(a => a.status === 'late').length,
-    percentage: attendance.length > 0 
+    percentage: attendance.length > 0
       ? Math.round((attendance.filter(a => a.status === 'present').length / attendance.length) * 100)
       : 0
   };
@@ -128,22 +129,20 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
             <div className="flex gap-4 border-b">
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`pb-4 px-1 font-medium transition-colors border-b-2 ${
-                  activeTab === 'profile'
+                className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'profile'
                     ? 'text-[#10B981] border-[#10B981]'
                     : 'text-gray-600 border-transparent hover:text-gray-900'
-                }`}
+                  }`}
               >
                 <User className="inline w-5 h-5 mr-2" />
                 Profile
               </button>
               <button
                 onClick={() => setActiveTab('attendance')}
-                className={`pb-4 px-1 font-medium transition-colors border-b-2 ${
-                  activeTab === 'attendance'
+                className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'attendance'
                     ? 'text-[#10B981] border-[#10B981]'
                     : 'text-gray-600 border-transparent hover:text-gray-900'
-                }`}
+                  }`}
               >
                 <Calendar className="inline w-5 h-5 mr-2" />
                 Attendance ({attendanceStats.total})
@@ -155,8 +154,14 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
               <div className="space-y-6">
                 {/* Personal Information */}
                 <div className="bg-gray-50 rounded-xl p-6 space-y-4">
-                  <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
-                  
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
+                    {profile.display_id && (
+                      <span className="inline-flex items-center gap-1.5 text-sm font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
+                        <span className="text-emerald-400">#</span>{profile.display_id}
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
@@ -189,7 +194,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                     <Building2 className="w-5 h-5 text-blue-600" />
                     Institution Information
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
@@ -228,11 +233,10 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                       {profile.is_email_verified ? 'Email has been verified' : 'Email pending verification'}
                     </p>
                   </div>
-                  <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    profile.is_email_verified 
-                      ? 'bg-green-100 text-green-800' 
+                  <div className={`px-4 py-2 rounded-lg text-sm font-medium ${profile.is_email_verified
+                      ? 'bg-green-100 text-green-800'
                       : 'bg-yellow-100 text-yellow-800'
-                  }`}>
+                    }`}>
                     {profile.is_email_verified ? 'Verified' : 'Pending'}
                   </div>
                 </div>

@@ -15,10 +15,13 @@ import {
 
 interface Section {
   id: string;
+  display_id?: string;
+  chatbot_display_id?: string;
   name: string;
   subject_name?: string;
   chatbot_id: string;
   teacher_name: string;
+  teacher_display_id?: string;
   created_at: string;
 }
 
@@ -68,7 +71,7 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
   const [activeTab, setActiveTab] = useState<
     'overview' | 'assignments' | 'resources' | 'attendance'
   >('overview');
-  const [teacher, setTeacher] = useState<{ full_name?: string; email?: string } | null>(null);
+  const [teacher, setTeacher] = useState<{ full_name?: string; email?: string; display_id?: string } | null>(null);
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(
     null
   );
@@ -88,7 +91,7 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
         // Fetch section overview
         const sectionRes = await api.get<{
           section: Section;
-          teacher: { full_name?: string; email?: string };
+          teacher: { full_name?: string; email?: string; display_id?: string };
           assignments: Assignment[];
           resources: Resource[];
           attendance: Attendance;
@@ -224,8 +227,13 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
               <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
                 Instructor
               </p>
-              <p className="font-semibold text-gray-900 dark:text-white">
+              <p className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 {teacher.full_name || 'Unknown'}
+                {(section?.teacher_display_id || teacher.display_id) && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold font-mono bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full align-middle whitespace-nowrap">
+                    <span className="text-emerald-500 dark:text-emerald-400">#</span>{(section?.teacher_display_id || teacher.display_id)?.split(',')[0]}
+                  </span>
+                )}
               </p>
               {teacher.email && (
                 <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -339,20 +347,32 @@ export function SectionOverview({ sectionId, chatbotId }: SectionOverviewProps) 
               <div className="space-y-2 text-sm">
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 dark:text-gray-400 font-medium">
-                    ID:
+                    Section:
                   </span>
-                  <code className="text-gray-700 dark:text-gray-300 font-mono">
-                    {section?.id}
-                  </code>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-gray-500 dark:text-gray-400 font-medium">
-                    Course:
-                  </span>
-                  <span className="text-gray-700 dark:text-gray-300">
-                    {section?.chatbot_id}
+                  <span className="text-gray-700 dark:text-gray-300 font-semibold flex items-center gap-2">
+                    {section?.name}
+                    {section?.display_id && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold font-mono bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-gray-400">#</span>{section.display_id}
+                      </span>
+                    )}
                   </span>
                 </div>
+                {section?.subject_name && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">
+                      Subject:
+                    </span>
+                    <span className="text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      {section.subject_name}
+                      {section.chatbot_display_id && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold font-mono bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          <span className="text-gray-400">#</span>{section.chatbot_display_id}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 dark:text-gray-400 font-medium">
                     Started:

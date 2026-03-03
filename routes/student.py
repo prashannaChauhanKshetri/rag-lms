@@ -219,6 +219,13 @@ async def list_my_sections(user=Depends(utils_auth.get_current_user)):
                 section_id = sub.get("section_id")
                 chatbot_id = sub.get("chatbot_id")
                 
+                # Make sure display IDs are directly accessible if they exist
+                sub["id"] = section_id # map section_id to id for frontend
+                sub["display_id"] = sub.get("section_display_id")
+                sub["chatbot_display_id"] = sub.get("chatbot_display_id")
+                sub["teacher_display_id"] = sub.get("teacher_display_id")
+                sub["name"] = sub.get("section_name")
+                
                 if not section_id or not chatbot_id:
                     continue
                 

@@ -525,6 +525,7 @@ async def get_available_students_admin(section_id: str, search: str = None, user
         return [
             {
                 "id": s["id"],
+                "display_id": s.get("display_id") or s["id"][:8],
                 "username": s["username"],
                 "full_name": s.get("full_name", s["username"]),
                 "email": s.get("email", ""),
@@ -548,6 +549,13 @@ async def get_enrollment_history_admin(section_id: str, user=Depends(utils_auth.
             raise HTTPException(status_code=404, detail="Section not found")
         
         history = db.get_enrollment_history(section_id=section_id)
+        # Enrich with readable display_id
+        for entry in history:
+            uid = entry.get("student_id", "")
+            if uid:
+                u = db.get_user_by_id(uid)
+                entry["student_display_id"] = (u or {}).get("display_id") or uid[:8]
+                entry["student_name"] = (u or {}).get("full_name") or (u or {}).get("username") or uid[:8]
         return {"enrollment_history": history}
     except HTTPException:
         raise
