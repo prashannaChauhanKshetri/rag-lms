@@ -3,7 +3,7 @@ import { User, Lock, LogIn, GraduationCap, BookOpen, Shield, Building2, Eye, Loa
 import { cn } from '../lib/utils';
 
 // Import logo from public folder
-const LOGO_PATH = "/logo.jpg";
+const LOGO_PATH = "/logo.png";
 
 interface LoginProps {
     onLoginSuccess: (userData: {

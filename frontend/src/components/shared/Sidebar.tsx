@@ -41,8 +41,8 @@ export function Sidebar({ activeTab, onTabChange, tabs }: SidebarProps) {
             )}>
                 <div className="p-6 border-b border-white/10 dark:border-gray-700">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                            <span className="font-bold text-white text-lg">G</span>
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                            <img src="/logo.png" alt="Gyana" className="w-full h-full object-contain scale-[1.7]" />
                         </div>
                         <div>
                             <span className="font-bold text-xl block">Gyana</span>

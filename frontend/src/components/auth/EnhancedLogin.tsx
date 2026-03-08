@@ -192,9 +192,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
         <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-10">
 
           {/* Brand */}
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#10B981] to-[#059669] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
-              <span className="text-white text-2xl font-bold">G</span>
+          <div className="text-center mb-6">
+            <div className="w-24 h-24 mx-auto mb-2 flex items-center justify-center">
+              <img src="/logo.png" alt="Gyana" className="w-full h-full object-contain scale-[2.2] drop-shadow-sm" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-1">Gyana</h1>
             <p className="text-sm text-gray-500">Learning with Intelligence</p>
