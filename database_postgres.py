@@ -1078,7 +1078,8 @@ def list_all_sections(institution_id: str = None) -> List[Dict]:
     """List all sections across all classes (Admin use, excluding deleted, optionally filtered by institution)"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            query = """SELECT s.*, c.name as class_name, c.grade_level
+            query = """SELECT s.*, c.name as class_name, c.grade_level,
+                           (SELECT COUNT(*) FROM enrollments e WHERE e.section_id = s.id AND e.deleted_at IS NULL) as student_count
                    FROM sections s
                    LEFT JOIN classes c ON c.id = s.class_id
                    WHERE s.deleted_at IS NULL"""
@@ -1120,7 +1121,11 @@ def get_sections_by_class(class_id: str) -> List[Dict]:
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                "SELECT * FROM sections WHERE class_id = %s AND deleted_at IS NULL ORDER BY created_at DESC",
+                """SELECT s.*, 
+                          (SELECT COUNT(*) FROM enrollments e WHERE e.section_id = s.id AND e.deleted_at IS NULL) as student_count
+                   FROM sections s 
+                   WHERE s.class_id = %s AND s.deleted_at IS NULL 
+                   ORDER BY s.created_at DESC""",
                 (class_id,)
             )
             sections = cur.fetchall()

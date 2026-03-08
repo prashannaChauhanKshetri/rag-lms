@@ -15,6 +15,7 @@ import {
     Save,
     GraduationCap,
     UserPlus,
+    Users,
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { ConfirmDialog } from '../shared/ConfirmDialog';
@@ -64,6 +65,19 @@ interface ClassItem {
     sections?: SectionItem[];
 }
 
+interface EnrolledStudent {
+    enrollment_id: string;
+    student_id: string;
+    display_id?: string;
+    username: string;
+    full_name: string;
+    email: string;
+    enrolled_at: string;
+    roll_number?: string;
+    department?: string;
+    attendance_percentage?: number;
+}
+
 interface SectionItem {
     id: string;
     class_id?: string;
@@ -91,6 +105,16 @@ const AdminClassManager: React.FC = () => {
     const [classSearch, setClassSearch] = useState('');
     const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
     const [detailTab, setDetailTab] = useState<'subjects' | 'teachers' | 'sections'>('subjects');
+
+    // Section Detail state
+    const [selectedSection, setSelectedSection] = useState<SectionItem | null>(null);
+    const [sectionStudents, setSectionStudents] = useState<EnrolledStudent[]>([]);
+    const [isSectionLoading, setIsSectionLoading] = useState(false);
+
+    // Pagination state
+    const [studentPage, setStudentPage] = useState(1);
+    const [teacherPage, setTeacherPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     // Form state - Create Class
     const [showCreateClass, setShowCreateClass] = useState(false);
@@ -173,11 +197,28 @@ const AdminClassManager: React.FC = () => {
         try {
             const cls = await api.get(`/admin/classes/${classId}`) as ClassItem;
             setSelectedClass(cls);
+            setSelectedSection(null); // Reset section view when loading class
         } catch (err: unknown) {
             const error = err as { message?: string };
             setError(error.message || 'Failed to load class details');
         } finally {
             setIsLoading(false);
+        }
+    }, []);
+
+    const loadSectionDetail = useCallback(async (section: SectionItem) => {
+        setIsSectionLoading(true);
+        setSelectedSection(section);
+        setStudentPage(1);
+        setTeacherPage(1);
+        try {
+            const response = await api.get(`/admin/sections/${section.id}/details`) as { students: EnrolledStudent[] };
+            setSectionStudents(response.students || []);
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { detail?: string } } };
+            setError(error.response?.data?.detail || 'Failed to load section students');
+        } finally {
+            setIsSectionLoading(false);
         }
     }, []);
 
@@ -425,21 +466,44 @@ const AdminClassManager: React.FC = () => {
                 {/* Back + Header */}
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => { setSelectedClass(null); loadClasses(); }}
+                        onClick={() => {
+                            if (selectedSection) {
+                                setSelectedSection(null);
+                            } else {
+                                setSelectedClass(null);
+                                loadClasses();
+                            }
+                        }}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                         <ChevronLeft className="w-5 h-5 text-gray-600" />
                     </button>
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-xl font-bold text-gray-900 truncate">{selectedClass.name}</h2>
-                        <div className="flex items-center gap-3 mt-0.5">
-                            {selectedClass.grade_level && (
-                                <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full font-medium">{selectedClass.grade_level}</span>
-                            )}
-                            {selectedClass.description && (
-                                <span className="text-xs text-gray-500 truncate">{selectedClass.description}</span>
-                            )}
-                        </div>
+                        {selectedSection ? (
+                            <>
+                                <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                                    <button onClick={() => setSelectedSection(null)} className="hover:text-[#6366F1] transition-colors">{selectedClass.name}</button>
+                                    <span>/</span>
+                                    <span className="text-gray-900 font-medium">{selectedSection.name}</span>
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-900 truncate">{selectedSection.name} Details</h2>
+                                <div className="flex items-center gap-3 mt-0.5">
+                                    <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">{sectionStudents.length} Students Enrolled</span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-xl font-bold text-gray-900 truncate">{selectedClass.name}</h2>
+                                <div className="flex items-center gap-3 mt-0.5">
+                                    {selectedClass.grade_level && (
+                                        <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full font-medium">{selectedClass.grade_level}</span>
+                                    )}
+                                    {selectedClass.description && (
+                                        <span className="text-xs text-gray-500 truncate">{selectedClass.description}</span>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -459,313 +523,473 @@ const AdminClassManager: React.FC = () => {
                     </div>
                 )}
 
-                {/* Detail Tabs */}
-                <div className="border-b border-gray-200">
-                    <div className="flex gap-4">
-                        {([
-                            { key: 'subjects' as const, label: 'Subjects', icon: BookOpen, count: selectedClass.subjects?.length || 0 },
-                            { key: 'teachers' as const, label: 'Teachers', icon: GraduationCap, count: selectedClass.teacher_assignments?.length || 0 },
-                            { key: 'sections' as const, label: 'Sections', icon: Layers, count: selectedClass.sections?.length || 0 },
-                        ]).map(({ key, label, icon: Icon, count }) => (
-                            <button
-                                key={key}
-                                onClick={() => { setDetailTab(key); setError(''); setSuccess(''); }}
-                                className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 whitespace-nowrap flex items-center gap-1.5 ${detailTab === key
-                                    ? 'text-[#6366F1] border-[#6366F1]'
-                                    : 'text-gray-500 border-transparent hover:text-gray-700'
-                                    }`}
-                            >
-                                <Icon className="w-4 h-4" />
-                                {label}
-                                <span className="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                {/* Section Detail View OR Class Detail View */}
+                {selectedSection ? (
+                    <div className="space-y-6">
+                        {isSectionLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="w-8 h-8 animate-spin text-[#6366F1]" />
+                            </div>
+                        ) : (
+                            <>
+                                {/* Section Teachers */}
+                                <div className="bg-white rounded-xl shadow overflow-hidden">
+                                    <div className="px-4 py-4 border-b border-gray-100 bg-gray-50">
+                                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                            <GraduationCap className="w-4 h-4 text-[#6366F1]" />
+                                            Assigned Teachers
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y divide-gray-100">
+                                        {(() => {
+                                            // Filter teachers assigned to this specific section OR assigned purely to the subject (section_id is null)
+                                            // Assuming if section_id is null, they teach all sections of that subject in this class
+                                            const sectionTeachersList = (selectedClass.teacher_assignments || []).filter(
+                                                ta => ta.section_id === selectedSection.id || !ta.section_id
+                                            );
 
-                {/* ---- SUBJECTS TAB ---- */}
-                {detailTab === 'subjects' && (
-                    <div className="space-y-4">
-                        <div className="flex justify-end">
-                            <button
-                                onClick={() => setShowAddSubject(true)}
-                                className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] transition-colors flex items-center gap-2"
-                                disabled={availableChatbots.length === 0}
-                            >
-                                <Plus className="w-4 h-4" />
-                                Add Subject
-                            </button>
+                                            if (sectionTeachersList.length === 0) {
+                                                return (
+                                                    <div className="p-6 text-center text-sm text-gray-500">
+                                                        No teachers specifically assigned to this section.
+                                                    </div>
+                                                );
+                                            }
+
+                                            const totalPages = Math.ceil(sectionTeachersList.length / ITEMS_PER_PAGE);
+                                            const paginatedTeachers = sectionTeachersList.slice(
+                                                (teacherPage - 1) * ITEMS_PER_PAGE,
+                                                teacherPage * ITEMS_PER_PAGE
+                                            );
+
+                                            return (
+                                                <>
+                                                    {paginatedTeachers.map((ta) => (
+                                                        <div key={ta.assignment_id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-900">{ta.teacher_name || ta.teacher_username}</p>
+                                                                <p className="text-xs text-gray-500 mt-0.5">Teaches <span className="text-indigo-600">{ta.subject_name}</span></p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {totalPages > 1 && (
+                                                        <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm">
+                                                            <span className="text-gray-500">Page {teacherPage} of {totalPages}</span>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => setTeacherPage(p => Math.max(1, p - 1))}
+                                                                    disabled={teacherPage === 1}
+                                                                    className="px-2 py-1 border border-gray-300 rounded text-gray-600 disabled:opacity-50"
+                                                                >
+                                                                    Prev
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setTeacherPage(p => Math.min(totalPages, p + 1))}
+                                                                    disabled={teacherPage === totalPages}
+                                                                    className="px-2 py-1 border border-gray-300 rounded text-gray-600 disabled:opacity-50"
+                                                                >
+                                                                    Next
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Section Students */}
+                                <div className="bg-white rounded-xl shadow overflow-hidden">
+                                    <div className="px-4 py-4 border-b border-gray-100 bg-gray-50">
+                                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                            <Users className="w-4 h-4 text-[#6366F1]" />
+                                            Enrolled Students ({sectionStudents.length})
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y divide-gray-100">
+                                        {sectionStudents.length === 0 ? (
+                                            <div className="p-8 text-center text-sm text-gray-500">
+                                                No students enrolled in this section yet.
+                                            </div>
+                                        ) : (
+                                            (() => {
+                                                const totalPages = Math.ceil(sectionStudents.length / ITEMS_PER_PAGE);
+                                                const paginatedStudents = sectionStudents.slice(
+                                                    (studentPage - 1) * ITEMS_PER_PAGE,
+                                                    studentPage * ITEMS_PER_PAGE
+                                                );
+
+                                                return (
+                                                    <>
+                                                        <table className="w-full text-left">
+                                                            <thead className="bg-gray-50 text-xs text-gray-500 border-b">
+                                                                <tr>
+                                                                    <th className="px-4 py-2 font-medium">Student</th>
+                                                                    <th className="px-4 py-2 font-medium">Email</th>
+                                                                    <th className="px-4 py-2 font-medium">Roll No</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-gray-100">
+                                                                {paginatedStudents.map(student => (
+                                                                    <tr key={student.student_id} className="hover:bg-gray-50 text-sm">
+                                                                        <td className="px-4 py-3">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-mono">{student.display_id || student.student_id.slice(0, 6)}</span>
+                                                                                <span className="font-medium text-gray-900">{student.full_name || student.username}</span>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-gray-600">{student.email}</td>
+                                                                        <td className="px-4 py-3 text-gray-600">{student.roll_number || '—'}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                        {totalPages > 1 && (
+                                                            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm bg-white">
+                                                                <span className="text-gray-500">Page {studentPage} of {totalPages}</span>
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={() => setStudentPage(p => Math.max(1, p - 1))}
+                                                                        disabled={studentPage === 1}
+                                                                        className="px-2 py-1 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                                                                    >
+                                                                        Prev
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setStudentPage(p => Math.min(totalPages, p + 1))}
+                                                                        disabled={studentPage === totalPages}
+                                                                        className="px-2 py-1 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                                                                    >
+                                                                        Next
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        {/* Detail Tabs */}
+                        <div className="border-b border-gray-200">
+                            <div className="flex gap-4">
+                                {([
+                                    { key: 'subjects' as const, label: 'Subjects', icon: BookOpen, count: selectedClass.subjects?.length || 0 },
+                                    { key: 'teachers' as const, label: 'Teachers', icon: GraduationCap, count: selectedClass.teacher_assignments?.length || 0 },
+                                    { key: 'sections' as const, label: 'Sections', icon: Layers, count: selectedClass.sections?.length || 0 },
+                                ]).map(({ key, label, icon: Icon, count }) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => { setDetailTab(key); setError(''); setSuccess(''); }}
+                                        className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 whitespace-nowrap flex items-center gap-1.5 ${detailTab === key
+                                            ? 'text-[#6366F1] border-[#6366F1]'
+                                            : 'text-gray-500 border-transparent hover:text-gray-700'
+                                            }`}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        {label}
+                                        <span className="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Add Subject Form */}
-                        {showAddSubject && (
-                            <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
-                                <form onSubmit={handleAddSubject} className="flex flex-col sm:flex-row items-end gap-3">
-                                    <div className="flex-1 relative w-full">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Select Course Bot</label>
-                                        <select
-                                            value={newSubjectChatbotId}
-                                            onChange={(e) => setNewSubjectChatbotId(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
-                                            required
-                                        >
-                                            <option value="">— Select Course Bot —</option>
-                                            {availableChatbots.map(c => (
-                                                <option key={c.id} value={c.id}>{c.name}</option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button type="button" onClick={() => setShowAddSubject(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-                                        <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
-                                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                                            Add
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
-
-                        {/* Subjects List */}
-                        <div className="bg-white rounded-xl shadow">
-                            {(selectedClass.subjects || []).length === 0 ? (
-                                <div className="text-center py-12 text-gray-500">
-                                    <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                                    <p className="text-sm">No subjects added yet</p>
-                                    <button onClick={() => setShowAddSubject(true)} className="mt-3 text-sm text-[#6366F1] hover:underline">
-                                        Add your first subject →
+                        {/* ---- SUBJECTS TAB ---- */}
+                        {detailTab === 'subjects' && (
+                            <div className="space-y-4">
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => setShowAddSubject(true)}
+                                        className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] transition-colors flex items-center gap-2"
+                                        disabled={availableChatbots.length === 0}
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Add Subject
                                     </button>
                                 </div>
-                            ) : (
-                                <div className="divide-y divide-gray-100">
-                                    {(selectedClass.subjects || []).map((subject) => (
-                                        <div key={subject.class_subject_id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <BookOpen className="w-4 h-4 text-indigo-600" />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">{subject.chatbot_name}</p>
-                                                    {subject.greeting && <p className="text-xs text-gray-500 truncate">{subject.greeting}</p>}
-                                                </div>
+
+                                {/* Add Subject Form */}
+                                {showAddSubject && (
+                                    <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
+                                        <form onSubmit={handleAddSubject} className="flex flex-col sm:flex-row items-end gap-3">
+                                            <div className="flex-1 relative w-full">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Select Course Bot</label>
+                                                <select
+                                                    value={newSubjectChatbotId}
+                                                    onChange={(e) => setNewSubjectChatbotId(e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                                    required
+                                                >
+                                                    <option value="">— Select Course Bot —</option>
+                                                    {availableChatbots.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
                                             </div>
-                                            <button
-                                                onClick={() => handleRemoveSubject(subject.class_subject_id, subject.chatbot_name)}
-                                                className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
-                                                title="Remove subject"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
+                                            <div className="flex gap-2">
+                                                <button type="button" onClick={() => setShowAddSubject(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                                                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
+                                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                )}
+
+                                {/* Subjects List */}
+                                <div className="bg-white rounded-xl shadow">
+                                    {(selectedClass.subjects || []).length === 0 ? (
+                                        <div className="text-center py-12 text-gray-500">
+                                            <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                            <p className="text-sm">No subjects added yet</p>
+                                            <button onClick={() => setShowAddSubject(true)} className="mt-3 text-sm text-[#6366F1] hover:underline">
+                                                Add your first subject →
                                             </button>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* ---- TEACHERS TAB ---- */}
-                {detailTab === 'teachers' && (
-                    <div className="space-y-4">
-                        <div className="flex justify-end">
-                            <button
-                                onClick={() => setShowAssignTeacher(true)}
-                                className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] transition-colors flex items-center gap-2"
-                                disabled={(selectedClass.subjects || []).length === 0}
-                            >
-                                <UserPlus className="w-4 h-4" />
-                                Assign Teacher
-                            </button>
-                        </div>
-
-                        {(selectedClass.subjects || []).length === 0 && (
-                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                <p className="text-sm text-amber-700">Add subjects to this class first before assigning teachers.</p>
-                            </div>
-                        )}
-
-                        {/* Assign Teacher Form */}
-                        {showAssignTeacher && (
-                            <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
-                                <form onSubmit={handleAssignTeacher} className="space-y-3">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                        <div className="relative">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                                            <select
-                                                value={assignSubjectId}
-                                                onChange={(e) => setAssignSubjectId(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
-                                                required
-                                            >
-                                                <option value="">— Select Subject —</option>
-                                                {(selectedClass.subjects || []).map(s => (
-                                                    <option key={s.class_subject_id} value={s.class_subject_id}>{s.chatbot_name}</option>
-                                                ))}
-                                            </select>
-                                            <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
+                                    ) : (
+                                        <div className="divide-y divide-gray-100">
+                                            {(selectedClass.subjects || []).map((subject) => (
+                                                <div key={subject.class_subject_id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            <BookOpen className="w-4 h-4 text-indigo-600" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900 truncate">{subject.chatbot_name}</p>
+                                                            {subject.greeting && <p className="text-xs text-gray-500 truncate">{subject.greeting}</p>}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleRemoveSubject(subject.class_subject_id, subject.chatbot_name)}
+                                                        className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
+                                                        title="Remove subject"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="relative">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
-                                            <select
-                                                value={assignTeacherId}
-                                                onChange={(e) => setAssignTeacherId(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
-                                                required
-                                            >
-                                                <option value="">— Select Teacher —</option>
-                                                {teachers.map(t => (
-                                                    <option key={t.id} value={t.id}>{t.full_name || t.username}</option>
-                                                ))}
-                                            </select>
-                                            <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
-                                        </div>
-                                        <div className="relative">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Section (Optional)</label>
-                                            <select
-                                                value={assignSectionId}
-                                                onChange={(e) => setAssignSectionId(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
-                                            >
-                                                <option value="">— All Sections —</option>
-                                                {(selectedClass.sections || []).map(s => (
-                                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                                ))}
-                                            </select>
-                                            <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end gap-2">
-                                        <button type="button" onClick={() => setShowAssignTeacher(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-                                        <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
-                                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                                            Assign
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
-
-                        {/* Teacher Assignments List */}
-                        <div className="bg-white rounded-xl shadow">
-                            {(selectedClass.teacher_assignments || []).length === 0 ? (
-                                <div className="text-center py-12 text-gray-500">
-                                    <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                                    <p className="text-sm">No teachers assigned yet</p>
-                                    {(selectedClass.subjects || []).length > 0 && (
-                                        <button onClick={() => setShowAssignTeacher(true)} className="mt-3 text-sm text-[#6366F1] hover:underline">
-                                            Assign your first teacher →
-                                        </button>
                                     )}
                                 </div>
-                            ) : (
-                                <div className="divide-y divide-gray-100">
-                                    {(selectedClass.teacher_assignments || []).map((ta) => (
-                                        <div key={ta.assignment_id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <GraduationCap className="w-4 h-4 text-emerald-600" />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">{ta.teacher_name || ta.teacher_username}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        Teaches <span className="text-indigo-600 font-medium">{ta.subject_name}</span>
-                                                        {ta.section_name && <span className="text-gray-500"> ({ta.section_name})</span>}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleRemoveTeacherAssignment(ta.assignment_id, ta.teacher_name, ta.subject_name)}
-                                                className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
-                                                title="Remove assignment"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* ---- SECTIONS TAB ---- */}
-                {detailTab === 'sections' && (
-                    <div className="space-y-4">
-                        <div className="flex justify-end">
-                            <button
-                                onClick={() => setShowCreateSection(true)}
-                                className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] transition-colors flex items-center gap-2"
-                            >
-                                <Plus className="w-4 h-4" />
-                                New Section
-                            </button>
-                        </div>
-
-                        {/* Create Section Form */}
-                        {showCreateSection && (
-                            <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
-                                <form onSubmit={handleCreateSection} className="flex flex-col sm:flex-row items-end gap-3">
-                                    <div className="flex-1 w-full">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Section Name</label>
-                                        <input
-                                            type="text"
-                                            value={newSectionName}
-                                            onChange={(e) => setNewSectionName(e.target.value)}
-                                            placeholder="e.g. Section A"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button type="button" onClick={() => setShowCreateSection(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-                                        <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
-                                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                                            Create
-                                        </button>
-                                    </div>
-                                </form>
                             </div>
                         )}
 
-                        {/* Sections List */}
-                        <div className="bg-white rounded-xl shadow">
-                            {(selectedClass.sections || []).length === 0 ? (
-                                <div className="text-center py-12 text-gray-500">
-                                    <Layers className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                                    <p className="text-sm">No sections created yet</p>
-                                    <button onClick={() => setShowCreateSection(true)} className="mt-3 text-sm text-[#6366F1] hover:underline">
-                                        Create your first section →
+                        {/* ---- TEACHERS TAB ---- */}
+                        {detailTab === 'teachers' && (
+                            <div className="space-y-4">
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => setShowAssignTeacher(true)}
+                                        className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] transition-colors flex items-center gap-2"
+                                        disabled={(selectedClass.subjects || []).length === 0}
+                                    >
+                                        <UserPlus className="w-4 h-4" />
+                                        Assign Teacher
                                     </button>
                                 </div>
-                            ) : (
-                                <div className="divide-y divide-gray-100">
-                                    {(selectedClass.sections || []).map((section) => (
-                                        <div key={section.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <Layers className="w-4 h-4 text-blue-600" />
+
+                                {(selectedClass.subjects || []).length === 0 && (
+                                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <p className="text-sm text-amber-700">Add subjects to this class first before assigning teachers.</p>
+                                    </div>
+                                )}
+
+                                {/* Assign Teacher Form */}
+                                {showAssignTeacher && (
+                                    <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
+                                        <form onSubmit={handleAssignTeacher} className="space-y-3">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                <div className="relative">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                                    <select
+                                                        value={assignSubjectId}
+                                                        onChange={(e) => setAssignSubjectId(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                                        required
+                                                    >
+                                                        <option value="">— Select Subject —</option>
+                                                        {(selectedClass.subjects || []).map(s => (
+                                                            <option key={s.class_subject_id} value={s.class_subject_id}>{s.chatbot_name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">{section.name}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {section.student_count ?? 0} students
-                                                    </p>
+                                                <div className="relative">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
+                                                    <select
+                                                        value={assignTeacherId}
+                                                        onChange={(e) => setAssignTeacherId(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                                        required
+                                                    >
+                                                        <option value="">— Select Teacher —</option>
+                                                        {teachers.map(t => (
+                                                            <option key={t.id} value={t.id}>{t.full_name || t.username}</option>
+                                                        ))}
+                                                    </select>
+                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
+                                                </div>
+                                                <div className="relative">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Section (Optional)</label>
+                                                    <select
+                                                        value={assignSectionId}
+                                                        onChange={(e) => setAssignSectionId(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                                    >
+                                                        <option value="">— All Sections —</option>
+                                                        {(selectedClass.sections || []).map(s => (
+                                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => handleDeleteSection(section.id, section.name)}
-                                                className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
-                                                title="Delete section"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
+                                            <div className="flex justify-end gap-2">
+                                                <button type="button" onClick={() => setShowAssignTeacher(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                                                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
+                                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                                                    Assign
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                )}
+
+                                {/* Teacher Assignments List */}
+                                <div className="bg-white rounded-xl shadow">
+                                    {(selectedClass.teacher_assignments || []).length === 0 ? (
+                                        <div className="text-center py-12 text-gray-500">
+                                            <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                            <p className="text-sm">No teachers assigned yet</p>
+                                            {(selectedClass.subjects || []).length > 0 && (
+                                                <button onClick={() => setShowAssignTeacher(true)} className="mt-3 text-sm text-[#6366F1] hover:underline">
+                                                    Assign your first teacher →
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-gray-100">
+                                            {(selectedClass.teacher_assignments || []).map((ta) => (
+                                                <div key={ta.assignment_id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            <GraduationCap className="w-4 h-4 text-emerald-600" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900 truncate">{ta.teacher_name || ta.teacher_username}</p>
+                                                            <p className="text-xs text-gray-500">
+                                                                Teaches <span className="text-indigo-600 font-medium">{ta.subject_name}</span>
+                                                                {ta.section_name && <span className="text-gray-500"> ({ta.section_name})</span>}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleRemoveTeacherAssignment(ta.assignment_id, ta.teacher_name, ta.subject_name)}
+                                                        className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
+                                                        title="Remove assignment"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ---- SECTIONS TAB ---- */}
+                        {detailTab === 'sections' && (
+                            <div className="space-y-4">
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => setShowCreateSection(true)}
+                                        className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] transition-colors flex items-center gap-2"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        New Section
+                                    </button>
+                                </div>
+
+                                {/* Create Section Form */}
+                                {showCreateSection && (
+                                    <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
+                                        <form onSubmit={handleCreateSection} className="flex flex-col sm:flex-row items-end gap-3">
+                                            <div className="flex-1 w-full">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Section Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={newSectionName}
+                                                    onChange={(e) => setNewSectionName(e.target.value)}
+                                                    placeholder="e.g. Section A"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button type="button" onClick={() => setShowCreateSection(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                                                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
+                                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                                    Create
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                )}
+
+                                {/* Sections List */}
+                                <div className="bg-white rounded-xl shadow">
+                                    {(selectedClass.sections || []).length === 0 ? (
+                                        <div className="text-center py-12 text-gray-500">
+                                            <Layers className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                            <p className="text-sm">No sections created yet</p>
+                                            <button onClick={() => setShowCreateSection(true)} className="mt-3 text-sm text-[#6366F1] hover:underline">
+                                                Create your first section →
                                             </button>
                                         </div>
-                                    ))}
+                                    ) : (
+                                        <div className="divide-y divide-gray-100">
+                                            {(selectedClass.sections || []).map((section) => (
+                                                <div
+                                                    key={section.id}
+                                                    className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                                                    onClick={() => loadSectionDetail(section)}
+                                                >
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                            <Layers className="w-4 h-4 text-blue-600" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900 truncate hover:text-[#6366F1]">{section.name}</p>
+                                                            <p className="text-xs text-gray-500">
+                                                                {section.student_count ?? 0} students
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteSection(section.id, section.name); }}
+                                                        className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
+                                                        title="Delete section"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         );
