@@ -11,10 +11,12 @@ interface Student {
   notes?: string;  // Optional notes from attendance records
 }
 
-interface Section {
-  id: string;
-  name: string;
-  student_count?: number;
+interface TeachingUnit {
+  section_id: string;
+  chatbot_id: string;
+  section_name: string;
+  class_name: string;
+  chatbot_name: string;
 }
 
 interface AttendanceRecord {
@@ -24,20 +26,20 @@ interface AttendanceRecord {
 }
 
 export default function AttendanceManager({ sectionId: initialSectionId }: { sectionId?: string }) {
-  const [selectedSectionId, setSelectedSectionId] = useState(initialSectionId || '');
-  const [sections, setSections] = useState<Section[]>([]);
+  const [selectedUnit, setSelectedUnit] = useState<string>(''); // format: sectionId|chatbotId
+  const [units, setUnits] = useState<TeachingUnit[]>([]);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<Map<string, AttendanceRecord>>(new Map());
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [sectionsLoading, setSectionsLoading] = useState(true);
+  const [unitsLoading, setUnitsLoading] = useState(true);
 
-  // Fetch sections list
+  // Fetch teaching units
   useEffect(() => {
-    const fetchSections = async () => {
+    const fetchUnits = async () => {
       try {
-        const res = await fetch('/instructor/sections/all', {
+        const res = await fetch('/instructor/teaching-units', {
           credentials: 'include'
         });
 
@@ -46,26 +48,36 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
         }
 
         const data = await res.json();
-        setSections(data || []);
+        const availableUnits = data.units || [];
+        setUnits(availableUnits);
 
-        // Auto-select first section if none selected
-        if (data?.length > 0) {
-          setSelectedSectionId(data[0].id);
+        // Auto-select based on initialSectionId or first unit
+        if (availableUnits.length > 0) {
+          if (initialSectionId) {
+            const match = availableUnits.find((u: TeachingUnit) => u.section_id === initialSectionId);
+            if (match) {
+              setSelectedUnit(`${match.section_id}|${match.chatbot_id}`);
+            } else {
+              setSelectedUnit(`${availableUnits[0].section_id}|${availableUnits[0].chatbot_id}`);
+            }
+          } else {
+            setSelectedUnit(`${availableUnits[0].section_id}|${availableUnits[0].chatbot_id}`);
+          }
         }
       } catch (error) {
-        console.error('Failed to fetch sections:', error);
+        console.error('Failed to fetch teaching units:', error);
       } finally {
-        setSectionsLoading(false);
+        setUnitsLoading(false);
       }
     };
 
-    fetchSections();
+    fetchUnits();
   }, []);
 
-  // Fetch enrolled students and attendance when section or date changes
+  // Fetch enrolled students and attendance when unit or date changes
   useEffect(() => {
     const fetchData = async () => {
-      if (!selectedSectionId) {
+      if (!selectedUnit) {
         setStudents([]);
         setAttendance(new Map());
         return;
@@ -73,8 +85,9 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
 
       setLoading(true);
       try {
-        // Fetch attendance records (includes student details) for the selected date
-        const res = await fetch(`/instructor/sections/${selectedSectionId}/attendance?date=${date}`, {
+        const [sectionId, chatbotId] = selectedUnit.split('|');
+        // Fetch attendance records (includes student details) for the selected date and chatbot
+        const res = await fetch(`/instructor/sections/${sectionId}/attendance?date=${date}&chatbot_id=${chatbotId}`, {
           credentials: 'include'
         });
 
@@ -114,7 +127,7 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
     };
 
     fetchData();
-  }, [selectedSectionId, date]);
+  }, [selectedUnit, date]);
 
   const updateAttendance = (studentId: string, status: 'present' | 'absent' | 'late' | 'excused') => {
     const existing = attendance.get(studentId) || { student_id: studentId, status: 'present' as const };
@@ -141,15 +154,18 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
   };
 
   const saveAttendance = async () => {
-    if (!selectedSectionId) {
-      alert('Please select a section');
+    if (!selectedUnit) {
+      alert('Please select a subject/section');
       return;
     }
+
+    const [sectionId, chatbotId] = selectedUnit.split('|');
 
     setLoading(true);
     try {
       const payload = {
         date,
+        chatbot_id: chatbotId,
         students: Array.from(attendance.values())
       };
 
@@ -157,7 +173,7 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
       console.log('📅 Date:', date);
       console.log('👥 Students data:', payload.students);
 
-      const res = await fetch(`/instructor/sections/${selectedSectionId}/attendance`, {
+      const res = await fetch(`/instructor/sections/${sectionId}/attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -215,23 +231,23 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
       {/* Section Selector */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-end">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Select Section</label>
-          {sectionsLoading ? (
-            <div className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-500">Loading sections...</div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Select Subject/Section</label>
+          {unitsLoading ? (
+            <div className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-500">Loading your subjects...</div>
           ) : (
             <div className="relative">
               <select
-                value={selectedSectionId}
+                value={selectedUnit}
                 onChange={(e) => {
-                  setSelectedSectionId(e.target.value);
+                  setSelectedUnit(e.target.value);
                   setSaved(false);
                 }}
                 className="w-full appearance-none px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800"
               >
-                <option value="">-- Select a section --</option>
-                {sections.map((section) => (
-                  <option key={section.id} value={section.id}>
-                    {section.name} ({section.student_count || 0} students)
+                <option value="">-- Select a subject and section --</option>
+                {units.map((unit) => (
+                  <option key={`${unit.section_id}|${unit.chatbot_id}`} value={`${unit.section_id}|${unit.chatbot_id}`}>
+                    {unit.class_name} - {unit.section_name} ({unit.chatbot_name})
                   </option>
                 ))}
               </select>
@@ -248,9 +264,9 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
         </div>
       )}
 
-      {!selectedSectionId && !sectionsLoading && (
+      {!selectedUnit && !unitsLoading && (
         <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
-          ⚠ Please select a section to begin marking attendance
+          ⚠ Please select a subject/section to begin marking attendance
         </div>
       )}
 

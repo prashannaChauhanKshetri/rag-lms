@@ -229,9 +229,9 @@ async def list_my_sections(user=Depends(utils_auth.get_current_user)):
                 if not section_id or not chatbot_id:
                     continue
                 
-                # Get attendance percentage (Currently per section, so shared across subjects in same section)
+                # Get attendance percentage (Specific to this subject/chatbot)
                 try:
-                    attendance = db.get_student_attendance(section_id, user_id)
+                    attendance = db.get_student_attendance(section_id, user_id, chatbot_id)
                     present_count = sum(1 for a in attendance if a.get("status") == "present")
                     attendance_pct = (present_count / len(attendance) * 100) if attendance else 0
                     sub["attendance_percentage"] = round(attendance_pct, 2)
@@ -298,7 +298,7 @@ async def get_section_overview(
             assignments = [a for a in assignments if a.get("chatbot_id") == chatbot_id]
             
         resources = db.list_resources(section_id)
-        attendance = db.get_student_attendance(section_id, student_id)
+        attendance = db.get_student_attendance(section_id, student_id, chatbot_id)
         
         # Get teacher info
         teacher = None
@@ -352,14 +352,14 @@ async def get_section_overview(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/sections/{section_id}/attendance")
-async def get_my_attendance(section_id: str, user=Depends(utils_auth.get_current_user)):
+async def get_my_attendance(section_id: str, chatbot_id: Optional[str] = None, user=Depends(utils_auth.get_current_user)):
     """Get personal attendance record for a section"""
     try:
         section = db.get_section(section_id)
         if not section:
             raise HTTPException(status_code=404, detail="Section not found")
         
-        attendance = db.get_student_attendance(section_id, utils_auth.get_user_id(user))
+        attendance = db.get_student_attendance(section_id, utils_auth.get_user_id(user), chatbot_id)
         
         # Calculate stats
         total = len(attendance)

@@ -84,6 +84,7 @@ class AttendanceReportResponse(BaseModel):
 
 class MarkAttendanceRequest(BaseModel):
     date: str
+    chatbot_id: Optional[str] = None
     students: List[Dict[str, Any]]  # [{student_id, status, notes}]
 
 class CreateAssignmentRequest(BaseModel):
@@ -989,8 +990,8 @@ async def get_enrollment_history(section_id: str, user=Depends(utils_auth.get_cu
     )
 
 @router.get("/sections/{section_id}/attendance")
-async def get_section_attendance(section_id: str, date: Optional[str] = None, user=Depends(utils_auth.get_current_user)):
-    """Get attendance records for a section, optionally for a specific date"""
+async def get_section_attendance(section_id: str, date: Optional[str] = None, chatbot_id: Optional[str] = None, user=Depends(utils_auth.get_current_user)):
+    """Get attendance records for a section, optionally for a specific date and chatbot_id"""
     try:
         section = db.get_section(section_id)
         if not section:
@@ -1008,7 +1009,7 @@ async def get_section_attendance(section_id: str, date: Optional[str] = None, us
         
         if date:
             # Fetch attendance for the specific date
-            attendance_records = db.get_attendance(section_id, date)
+            attendance_records = db.get_attendance(section_id, date, chatbot_id)
             attendance_map = {r["student_id"]: r for r in attendance_records}
             
             # Merge with enrollments
@@ -1181,7 +1182,8 @@ async def mark_attendance(section_id: str, request: MarkAttendanceRequest, user=
                     request.date,
                     student_rec["status"],
                     (user.get("sub") or user.get("id")),
-                    student_rec.get("notes")
+                    student_rec.get("notes"),
+                    request.chatbot_id
                 )
             except Exception as e:
                 logger.error(f"Error marking attendance for student {student_rec.get('student_id') if isinstance(student_rec, dict) else 'unknown'}: {str(e)}")

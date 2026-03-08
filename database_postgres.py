@@ -1435,43 +1435,70 @@ def unenroll_by_institution(institution_id: str, chatbot_id: str = None, perform
 
 # --- ATTENDANCE ---
 
-def mark_attendance(attendance_id: str, section_id: str, student_id: str, date: str, status: str, marked_by: str, notes: str = None):
+def mark_attendance(attendance_id: str, section_id: str, student_id: str, date: str, status: str, marked_by: str, notes: str = None, chatbot_id: str = None):
     """Mark attendance for a student"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                """INSERT INTO attendance (id, section_id, student_id, date, status, marked_by, notes)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s)
-                   ON CONFLICT (section_id, student_id, date) DO UPDATE
-                   SET status = %s, marked_by = %s, notes = %s""",
-                (attendance_id, section_id, student_id, date, status, marked_by, notes, status, marked_by, notes)
-            )
+            if chatbot_id:
+                cur.execute(
+                    """INSERT INTO attendance (id, section_id, student_id, date, status, marked_by, notes, chatbot_id)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                       ON CONFLICT (section_id, student_id, date, chatbot_id) DO UPDATE
+                       SET status = %s, marked_by = %s, notes = %s""",
+                    (attendance_id, section_id, student_id, date, status, marked_by, notes, chatbot_id, status, marked_by, notes)
+                )
+            else:
+                cur.execute(
+                    """INSERT INTO attendance (id, section_id, student_id, date, status, marked_by, notes)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s)
+                       ON CONFLICT (section_id, student_id, date, chatbot_id) DO UPDATE
+                       SET status = %s, marked_by = %s, notes = %s""",
+                    (attendance_id, section_id, student_id, date, status, marked_by, notes, status, marked_by, notes)
+                )
 
-def get_attendance(section_id: str, date: str) -> List[Dict]:
+def get_attendance(section_id: str, date: str, chatbot_id: str = None) -> List[Dict]:
     """Get attendance records for a section on a specific date"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute(
-                """SELECT a.*, u.full_name, u.username
-                   FROM attendance a
-                   JOIN users u ON a.student_id = u.id
-                   WHERE a.section_id = %s AND a.date = %s
-                   ORDER BY u.full_name""",
-                (section_id, date)
-            )
+            if chatbot_id:
+                cur.execute(
+                    """SELECT a.*, u.full_name, u.username
+                       FROM attendance a
+                       JOIN users u ON a.student_id = u.id
+                       WHERE a.section_id = %s AND a.date = %s AND a.chatbot_id = %s
+                       ORDER BY u.full_name""",
+                    (section_id, date, chatbot_id)
+                )
+            else:
+                cur.execute(
+                    """SELECT a.*, u.full_name, u.username
+                       FROM attendance a
+                       JOIN users u ON a.student_id = u.id
+                       WHERE a.section_id = %s AND a.date = %s
+                       ORDER BY u.full_name""",
+                    (section_id, date)
+                )
             records = cur.fetchall()
     return [dict(r) for r in records]
 
-def get_student_attendance(section_id: str, student_id: str) -> List[Dict]:
+def get_student_attendance(section_id: str, student_id: str, chatbot_id: str = None) -> List[Dict]:
     """Get attendance history for a student in a section"""
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            cur.execute(
-                """SELECT * FROM attendance
-                   WHERE section_id = %s AND student_id = %s
-                   ORDER BY date DESC""",
-                (section_id, student_id)
-            )
+            if chatbot_id:
+                cur.execute(
+                    """SELECT * FROM attendance
+                       WHERE section_id = %s AND student_id = %s AND chatbot_id = %s
+                       ORDER BY date DESC""",
+                    (section_id, student_id, chatbot_id)
+                )
+            else:
+                cur.execute(
+                    """SELECT * FROM attendance
+                       WHERE section_id = %s AND student_id = %s
+                       ORDER BY date DESC""",
+                    (section_id, student_id)
+                )
             records = cur.fetchall()
     return [dict(r) for r in records]
 
