@@ -165,20 +165,27 @@ function SecuritySection() {
         <SectionCard title="Account Security" subtitle="Update your login password">
             {msg && <Alert type={msg.type} message={msg.text} />}
             <div className="space-y-4">
-                {[
-                    { label: 'Current Password', value: current, onChange: setCurrent, show: showCurrent, onToggle: () => setShowCurrent(p => !p) },
-                    { label: 'New Password', value: newPw, onChange: setNewPw, show: showNew, onToggle: () => setShowNew(p => !p) },
-                ].map(({ label, value, onChange, show, onToggle }) => (
-                    <div key={label}>
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{label}</label>
-                        <div className="relative">
-                            <input type={show ? 'text' : 'password'} value={value} onChange={e => onChange(e.target.value)} className="w-full px-3 py-2 pr-10 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
-                            <button type="button" onClick={onToggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                        </div>
+                {/* Current Password */}
+                <div>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Current Password</label>
+                    <div className="relative">
+                        <input type={showCurrent ? 'text' : 'password'} value={current} onChange={e => setCurrent(e.target.value)} className="w-full px-3 py-2 pr-10 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                        <button type="button" onClick={() => setShowCurrent(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
                     </div>
-                ))}
+                </div>
+                {/* New Password */}
+                <div>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">New Password</label>
+                    <div className="relative">
+                        <input type={showNew ? 'text' : 'password'} value={newPw} onChange={e => setNewPw(e.target.value)} className="w-full px-3 py-2 pr-10 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                        <button type="button" onClick={() => setShowNew(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                    </div>
+                </div>
+                {/* Confirm Password */}
                 <div>
                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Confirm New Password</label>
                     <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
