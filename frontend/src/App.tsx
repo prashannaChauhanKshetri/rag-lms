@@ -42,6 +42,10 @@ import AdminEnrollmentCenter from './components/admin/AdminEnrollmentCenter';
 import AdminClassManager from './components/admin/AdminClassManager';
 import AdminCourseManager from './components/admin/AdminCourseManager';
 import AdminDashboard from './components/admin/AdminDashboard';
+import { StudentSettings } from './components/student/StudentSettings';
+import { InstructorSettings } from './components/instructor/InstructorSettings';
+import { AdminSettings } from './components/admin/AdminSettings';
+import { SuperAdminSettings } from './components/admin/SuperAdminSettings';
 
 interface User {
   id: string;
@@ -71,6 +75,7 @@ const studentTabs = [
   { id: 'assignment-manager', label: 'My Submissions', icon: CheckSquare },
   { id: 'quiz', label: 'Quizzes', icon: Brain },
   { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
+  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 const instructorTabs = [
@@ -83,6 +88,7 @@ const instructorTabs = [
   { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
   { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard },
   { id: 'analytics', label: 'Analytics', icon: CheckSquare },
+  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 const adminTabs = [
@@ -160,6 +166,7 @@ function App() {
               userEmail={user.email}
               userId={user.id}
               canEditProfile={true}
+              onSettingsClick={() => setActiveTab('settings')}
               onLogout={handleLogout}
             />
 
@@ -189,6 +196,19 @@ function App() {
               {activeTab === 'assignment-manager' && <StudentAssignmentManager />}
               {activeTab === 'flashcards' && <StudentFlashcards />}
               {activeTab === 'quiz' && <StudentQuizzes />}
+              {activeTab === 'settings' && (
+                <StudentSettings
+                  user={{
+                    id: user.id,
+                    username: user.username,
+                    full_name: user.full_name,
+                    email: user.email,
+                    role: user.role,
+                    institution_name: user.institution_name,
+                  }}
+                  onLogout={handleLogout}
+                />
+              )}
             </div>
           </main>
 
@@ -218,6 +238,7 @@ function App() {
               userEmail={user.email}
               userId={user.id}
               canEditProfile={true}
+              onSettingsClick={() => setActiveTab('settings')}
               onLogout={handleLogout}
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
@@ -239,6 +260,19 @@ function App() {
               {activeTab === 'lesson-plans' && <LessonPlanner />}
               {activeTab === 'assignments' && <AssignmentManager />}
               {activeTab === 'analytics' && <AnalyticsDashboard />}
+              {activeTab === 'settings' && (
+                <InstructorSettings
+                  user={{
+                    id: user.id,
+                    username: user.username,
+                    full_name: user.full_name,
+                    email: user.email,
+                    role: user.role,
+                    institution_name: user.institution_name,
+                  }}
+                  onLogout={handleLogout}
+                />
+              )}
             </div>
           </main>
           <MobileNav
@@ -252,6 +286,36 @@ function App() {
 
     // Super Admin Dashboard
     if (user.role === 'super_admin') {
+      if (activeTab === 'settings') {
+        return (
+          <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden transition-colors duration-200">
+            <main className="flex-1 flex flex-col h-screen overflow-hidden">
+              <Header
+                userName={user.full_name}
+                userRole={user.role}
+                institutionName={user.institution_name || user.institution || 'Gyana Learning'}
+                userEmail={user.email}
+                userId={user.id}
+                canEditProfile={true}
+                onSettingsClick={() => setActiveTab('settings')}
+                onLogout={handleLogout}
+              />
+              <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+                <SuperAdminSettings
+                  user={{
+                    id: user.id,
+                    username: user.username,
+                    full_name: user.full_name,
+                    email: user.email,
+                    role: user.role,
+                  }}
+                  onLogout={handleLogout}
+                />
+              </div>
+            </main>
+          </div>
+        );
+      }
       return <SuperAdminDashboard />;
     }
 
@@ -272,6 +336,7 @@ function App() {
               userEmail={user.email}
               userId={user.id}
               canEditProfile={true}
+              onSettingsClick={() => setActiveTab('settings')}
               onLogout={handleLogout}
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
@@ -283,10 +348,18 @@ function App() {
               {activeTab === 'courses' && <AdminCourseManager />}
               {activeTab === 'enrollments' && <AdminEnrollmentCenter />}
               {activeTab === 'settings' && (
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold">Settings</h1>
-                  <p className="text-gray-600">Coming soon...</p>
-                </div>
+                <AdminSettings
+                  user={{
+                    id: user.id,
+                    username: user.username,
+                    full_name: user.full_name,
+                    email: user.email,
+                    role: user.role,
+                    institution_name: user.institution_name,
+                    institution: user.institution,
+                  }}
+                  onLogout={handleLogout}
+                />
               )}
             </div>
           </main>
