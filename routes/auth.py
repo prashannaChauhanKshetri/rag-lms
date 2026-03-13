@@ -329,3 +329,131 @@ async def get_session(request: Request):
         "full_name": user_data.get("full_name"),
         "institution_id": user_data.get("institution_id")
     }
+
+
+class UpdateProfileRequest(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_password: str
+
+    @validator('new_password')
+    def validate_new_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one digit')
+        return v
+
+    @validator('confirm_password')
+    def validate_confirm_password(cls, v, values):
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError('Passwords do not match')
+        return v
+
+
+def _get_current_user(request: Request) -> dict:
+    """Helper: extract and validate the JWT token from Authorization header or cookie."""
+    auth_header = request.headers.get("Authorization", "")
+    token = None
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    if not token:
+        token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user_data = utils_auth.decode_access_token(token)
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    return user_data
+
+
+@router.put("/profile")
+async def update_profile(request: Request, data: UpdateProfileRequest):
+    """Update the current user's profile (full_name, email)"""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+    user = db.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    updates = {}
+    if data.full_name is not None:
+        updates['full_name'] = data.full_name
+    if data.email is not None:
+        # Check email uniqueness
+        existing = db.get_user_by_email(data.email)
+        if existing and existing['id'] != user_id:
+            raise HTTPException(status_code=400, detail="Email already in use")
+        updates['email'] = data.email
+
+    if not updates:
+        return {"message": "No changes provided"}
+
+    try:
+        with db.get_db_connection() as conn:
+            with conn.cursor() as cur:
+                set_clauses = ", ".join([f"{k} = %s" for k in updates])
+                values = list(updates.values()) + [user_id]
+                cur.execute(f"UPDATE users SET {set_clauses} WHERE id = %s", values)
+                conn.commit()
+        return {"message": "Profile updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update profile: {str(e)}")
+
+
+@router.put("/change-password")
+async def change_password(request: Request, data: ChangePasswordRequest):
+    """Change the current user's password"""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+    user = db.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Verify current password
+    if not utils_auth.verify_password(data.current_password, user['password_hash']):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    try:
+        new_hash = utils_auth.get_password_hash(data.new_password)
+        db.update_user_password(user_id, new_hash)
+        return {"message": "Password changed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to change password: {str(e)}")
+
+
+@router.delete("/account")
+async def delete_account(request: Request, password: str = Body(..., embed=True)):
+    """Delete (deactivate) the current user's account after password confirmation"""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+    user = db.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Require password confirmation
+    if not utils_auth.verify_password(password, user['password_hash']):
+        raise HTTPException(status_code=400, detail="Incorrect password")
+
+    try:
+        with db.get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # Soft-delete: mark account as inactive
+                cur.execute(
+                    "UPDATE users SET is_active = FALSE, username = username || '_deleted_' || LEFT(id::text, 8) WHERE id = %s",
+                    (user_id,)
+                )
+                conn.commit()
+        response = JSONResponse({"message": "Account deleted successfully"})
+        response.delete_cookie("access_token")
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete account: {str(e)}")
+
