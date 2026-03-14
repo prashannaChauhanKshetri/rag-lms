@@ -72,7 +72,7 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
     };
 
     fetchUnits();
-  }, []);
+  }, [initialSectionId]);
 
   // Fetch enrolled students and attendance when unit or date changes
   useEffect(() => {
