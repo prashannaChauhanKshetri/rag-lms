@@ -20,6 +20,26 @@ interface Question {
     points: number;
 }
 
+interface QuizTakeData {
+    id: string;
+    title: string;
+    description: string;
+    questions: Question[];
+}
+
+interface SubmissionResult {
+    submission_id: string;
+    result_status?: 'pending_review' | 'pending_publish' | 'published';
+    is_result_published?: boolean;
+    score?: number;
+    auto_score?: number;
+    manual_total_score?: number;
+    earned_points?: number;
+    total_points?: number;
+    feedback?: string;
+    published_at?: string;
+}
+
 export function StudentQuizzes() {
     const [courses, setCourses] = useState<Chatbot[]>([]);
     const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -28,10 +48,11 @@ export function StudentQuizzes() {
 
     // Quiz Taking State
     const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
-    const [quizData, setQuizData] = useState<any>(null);
+    const [quizData, setQuizData] = useState<QuizTakeData | null>(null);
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submissionResult, setSubmissionResult] = useState<any>(null);
+    const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
+    const [isCheckingResult, setIsCheckingResult] = useState(false);
 
     useEffect(() => {
         api.get<{ chatbots: Chatbot[] }>('/chatbots/list')
@@ -54,7 +75,7 @@ export function StudentQuizzes() {
     const startQuiz = async (quizId: string) => {
         try {
             setIsLoading(true);
-            const data = await api.get<any>(`/student/quizzes/${quizId}/take`);
+            const data = await api.get<QuizTakeData>(`/student/quizzes/${quizId}/take`);
             setQuizData(data);
             setActiveQuizId(quizId);
             setAnswers({});
@@ -71,10 +92,8 @@ export function StudentQuizzes() {
         if (!activeQuizId) return;
         setIsSubmitting(true);
         try {
-            const userId = localStorage.getItem('user_id') || 'demo_student';
-            const res = await api.post('/student/quizzes/submit', {
+            const res = await api.post<SubmissionResult>('/student/quizzes/submit', {
                 quiz_id: activeQuizId,
-                student_id: userId,
                 answers: answers
             });
             setSubmissionResult(res);
@@ -83,6 +102,20 @@ export function StudentQuizzes() {
             alert("Failed to submit quiz");
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const refreshSubmissionResult = async () => {
+        if (!submissionResult?.submission_id) return;
+        try {
+            setIsCheckingResult(true);
+            const res = await api.get<SubmissionResult>(`/student/quizzes/submissions/${submissionResult.submission_id}/result`);
+            setSubmissionResult((prev) => ({ ...(prev ?? { submission_id: submissionResult.submission_id }), ...res }));
+        } catch (e) {
+            console.error(e);
+            alert("Failed to refresh result status");
+        } finally {
+            setIsCheckingResult(false);
         }
     };
 
@@ -106,13 +139,38 @@ export function StudentQuizzes() {
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="w-10 h-10 text-green-600" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Completed!</h2>
-                        <div className="text-5xl font-extrabold text-green-600 mb-2">
-                            {Math.round(submissionResult.score)}%
-                        </div>
-                        <p className="text-gray-500 mb-8">
-                            You earned {submissionResult.earned_points} out of {submissionResult.total_points} points.
-                        </p>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Submitted!</h2>
+
+                        {submissionResult.result_status === 'published' ? (
+                            <>
+                                <div className="text-5xl font-extrabold text-green-600 mb-2">
+                                    {Math.round(submissionResult.score ?? 0)}%
+                                </div>
+                                <p className="text-gray-500 mb-3">
+                                    Your result has been published by your instructor.
+                                </p>
+                                {submissionResult.feedback && (
+                                    <div className="text-left bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-6">
+                                        <p className="text-sm text-emerald-900"><strong>Feedback:</strong> {submissionResult.feedback}</p>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className="text-lg font-semibold text-amber-600 mb-2">Pending Teacher Review</div>
+                                <p className="text-gray-500 mb-4">
+                                    Your attempt is submitted and waiting for the teacher to publish the official marks.
+                                </p>
+                                <button
+                                    onClick={refreshSubmissionResult}
+                                    disabled={isCheckingResult}
+                                    className="mb-6 w-full py-3 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                                >
+                                    {isCheckingResult ? 'Checking...' : 'Check Result Status'}
+                                </button>
+                            </>
+                        )}
+
                         <button
                             onClick={() => { setActiveQuizId(null); setQuizData(null); setSubmissionResult(null); }}
                             className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-colors"

@@ -3,7 +3,7 @@ import re
 import json
 import logging
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Body, Depends, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, Body, Depends, File, UploadFile, Form, Query
 from pydantic import BaseModel
 from datetime import datetime
 import database_postgres as db
@@ -124,6 +124,18 @@ class CreateQuizRequest(BaseModel):
     description: str = ""
     questions: List[Dict[str, Any]]
 
+class QuizQuestionGrade(BaseModel):
+    question_id: str
+    awarded_points: float
+    comment: str = ""
+
+class QuizManualGradeRequest(BaseModel):
+    question_grades: List[QuizQuestionGrade]
+    feedback: str = ""
+
+class QuizPublishResultsRequest(BaseModel):
+    submission_ids: List[str]
+
 class GenerateFlashcardsRequest(BaseModel):
     chatbot_id: str
     topic: str = ""
@@ -147,14 +159,44 @@ class SaveLessonPlanRequest(BaseModel):
     examples: List[str] = []
     activities: List[str] = []
 
+def _ensure_instructor_can_access_quiz(user: Dict[str, Any], quiz_id: str) -> Dict[str, Any]:
+    """Verify quiz exists and the current instructor can manage it."""
+    quiz = db.get_quiz(quiz_id)
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    if user.get("role") == "admin":
+        return quiz
+
+    teacher_id = utils_auth.get_user_id(user)
+    units = db.list_teacher_teaching_units(teacher_id)
+    if not any(unit.get("chatbot_id") == quiz.get("chatbot_id") for unit in units):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    return quiz
+
+def _ensure_instructor_can_access_chatbot(user: Dict[str, Any], chatbot_id: str) -> Dict[str, Any]:
+    """Verify chatbot exists and instructor is assigned to at least one matching teaching unit."""
+    chatbot = db.get_chatbot(chatbot_id)
+    if not chatbot:
+        raise HTTPException(status_code=404, detail="Chatbot not found")
+
+    if user.get("role") == "admin":
+        return chatbot
+
+    teacher_id = utils_auth.get_user_id(user)
+    units = db.list_teacher_teaching_units(teacher_id)
+    if not any(unit.get("chatbot_id") == chatbot_id for unit in units):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    return chatbot
+
 # --- Endpoints ---
 
 @router.post("/generate-questions")
-async def generate_questions_endpoint(request: GenerateQuestionsRequest):
+async def generate_questions_endpoint(request: GenerateQuestionsRequest, user=Depends(utils_auth.get_current_user)):
     """Generate questions using AI"""
-    chatbot = db.get_chatbot(request.chatbot_id)
-    if not chatbot:
-        raise HTTPException(status_code=404, detail="Chatbot not found")
+    _ensure_instructor_can_access_chatbot(user, request.chatbot_id)
     
     types_str = ", ".join(request.types)
     per_type_count = request.count // len(request.types)
@@ -314,10 +356,11 @@ OUTPUT FORMAT (VERY IMPORTANT):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/quizzes/create")
-async def create_quiz_endpoint(request: CreateQuizRequest):
+async def create_quiz_endpoint(request: CreateQuizRequest, user=Depends(utils_auth.get_current_user)):
     """Create a new quiz with questions"""
     quiz_id = str(uuid.uuid4())
     try:
+        _ensure_instructor_can_access_chatbot(user, request.chatbot_id)
         # Define allowed types in the DB
         ALLOWED_TYPES = {'mcq', 'true_false', 'short_answer', 'long_answer'}
         
@@ -349,8 +392,9 @@ async def create_quiz_endpoint(request: CreateQuizRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/quizzes/{chatbot_id}")
-async def list_instructor_quizzes(chatbot_id: str):
+async def list_instructor_quizzes(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List all quizzes for a chatbot"""
+    _ensure_instructor_can_access_chatbot(user, chatbot_id)
     quizzes = db.list_quizzes(chatbot_id, published_only=False)
     for quiz in quizzes:
         questions = db.get_quiz_questions(quiz["id"])
@@ -358,50 +402,138 @@ async def list_instructor_quizzes(chatbot_id: str):
     return {"quizzes": quizzes}
 
 @router.get("/quizzes/{quiz_id}/details")
-async def get_quiz_details(quiz_id: str):
+async def get_quiz_details(quiz_id: str, user=Depends(utils_auth.get_current_user)):
     """Get quiz with all questions"""
-    quiz = db.get_quiz(quiz_id)
-    if not quiz:
-        raise HTTPException(status_code=404, detail="Quiz not found")
+    quiz = _ensure_instructor_can_access_quiz(user, quiz_id)
     quiz["questions"] = db.get_quiz_questions(quiz_id)
     return quiz
 
 @router.post("/quizzes/{quiz_id}/publish")
-async def publish_quiz_endpoint(quiz_id: str):
+async def publish_quiz_endpoint(quiz_id: str, user=Depends(utils_auth.get_current_user)):
     """Publish a quiz"""
+    _ensure_instructor_can_access_quiz(user, quiz_id)
     db.publish_quiz(quiz_id)
     return {"message": "Quiz published"}
 
 @router.post("/quizzes/{quiz_id}/unpublish")
-async def unpublish_quiz_endpoint(quiz_id: str):
+async def unpublish_quiz_endpoint(quiz_id: str, user=Depends(utils_auth.get_current_user)):
     """Unpublish a quiz"""
+    _ensure_instructor_can_access_quiz(user, quiz_id)
     db.unpublish_quiz(quiz_id)
     return {"message": "Quiz unpublished"}
 
 @router.delete("/quizzes/{quiz_id}")
-async def delete_quiz_endpoint(quiz_id: str):
+async def delete_quiz_endpoint(quiz_id: str, user=Depends(utils_auth.get_current_user)):
     """Delete a quiz"""
+    _ensure_instructor_can_access_quiz(user, quiz_id)
     db.delete_quiz(quiz_id)
     return {"message": "Quiz deleted"}
 
 @router.delete("/questions/{question_id}")
-async def delete_question_endpoint(question_id: str):
+async def delete_question_endpoint(question_id: str, user=Depends(utils_auth.get_current_user)):
     """Delete a question"""
+    question = db.get_question(question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    _ensure_instructor_can_access_quiz(user, question["quiz_id"])
     db.delete_question(question_id)
     return {"message": "Question deleted"}
 
 @router.get("/quizzes/{quiz_id}/submissions")
-async def get_quiz_submissions_endpoint(quiz_id: str):
-    """Get all submissions for a quiz"""
-    submissions = db.get_quiz_submissions(quiz_id)
+async def get_quiz_submissions_endpoint(
+    quiz_id: str,
+    user=Depends(utils_auth.get_current_user),
+    status: Optional[str] = Query(None),
+    published: Optional[bool] = Query(None),
+    student_id: Optional[str] = Query(None)
+):
+    """Get all submissions for a quiz with optional review filters."""
+    _ensure_instructor_can_access_quiz(user, quiz_id)
+    submissions = db.list_quiz_submissions_for_review(
+        quiz_id,
+        grading_status=status,
+        is_result_published=published,
+        student_id=student_id
+    )
     return {"submissions": submissions}
 
+@router.get("/quizzes/submissions/{submission_id}")
+async def get_quiz_submission_detail(submission_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get one submission with quiz questions for manual review."""
+    payload = db.get_quiz_submission_with_questions(submission_id)
+    if not payload:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    _ensure_instructor_can_access_quiz(user, payload["submission"]["quiz_id"])
+    return payload
+
+@router.post("/quizzes/submissions/{submission_id}/grade")
+async def grade_quiz_submission(submission_id: str, request: QuizManualGradeRequest, user=Depends(utils_auth.get_current_user)):
+    """Save per-question manual grading for a quiz submission."""
+    payload = db.get_quiz_submission_with_questions(submission_id)
+    if not payload:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    _ensure_instructor_can_access_quiz(user, payload["submission"]["quiz_id"])
+
+    question_map = {q["id"]: q for q in payload["questions"]}
+    scores_payload: Dict[str, Dict[str, Any]] = {}
+    for grade in request.question_grades:
+        question = question_map.get(grade.question_id)
+        if not question:
+            raise HTTPException(status_code=400, detail=f"Unknown question_id: {grade.question_id}")
+
+        max_points = float(question.get("points", 0) or 0)
+        if grade.awarded_points < 0 or grade.awarded_points > max_points:
+            raise HTTPException(
+                status_code=400,
+                detail=f"awarded_points must be between 0 and {max_points} for question {grade.question_id}"
+            )
+
+        scores_payload[grade.question_id] = {
+            "awarded_points": grade.awarded_points,
+            "comment": grade.comment
+        }
+
+    graded = db.save_quiz_manual_grading(
+        submission_id=submission_id,
+        question_scores=scores_payload,
+        feedback=request.feedback,
+        graded_by=utils_auth.get_user_id(user)
+    )
+    if not graded:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    return {"message": "Quiz submission graded", "submission": graded}
+
+@router.post("/quizzes/submissions/{submission_id}/publish")
+async def publish_quiz_submission(submission_id: str, user=Depends(utils_auth.get_current_user)):
+    """Publish one submission result so the student can view marks and feedback."""
+    submission = db.get_quiz_submission_by_id(submission_id)
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    _ensure_instructor_can_access_quiz(user, submission["quiz_id"])
+    published = db.publish_quiz_submission_result(submission_id, utils_auth.get_user_id(user))
+    return {"message": "Quiz result published", "submission": published}
+
+@router.post("/quizzes/{quiz_id}/publish-results")
+async def bulk_publish_quiz_results(quiz_id: str, request: QuizPublishResultsRequest, user=Depends(utils_auth.get_current_user)):
+    """Publish selected submission results for a quiz."""
+    _ensure_instructor_can_access_quiz(user, quiz_id)
+
+    updated = db.bulk_publish_quiz_results(
+        quiz_id=quiz_id,
+        submission_ids=request.submission_ids,
+        publisher_id=utils_auth.get_user_id(user)
+    )
+    return {"message": "Quiz results published", "updated": updated}
+
 @router.post("/flashcards/generate")
-async def generate_flashcards_endpoint(request: GenerateFlashcardsRequest):
+async def generate_flashcards_endpoint(request: GenerateFlashcardsRequest, user=Depends(utils_auth.get_current_user)):
     """Generate flashcards using AI"""
-    chatbot = db.get_chatbot(request.chatbot_id)
-    if not chatbot:
-        raise HTTPException(status_code=404, detail="Chatbot not found")
+    _ensure_instructor_can_access_chatbot(user, request.chatbot_id)
     
     prompt = f"""Create {request.count} flashcards {f'about "{request.topic}"' if request.topic else 'from the course content'}.
 Format: For each flashcard, write "FRONT:" followed by the question/term, then "BACK:" followed by the answer/definition.
@@ -430,8 +562,9 @@ Make them clear and educational."""
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/flashcards/save")
-async def save_flashcards_endpoint(request: SaveFlashcardsRequest):
+async def save_flashcards_endpoint(request: SaveFlashcardsRequest, user=Depends(utils_auth.get_current_user)):
     """Save flashcards"""
+    _ensure_instructor_can_access_chatbot(user, request.chatbot_id)
     flashcard_ids = []
     for card in request.flashcards:
         flashcard_id = str(uuid.uuid4())
@@ -441,29 +574,38 @@ async def save_flashcards_endpoint(request: SaveFlashcardsRequest):
     return {"message": f"{len(flashcard_ids)} flashcards saved and published", "ids": flashcard_ids}
 
 @router.get("/flashcards/{chatbot_id}")
-async def list_instructor_flashcards(chatbot_id: str):
+async def list_instructor_flashcards(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List all flashcards"""
+    _ensure_instructor_can_access_chatbot(user, chatbot_id)
     flashcards = db.list_flashcards(chatbot_id, published_only=False)
     return {"flashcards": flashcards}
 
 @router.post("/flashcards/{flashcard_id}/publish")
-async def publish_flashcard_endpoint(flashcard_id: str):
+async def publish_flashcard_endpoint(flashcard_id: str, user=Depends(utils_auth.get_current_user)):
     """Publish a flashcard"""
+    flashcard = db.get_flashcard(flashcard_id)
+    if not flashcard:
+        raise HTTPException(status_code=404, detail="Flashcard not found")
+
+    _ensure_instructor_can_access_chatbot(user, flashcard["chatbot_id"])
     db.publish_flashcard(flashcard_id)
     return {"message": "Flashcard published"}
 
 @router.delete("/flashcards/{flashcard_id}")
-async def delete_flashcard_endpoint(flashcard_id: str):
+async def delete_flashcard_endpoint(flashcard_id: str, user=Depends(utils_auth.get_current_user)):
     """Delete a flashcard"""
+    flashcard = db.get_flashcard(flashcard_id)
+    if not flashcard:
+        raise HTTPException(status_code=404, detail="Flashcard not found")
+
+    _ensure_instructor_can_access_chatbot(user, flashcard["chatbot_id"])
     db.delete_flashcard(flashcard_id)
     return {"message": "Flashcard deleted"}
 
 @router.post("/lesson-plans/generate")
-async def generate_lesson_plan_endpoint(request: GenerateLessonPlanRequest):
+async def generate_lesson_plan_endpoint(request: GenerateLessonPlanRequest, user=Depends(utils_auth.get_current_user)):
     """Generate a lesson plan using ONLY the provided textbook context"""
-    chatbot = db.get_chatbot(request.chatbot_id)
-    if not chatbot:
-        raise HTTPException(status_code=404, detail="Chatbot not found")
+    _ensure_instructor_can_access_chatbot(user, request.chatbot_id)
     
     # STRICTOR PROMPT
     prompt = f"""You are an expert teacher assistant. 
@@ -505,29 +647,38 @@ Include:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/lesson-plans/save")
-async def save_lesson_plan_endpoint(request: SaveLessonPlanRequest):
+async def save_lesson_plan_endpoint(request: SaveLessonPlanRequest, user=Depends(utils_auth.get_current_user)):
     """Save a lesson plan"""
+    _ensure_instructor_can_access_chatbot(user, request.chatbot_id)
     plan_id = str(uuid.uuid4())
     db.create_lesson_plan(plan_id, request.chatbot_id, request.title, request.topic, request.content, request.objectives, request.examples, request.activities)
     return {"message": "Lesson plan saved", "plan_id": plan_id}
 
 @router.get("/lesson-plans/{chatbot_id}")
-async def list_lesson_plans_endpoint(chatbot_id: str):
+async def list_lesson_plans_endpoint(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List all lesson plans"""
+    _ensure_instructor_can_access_chatbot(user, chatbot_id)
     plans = db.list_lesson_plans(chatbot_id)
     return {"lesson_plans": plans}
 
 @router.get("/lesson-plans/{plan_id}/details")
-async def get_lesson_plan_endpoint(plan_id: str):
+async def get_lesson_plan_endpoint(plan_id: str, user=Depends(utils_auth.get_current_user)):
     """Get lesson plan details"""
     plan = db.get_lesson_plan(plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Lesson plan not found")
+
+    _ensure_instructor_can_access_chatbot(user, plan["chatbot_id"])
     return plan
 
 @router.delete("/lesson-plans/{plan_id}")
-async def delete_lesson_plan_endpoint(plan_id: str):
+async def delete_lesson_plan_endpoint(plan_id: str, user=Depends(utils_auth.get_current_user)):
     """Delete a lesson plan"""
+    plan = db.get_lesson_plan(plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Lesson plan not found")
+
+    _ensure_instructor_can_access_chatbot(user, plan["chatbot_id"])
     db.delete_lesson_plan(plan_id)
     return {"message": "Lesson plan deleted"}
 
@@ -1335,7 +1486,7 @@ async def grade_submission(submission_id: str, request: GradeSubmissionRequest, 
         assignment = db.get_assignment(submission["assignment_id"])
         section = db.get_section(assignment["section_id"])
         
-        if not db.is_teacher_of_section(user.get("sub") or user.get("id"), section_id):
+        if not db.is_teacher_of_section(user.get("sub") or user.get("id"), assignment["section_id"]):
             raise HTTPException(status_code=403, detail="Not authorized")
         
         db.grade_submission(submission_id, request.score, request.feedback)

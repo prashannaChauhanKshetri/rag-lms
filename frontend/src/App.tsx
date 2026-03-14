@@ -22,6 +22,7 @@ import {
   Settings,
   BarChart3,
   UserPlus,
+  ClipboardCheck,
 } from 'lucide-react';
 import { InstructorHome } from './components/instructor/InstructorHome';
 import { QuizCreator } from './components/instructor/QuizCreator';
@@ -30,6 +31,7 @@ import { FlashcardManager } from './components/instructor/FlashcardManager';
 import { AssignmentManager } from './components/instructor/AssignmentManager';
 import { AnalyticsDashboard } from './components/instructor/AnalyticsDashboard';
 import AttendanceManager from './components/instructor/AttendanceManager';
+import { QuizReviewManager } from './components/instructor/QuizReviewManager';
 import { StudentFlashcards } from './components/student/StudentFlashcards';
 import { StudentQuizzes } from './components/student/StudentQuizzes';
 import { StudentAssignmentManager } from './components/student/StudentAssignmentManager';
@@ -85,6 +87,7 @@ const instructorTabs = [
   { id: 'attendance-report', label: 'Reports', icon: BarChart3 },
   { id: 'assignments', label: 'Assignments', icon: FileText },
   { id: 'quizzes', label: 'Quiz Creator', icon: HelpCircle },
+  { id: 'quiz-review', label: 'Quiz Review', icon: ClipboardCheck },
   { id: 'flashcards', label: 'Flashcards', icon: CreditCard },
   { id: 'lesson-plans', label: 'Lesson Plans', icon: LayoutDashboard },
   { id: 'analytics', label: 'Analytics', icon: CheckSquare },
@@ -256,6 +259,7 @@ function App() {
               )}
               {activeTab === 'attendance' && <AttendanceManager sectionId={selectedSectionId || ""} />}
               {activeTab === 'quizzes' && <QuizCreator />}
+              {activeTab === 'quiz-review' && <QuizReviewManager />}
               {activeTab === 'flashcards' && <FlashcardManager />}
               {activeTab === 'lesson-plans' && <LessonPlanner />}
               {activeTab === 'assignments' && <AssignmentManager />}

@@ -11,7 +11,7 @@ router = APIRouter(prefix="/student", tags=["Student"], dependencies=[Depends(ut
 
 class SubmitQuizRequest(BaseModel):
     quiz_id: str
-    student_id: str
+    student_id: Optional[str] = None
     answers: Dict[str, str]
 
 @router.get("/quizzes/{chatbot_id}")
@@ -56,6 +56,7 @@ async def submit_quiz_endpoint(request: SubmitQuizRequest, user=Depends(utils_au
         raise HTTPException(status_code=404, detail="Quiz not found or not published")
     
     questions = db.get_quiz_questions(request.quiz_id)
+    student_id = utils_auth.get_user_id(user)
     total_points = sum(q["points"] for q in questions)
     earned_points = 0
     
@@ -68,13 +69,48 @@ async def submit_quiz_endpoint(request: SubmitQuizRequest, user=Depends(utils_au
     
     score = (earned_points / total_points * 100) if total_points > 0 else 0
     submission_id = str(uuid.uuid4())
-    db.submit_quiz(submission_id, request.quiz_id, request.student_id, request.answers, score)
+    db.submit_quiz(submission_id, request.quiz_id, student_id, request.answers, score)
     
     return {
         "submission_id": submission_id,
-        "score": score,
+        "result_status": "pending_review",
         "earned_points": earned_points,
-        "total_points": total_points
+        "total_points": total_points,
+        "score": score,
+        "auto_score": score,
+        "is_result_published": False
+    }
+
+@router.get("/quizzes/submissions/{submission_id}/result")
+async def get_quiz_submission_result(submission_id: str, user=Depends(utils_auth.get_current_user)):
+    """Get quiz result visibility for the authenticated student."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    submission = db.get_quiz_submission_by_id(submission_id)
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    student_id = utils_auth.get_user_id(user)
+    if submission.get("student_id") != student_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if not submission.get("is_result_published"):
+        return {
+            "submission_id": submission_id,
+            "result_status": "pending_publish",
+            "is_result_published": False
+        }
+
+    return {
+        "submission_id": submission_id,
+        "result_status": "published",
+        "is_result_published": True,
+        "score": submission.get("display_score"),
+        "auto_score": submission.get("score"),
+        "manual_total_score": submission.get("manual_total_score"),
+        "feedback": submission.get("feedback"),
+        "published_at": submission.get("published_at")
     }
 
 @router.get("/flashcards/{chatbot_id}")

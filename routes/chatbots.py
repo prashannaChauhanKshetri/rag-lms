@@ -40,9 +40,10 @@ async def list_chatbots_endpoint(user=Depends(utils_auth.get_current_user)):
     
     if role == "student":
         chatbots = db.list_student_chatbots(user.get("sub") or user.get("id"))
+    elif role == "instructor":
+        chatbots = db.list_instructor_chatbots(user.get("sub") or user.get("id"))
     else:
-        # Admin / Instructor / Super Admin
-        # Instructors see institution-wide for now to allow course creation flexibility
+        # Admin / Super Admin
         chatbots = db.list_chatbots(user.get("institution_id"))
         
     return {"chatbots": chatbots}

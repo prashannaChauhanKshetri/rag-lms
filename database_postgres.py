@@ -289,6 +289,29 @@ def list_student_chatbots(student_id: str) -> List[Dict]:
             chatbots = cur.fetchall()
     return [dict(c) for c in chatbots]
 
+def list_instructor_chatbots(teacher_id: str) -> List[Dict]:
+    """List chatbots for section-subject units explicitly assigned to a teacher."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """
+                SELECT DISTINCT cb.*
+                FROM teacher_assignments ta
+                JOIN class_subjects cs ON cs.id = ta.class_subject_id
+                JOIN chatbots cb ON cb.id = cs.chatbot_id
+                JOIN classes c ON c.id = cs.class_id
+                LEFT JOIN sections s ON s.class_id = c.id
+                WHERE ta.teacher_id = %s
+                  AND (ta.section_id IS NULL OR ta.section_id = s.id)
+                  AND (s.id IS NULL OR s.deleted_at IS NULL)
+                ORDER BY cb.created_at DESC
+                """,
+                (teacher_id,)
+            )
+            chatbots = cur.fetchall()
+
+    return [dict(c) for c in chatbots]
+
 def update_chatbot(chatbot_id: str, name: str = None, greeting: str = None, ratio: float = None):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -488,6 +511,13 @@ def delete_question(question_id: str):
         with conn.cursor() as cur:
             cur.execute("DELETE FROM questions WHERE id = %s", (question_id,))
 
+def get_question(question_id: str) -> Optional[Dict]:
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM questions WHERE id = %s", (question_id,))
+            question = cur.fetchone()
+    return dict(question) if question else None
+
 def submit_quiz(submission_id: str, quiz_id: str, student_id: str, answers: Dict, score: float):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -501,7 +531,10 @@ def get_quiz_submissions(quiz_id: str) -> List[Dict]:
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                """SELECT * FROM quiz_submissions WHERE quiz_id = %s 
+                """SELECT qs.*, u.full_name AS student_name, u.username AS student_username
+                   FROM quiz_submissions qs
+                   LEFT JOIN users u ON u.id = qs.student_id
+                   WHERE qs.quiz_id = %s 
                    ORDER BY submitted_at DESC""",
                 (quiz_id,)
             )
@@ -516,8 +549,192 @@ def get_quiz_submissions(quiz_id: str) -> List[Dict]:
                     d['answers'] = json.loads(d['answers'])
                 except:
                     d['answers'] = {}
+        if d.get('question_scores') and isinstance(d['question_scores'], str):
+            try:
+                d['question_scores'] = json.loads(d['question_scores'])
+            except:
+                d['question_scores'] = {}
+
+        # Use manually graded score when available.
+        d['display_score'] = d.get('manual_total_score') if d.get('manual_total_score') is not None else d.get('score')
         results.append(d)
     return results
+
+def get_quiz_submission_by_id(submission_id: str) -> Optional[Dict]:
+    """Get a single quiz submission with student metadata."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT qs.*, u.full_name AS student_name, u.username AS student_username
+                   FROM quiz_submissions qs
+                   LEFT JOIN users u ON u.id = qs.student_id
+                   WHERE qs.id = %s""",
+                (submission_id,)
+            )
+            submission = cur.fetchone()
+
+    if not submission:
+        return None
+
+    d = dict(submission)
+    if d.get('answers') and isinstance(d['answers'], str):
+        try:
+            d['answers'] = json.loads(d['answers'])
+        except:
+            d['answers'] = {}
+    if d.get('question_scores') and isinstance(d['question_scores'], str):
+        try:
+            d['question_scores'] = json.loads(d['question_scores'])
+        except:
+            d['question_scores'] = {}
+
+    d['display_score'] = d.get('manual_total_score') if d.get('manual_total_score') is not None else d.get('score')
+    return d
+
+def list_quiz_submissions_for_review(quiz_id: str, grading_status: Optional[str] = None, is_result_published: Optional[bool] = None, student_id: Optional[str] = None) -> List[Dict]:
+    """List quiz submissions with optional instructor review filters."""
+    clauses = ["qs.quiz_id = %s"]
+    params: List[Any] = [quiz_id]
+
+    if grading_status:
+        clauses.append("qs.grading_status = %s")
+        params.append(grading_status)
+    if is_result_published is not None:
+        clauses.append("qs.is_result_published = %s")
+        params.append(is_result_published)
+    if student_id:
+        clauses.append("qs.student_id = %s")
+        params.append(student_id)
+
+    query = f"""
+        SELECT qs.*, u.full_name AS student_name, u.username AS student_username
+        FROM quiz_submissions qs
+        LEFT JOIN users u ON u.id = qs.student_id
+        WHERE {' AND '.join(clauses)}
+        ORDER BY qs.submitted_at DESC
+    """
+
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(query, tuple(params))
+            submissions = cur.fetchall()
+
+    results = []
+    for row in submissions:
+        item = dict(row)
+        if item.get('answers') and isinstance(item['answers'], str):
+            try:
+                item['answers'] = json.loads(item['answers'])
+            except:
+                item['answers'] = {}
+        if item.get('question_scores') and isinstance(item['question_scores'], str):
+            try:
+                item['question_scores'] = json.loads(item['question_scores'])
+            except:
+                item['question_scores'] = {}
+        item['display_score'] = item.get('manual_total_score') if item.get('manual_total_score') is not None else item.get('score')
+        results.append(item)
+
+    return results
+
+def get_quiz_submission_with_questions(submission_id: str) -> Optional[Dict]:
+    """Get quiz submission plus quiz and question details for manual review."""
+    submission = get_quiz_submission_by_id(submission_id)
+    if not submission:
+        return None
+
+    quiz = get_quiz(submission['quiz_id'])
+    if not quiz:
+        return None
+
+    questions = get_quiz_questions(submission['quiz_id'])
+    return {
+        "submission": submission,
+        "quiz": quiz,
+        "questions": questions
+    }
+
+def save_quiz_manual_grading(submission_id: str, question_scores: Dict[str, Dict[str, Any]], feedback: str, graded_by: str) -> Optional[Dict]:
+    """Save instructor per-question grading and compute total score as percentage."""
+    submission_with_questions = get_quiz_submission_with_questions(submission_id)
+    if not submission_with_questions:
+        return None
+
+    questions = submission_with_questions['questions']
+    question_map = {q['id']: q for q in questions}
+
+    total_points = float(sum(float(q.get('points', 0) or 0) for q in questions))
+    earned_points = 0.0
+
+    normalized_scores: Dict[str, Dict[str, Any]] = {}
+    for question_id, payload in question_scores.items():
+        if question_id not in question_map:
+            continue
+
+        max_points = float(question_map[question_id].get('points', 0) or 0)
+        awarded_points = float(payload.get('awarded_points', 0) or 0)
+        awarded_points = max(0.0, min(max_points, awarded_points))
+        earned_points += awarded_points
+
+        normalized_scores[question_id] = {
+            "awarded_points": awarded_points,
+            "max_points": max_points,
+            "comment": payload.get('comment', "")
+        }
+
+    manual_total_score = (earned_points / total_points * 100.0) if total_points > 0 else 0.0
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """UPDATE quiz_submissions
+                   SET question_scores = %s,
+                       manual_total_score = %s,
+                       feedback = %s,
+                       graded_by = %s,
+                       graded_at = CURRENT_TIMESTAMP,
+                       grading_status = 'reviewed'
+                   WHERE id = %s""",
+                (json.dumps(normalized_scores), manual_total_score, feedback, graded_by, submission_id)
+            )
+
+    return get_quiz_submission_by_id(submission_id)
+
+def publish_quiz_submission_result(submission_id: str, publisher_id: str) -> Optional[Dict]:
+    """Publish one graded submission so student can view results."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """UPDATE quiz_submissions
+                   SET is_result_published = TRUE,
+                       published_at = CURRENT_TIMESTAMP,
+                       grading_status = 'published',
+                       graded_by = COALESCE(graded_by, %s),
+                       graded_at = COALESCE(graded_at, CURRENT_TIMESTAMP)
+                   WHERE id = %s""",
+                (publisher_id, submission_id)
+            )
+
+    return get_quiz_submission_by_id(submission_id)
+
+def bulk_publish_quiz_results(quiz_id: str, submission_ids: List[str], publisher_id: str) -> int:
+    """Publish selected submissions for a quiz. Returns number of updated rows."""
+    if not submission_ids:
+        return 0
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """UPDATE quiz_submissions
+                   SET is_result_published = TRUE,
+                       published_at = CURRENT_TIMESTAMP,
+                       grading_status = 'published',
+                       graded_by = COALESCE(graded_by, %s),
+                       graded_at = COALESCE(graded_at, CURRENT_TIMESTAMP)
+                   WHERE quiz_id = %s AND id = ANY(%s)""",
+                (publisher_id, quiz_id, submission_ids)
+            )
+            return cur.rowcount
 
 # --- Flashcard Operations ---
 
@@ -558,6 +775,13 @@ def delete_flashcard(flashcard_id: str):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM flashcards WHERE id = %s", (flashcard_id,))
+
+def get_flashcard(flashcard_id: str) -> Optional[Dict]:
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM flashcards WHERE id = %s", (flashcard_id,))
+            flashcard = cur.fetchone()
+    return dict(flashcard) if flashcard else None
 
 # --- Lesson Plan Operations ---
 
