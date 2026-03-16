@@ -21,7 +21,7 @@ export function Sidebar({ activeTab, onTabChange, tabs }: SidebarProps) {
             {/* Mobile Menu Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed top-4 left-4 z-50 lg:hidden bg-[#064E3B] text-white p-3 rounded-xl shadow-lg"
+                className="fixed top-4 left-4 z-50 lg:hidden bg-emerald-900 dark:bg-gray-900 text-white p-3 rounded-xl shadow-lg"
             >
                 {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -36,7 +36,7 @@ export function Sidebar({ activeTab, onTabChange, tabs }: SidebarProps) {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed lg:sticky top-0 left-0 h-screen bg-[#064E3B] dark:bg-gray-900 text-white transition-all duration-300 z-40 flex flex-col w-64 flex-shrink-0",
+                "fixed lg:sticky top-0 left-0 h-screen bg-emerald-900 dark:bg-gray-900 text-white transition-all duration-300 z-40 flex flex-col w-64 flex-shrink-0 border-r border-white/10 dark:border-gray-800",
                 isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
             )}>
                 <div className="p-6 border-b border-white/10 dark:border-gray-700">
@@ -64,7 +64,7 @@ export function Sidebar({ activeTab, onTabChange, tabs }: SidebarProps) {
                                 className={cn(
                                     "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
                                     activeTab === tab.id
-                                        ? "bg-[#10B981] text-white shadow-lg"
+                                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
                                         : "text-white/70 hover:text-white hover:bg-white/10"
                                 )}
                             >

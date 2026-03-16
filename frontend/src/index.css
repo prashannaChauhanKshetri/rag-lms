@@ -41,6 +41,15 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 151 55% 41.5%;
     --radius: 0.5rem;
+    --surface: 0 0% 100%;
+    --surface-elevated: 210 20% 98%;
+    --surface-subtle: 210 40% 96.1%;
+    --text-primary: 222.2 47.4% 11.2%;
+    --text-secondary: 215.4 16.3% 46.9%;
+    --text-muted: 215.4 16.3% 56.9%;
+    --border-strong: 214.3 31.8% 85%;
+    --brand: 151 55% 41.5%;
+    --brand-hover: 151 70% 34%;
   }
 
   .dark {
@@ -63,6 +72,15 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 142.1 76.2% 36.3%;
+    --surface: 222.2 35% 10.5%;
+    --surface-elevated: 222.2 30% 13.5%;
+    --surface-subtle: 222.2 25% 16.5%;
+    --text-primary: 210 40% 96%;
+    --text-secondary: 215 20.2% 75%;
+    --text-muted: 215 20.2% 65.1%;
+    --border-strong: 217.2 24% 24%;
+    --brand: 151 55% 41.5%;
+    --brand-hover: 151 60% 48%;
   }
 }
 
@@ -73,6 +91,82 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  .dark .bg-white {
+    background-color: hsl(var(--surface));
+  }
+
+  .dark .bg-gray-50,
+  .dark .bg-gray-100 {
+    background-color: hsl(var(--surface-subtle));
+  }
+
+  .dark .bg-slate-50,
+  .dark .bg-slate-100 {
+    background-color: hsl(var(--surface-subtle));
+  }
+
+  .dark .text-gray-900,
+  .dark .text-gray-800,
+  .dark .text-gray-700 {
+    color: hsl(var(--text-primary));
+  }
+
+  .dark .text-gray-600,
+  .dark .text-gray-500,
+  .dark .text-gray-400 {
+    color: hsl(var(--text-secondary));
+  }
+
+  .dark .text-slate-900,
+  .dark .text-slate-800,
+  .dark .text-slate-700 {
+    color: hsl(var(--text-primary));
+  }
+
+  .dark .text-slate-600,
+  .dark .text-slate-500,
+  .dark .text-slate-400 {
+    color: hsl(var(--text-secondary));
+  }
+
+  .dark .border-gray-50,
+  .dark .border-gray-100,
+  .dark .border-gray-200,
+  .dark .border-gray-300 {
+    border-color: hsl(var(--border-strong));
+  }
+
+  .dark .border-slate-100,
+  .dark .border-slate-200,
+  .dark .border-slate-300 {
+    border-color: hsl(var(--border-strong));
+  }
+
+  .dark input,
+  .dark textarea,
+  .dark select {
+    background-color: hsl(var(--surface-subtle));
+    color: hsl(var(--text-primary));
+    border-color: hsl(var(--border-strong));
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: hsl(var(--text-muted));
+  }
+
+  .dark button:focus-visible,
+  .dark input:focus-visible,
+  .dark select:focus-visible,
+  .dark textarea:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 1px;
   }
 }
 

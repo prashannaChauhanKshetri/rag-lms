@@ -20,6 +20,7 @@ import {
     ToggleLeft,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type SectionId = 'profile' | 'security' | 'platform' | 'institutions' | 'notifications' | 'appearance' | 'danger';
 
@@ -276,19 +277,17 @@ function NotificationsSection() {
 }
 
 function AppearanceSection() {
-    const isDark = document.documentElement.classList.contains('dark');
-    const [dark, setDark] = useState(isDark);
-    const toggle = (v: boolean) => { setDark(v); document.documentElement.classList.toggle('dark', v); localStorage.setItem('theme', v ? 'dark' : 'light'); };
+    const { isDark, setDarkMode } = useTheme();
     return (
         <SectionCard title="Appearance" subtitle="Customize your view">
             <div className="flex gap-4">
-                <button onClick={() => toggle(false)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!dark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-                    <Sun className={`w-6 h-6 ${!dark ? 'text-rose-600' : 'text-gray-400'}`} />
-                    <span className={`text-sm font-semibold ${!dark ? 'text-rose-700' : 'text-gray-500'}`}>Light</span>
+                <button onClick={() => setDarkMode(false)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                    <Sun className={`w-6 h-6 ${!isDark ? 'text-rose-600' : 'text-gray-400'}`} />
+                    <span className={`text-sm font-semibold ${!isDark ? 'text-rose-700' : 'text-gray-500'}`}>Light</span>
                 </button>
-                <button onClick={() => toggle(true)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${dark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-                    <Moon className={`w-6 h-6 ${dark ? 'text-rose-400' : 'text-gray-400'}`} />
-                    <span className={`text-sm font-semibold ${dark ? 'text-rose-400' : 'text-gray-500'}`}>Dark</span>
+                <button onClick={() => setDarkMode(true)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                    <Moon className={`w-6 h-6 ${isDark ? 'text-rose-400' : 'text-gray-400'}`} />
+                    <span className={`text-sm font-semibold ${isDark ? 'text-rose-400' : 'text-gray-500'}`}>Dark</span>
                 </button>
             </div>
         </SectionCard>
