@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   FileText,
   Upload,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useToast } from '../../contexts/ToastContext';
+import DOMPurify from 'dompurify';
 
 interface PendingAssignment {
   id: string;
@@ -39,6 +40,16 @@ const StudentAssignmentSubmission: React.FC = () => {
     content_text: '',
     file: null as File | null,
   });
+
+  const safeInstructionsHtml = useMemo(() => {
+    if (!selectedAssignment?.instructions) {
+      return '';
+    }
+
+    return DOMPurify.sanitize(selectedAssignment.instructions, {
+      USE_PROFILES: { html: true },
+    });
+  }, [selectedAssignment?.instructions]);
 
   const loadAssignments = useCallback(async () => {
     setIsLoading(true);
@@ -254,7 +265,7 @@ const StudentAssignmentSubmission: React.FC = () => {
                       <h3 className="font-semibold text-gray-900 mb-2">Instructions</h3>
                       <div
                         className="text-sm text-gray-700 prose max-w-none"
-                        dangerouslySetInnerHTML={{ __html: selectedAssignment.instructions }}
+                        dangerouslySetInnerHTML={{ __html: safeInstructionsHtml }}
                       />
                     </div>
                   )}

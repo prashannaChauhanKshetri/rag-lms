@@ -64,10 +64,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
         password: credentials.password,
       }) as LoginResponse;
 
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-      }
-
       if (onLoginSuccess) {
         onLoginSuccess(response.user);
       }

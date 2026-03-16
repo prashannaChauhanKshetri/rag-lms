@@ -7,6 +7,10 @@ interface RequestOptions extends RequestInit {
 class ApiClient {
     public static readonly BASE_URL = 'http://localhost:8000'; // Make this configurable or dynamic if needed
 
+    public getBaseUrl(): string {
+        return ApiClient.BASE_URL;
+    }
+
     private getHeaders(token?: string, isFormData: boolean = false): HeadersInit {
         const headers: HeadersInit = {};
 
@@ -14,10 +18,9 @@ class ApiClient {
             headers['Content-Type'] = 'application/json';
         }
 
-        // Prefer passed token, then localStorage
-        const storedToken = localStorage.getItem('access_token');
-        if (token || storedToken) {
-            headers['Authorization'] = `Bearer ${token || storedToken}`;
+        // Tokens should be passed explicitly if needed; default auth uses secure cookies.
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
         }
 
         return headers;
@@ -42,8 +45,6 @@ class ApiClient {
 
             if (response.status === 401) {
                 // Handle unauthorized (e.g., redirect to login)
-                // For now, we might just clear storage and throw
-                localStorage.removeItem('access_token');
                 // Only redirect if not already on login page to avoid loops
                 if (window.location.pathname !== '/' && window.location.pathname !== '/login') {
                     window.location.href = '/';

@@ -97,10 +97,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 throw new Error(data.detail || 'Login failed');
             }
 
-            if (rememberMe && data.access_token) {
-                localStorage.setItem('access_token', data.access_token);
-            }
-
             onLoginSuccess({ ...data.user, institution: selectedInstitution });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred during login');
