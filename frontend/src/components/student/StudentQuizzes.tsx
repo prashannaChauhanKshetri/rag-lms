@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import type { Chatbot } from '../../types';
 import { Loader2, Brain, CheckCircle, Clock, PlayCircle, RefreshCw } from 'lucide-react';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Select } from '../ui/Select';
+import { Textarea } from '../ui/Textarea';
 
 interface Quiz {
     id: string;
@@ -127,78 +131,80 @@ export function StudentQuizzes() {
         // Quiz Taking View
         return (
             <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <button
+                <Button
                     onClick={() => { setActiveQuizId(null); setQuizData(null); setSubmissionResult(null); }}
-                    className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4"
+                    variant="ghost"
+                    className="text-sm text-muted-foreground hover:text-foreground justify-start px-0 mb-4"
                 >
                     &larr; Back to Quizzes
-                </button>
+                </Button>
 
                 {submissionResult ? (
-                    <div className="bg-white rounded-3xl border border-gray-100 shadow-lg p-8 text-center max-w-md mx-auto">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Card className="rounded-3xl p-8 text-center max-w-md mx-auto" elevated>
+                        <div className="w-20 h-20 bg-green-100 dark:bg-emerald-950/40 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="w-10 h-10 text-green-600" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Submitted!</h2>
+                        <h2 className="text-2xl font-bold text-foreground mb-2">Quiz Submitted!</h2>
 
                         {submissionResult.result_status === 'published' ? (
                             <>
                                 <div className="text-5xl font-extrabold text-green-600 mb-2">
                                     {Math.round(submissionResult.score ?? 0)}%
                                 </div>
-                                <p className="text-gray-500 mb-3">
+                                <p className="text-muted-foreground mb-3">
                                     Your result has been published by your instructor.
                                 </p>
                                 {submissionResult.feedback && (
-                                    <div className="text-left bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-6">
-                                        <p className="text-sm text-emerald-900"><strong>Feedback:</strong> {submissionResult.feedback}</p>
+                                    <div className="text-left bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-3 mb-6">
+                                        <p className="text-sm text-emerald-900 dark:text-emerald-300"><strong>Feedback:</strong> {submissionResult.feedback}</p>
                                     </div>
                                 )}
                             </>
                         ) : (
                             <>
                                 <div className="text-lg font-semibold text-amber-600 mb-2">Pending Teacher Review</div>
-                                <p className="text-gray-500 mb-4">
+                                <p className="text-muted-foreground mb-4">
                                     Your attempt is submitted and waiting for the teacher to publish the official marks.
                                 </p>
-                                <button
+                                <Button
                                     onClick={refreshSubmissionResult}
                                     disabled={isCheckingResult}
-                                    className="mb-6 w-full py-3 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                                    variant="secondary"
+                                    className="mb-6 w-full"
                                 >
                                     {isCheckingResult ? 'Checking...' : 'Check Result Status'}
-                                </button>
+                                </Button>
                             </>
                         )}
 
-                        <button
+                        <Button
                             onClick={() => { setActiveQuizId(null); setQuizData(null); setSubmissionResult(null); }}
-                            className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-colors"
+                            className="w-full bg-gray-900 text-white hover:bg-black"
                         >
                             Return to List
-                        </button>
-                    </div>
+                        </Button>
+                    </Card>
                 ) : (
                     <div className="space-y-8">
-                        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{quizData.title}</h1>
-                            <p className="text-gray-500">{quizData.description}</p>
-                            <div className="flex gap-4 mt-4 text-sm font-medium text-gray-600">
-                                <span className="px-3 py-1 bg-gray-100 rounded-lg">
+                        <Card className="p-6 rounded-2xl" elevated>
+                            <h1 className="text-2xl font-bold text-foreground mb-2">{quizData.title}</h1>
+                            <p className="text-muted-foreground">{quizData.description}</p>
+                            <div className="flex gap-4 mt-4 text-sm font-medium text-muted-foreground">
+                                <span className="px-3 py-1 bg-muted rounded-lg">
                                     {quizData.questions.length} Questions
                                 </span>
                             </div>
-                        </div>
+                        </Card>
 
                         <div className="space-y-6">
                             {quizData.questions.map((q: Question, idx: number) => (
-                                <div key={q.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                                <Card key={q.id} className="p-6 rounded-2xl" elevated>
                                     <div className="flex items-start gap-4">
-                                        <span className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-500 text-sm">
+                                        <span className="flex-shrink-0 w-8 h-8 bg-muted rounded-lg flex items-center justify-center font-bold text-muted-foreground text-sm">
                                             {idx + 1}
                                         </span>
                                         <div className="flex-1">
-                                            <p className="font-semibold text-gray-900 text-lg mb-4">{q.question_text}</p>
+                                            <p className="font-semibold text-foreground text-lg mb-4">{q.question_text}</p>
 
                                             {q.question_type === 'mcq' && q.options ? (
                                                 <div className="grid gap-3">
@@ -228,7 +234,7 @@ export function StudentQuizzes() {
                                                                     onChange={() => handleAnswerParams(q.id, optLabel)}
                                                                     className="w-5 h-5 text-green-600 focus:ring-green-500"
                                                                 />
-                                                                <span className="text-gray-700 font-medium">{opt}</span>
+                                                                <span className="text-foreground font-medium">{opt}</span>
                                                             </label>
                                                         )
                                                     })}
@@ -238,7 +244,7 @@ export function StudentQuizzes() {
                                                     {['True', 'False'].map(opt => (
                                                         <label key={opt} className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${answers[q.id]?.toLowerCase() === opt.toLowerCase()
                                                             ? 'border-green-500 bg-green-50 font-bold text-green-700'
-                                                            : 'border-gray-100 hover:border-gray-200 bg-gray-50 text-gray-600'
+                                                            : 'border-gray-100 dark:border-slate-700 hover:border-gray-200 dark:hover:border-slate-600 bg-gray-50 dark:bg-slate-900 text-muted-foreground'
                                                             }`}>
                                                             <input
                                                                 type="radio"
@@ -253,29 +259,29 @@ export function StudentQuizzes() {
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <textarea
+                                                <Textarea
                                                     value={answers[q.id] || ''}
                                                     onChange={(e) => handleAnswerParams(q.id, e.target.value)}
-                                                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                                                    className="p-4 bg-muted"
                                                     placeholder="Type your answer here..."
                                                     rows={3}
                                                 />
                                             )}
                                         </div>
                                     </div>
-                                </div>
+                                </Card>
                             ))}
                         </div>
 
                         <div className="flex justify-end pt-4 pb-12">
-                            <button
+                            <Button
                                 onClick={submitQuiz}
                                 disabled={isSubmitting}
-                                className="px-8 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all disabled:opacity-50 flex items-center gap-2"
+                                className="px-8 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all disabled:opacity-50"
                             >
                                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
                                 Submit Quiz
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}
@@ -287,19 +293,18 @@ export function StudentQuizzes() {
         <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                         <Brain className="w-6 h-6 text-indigo-600" />
                         Available Quizzes
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Test your knowledge and track progress</p>
+                    <p className="text-sm text-muted-foreground mt-1">Test your knowledge and track progress</p>
                 </div>
-                <select
+                <Select
                     value={selectedCourseId}
                     onChange={(e) => setSelectedCourseId(e.target.value)}
-                    className="px-4 py-2 border rounded-lg bg-white shadow-sm outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                     {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                </Select>
             </div>
 
             {isLoading ? (
@@ -307,31 +312,31 @@ export function StudentQuizzes() {
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
                 </div>
             ) : quizzes.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
-                    <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Card className="text-center py-20 rounded-2xl" elevated>
+                    <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-950/30 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Brain className="h-8 w-8 text-indigo-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No quizzes available</h3>
-                    <p className="text-gray-500 max-w-sm mx-auto">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">No quizzes available</h3>
+                    <p className="text-muted-foreground max-w-sm mx-auto">
                         There are no published quizzes for this course yet.
                     </p>
-                </div>
+                </Card>
             ) : (
                 <div className="grid gap-4">
                     {quizzes.map(quiz => (
-                        <div key={quiz.id} className="bg-white p-6 rounded-2xl border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all group flex items-center justify-between">
+                        <Card key={quiz.id} className="p-6 rounded-2xl hover:border-indigo-100 dark:hover:border-indigo-900/40 hover:shadow-md transition-all group flex items-center justify-between" elevated>
                             <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-300 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <Brain className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                    <h3 className="font-bold text-lg text-foreground group-hover:text-indigo-600 transition-colors">
                                         {quiz.title}
                                     </h3>
-                                    <p className="text-gray-500 text-sm line-clamp-1 mb-2">
+                                    <p className="text-muted-foreground text-sm line-clamp-1 mb-2">
                                         {quiz.description || "No description provided."}
                                     </p>
-                                    <div className="flex items-center gap-4 text-xs font-medium text-gray-400">
+                                    <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
                                         <span className="flex items-center gap-1">
                                             <Clock className="w-3 h-3" /> {new Date(quiz.created_at).toLocaleDateString()}
                                         </span>
@@ -342,13 +347,13 @@ export function StudentQuizzes() {
                                 </div>
                             </div>
 
-                            <button
+                            <Button
                                 onClick={() => startQuiz(quiz.id)}
-                                className="px-6 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-indigo-600 transition-colors flex items-center gap-2"
+                                className="px-6 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-indigo-600"
                             >
                                 Start Quiz <PlayCircle className="w-4 h-4" />
-                            </button>
-                        </div>
+                            </Button>
+                        </Card>
                     ))}
                 </div>
             )}

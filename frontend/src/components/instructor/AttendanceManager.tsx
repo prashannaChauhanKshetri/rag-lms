@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Check, X, Clock, FileText, ChevronDown } from 'lucide-react';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
 
 interface Student {
   student_id: string;  // Backend returns student_id, not id
@@ -196,10 +200,10 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
   };
 
   const statusColors = {
-    present: 'bg-green-100 text-green-800 border-green-300',
-    absent: 'bg-red-100 text-red-800 border-red-300',
-    late: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    excused: 'bg-blue-100 text-blue-800 border-blue-300'
+    present: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700',
+    absent: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700',
+    late: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700',
+    excused: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-700'
   };
 
   const statusIcons = {
@@ -210,39 +214,39 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg shadow-sm">
+    <Card className="w-full max-w-6xl mx-auto p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-900 rounded-2xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-2">
           <Calendar className="w-6 h-6 text-blue-600" />
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">Mark Attendance</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-gray-100">Mark Attendance</h2>
         </div>
-        <input
+        <Input
           type="date"
           value={date}
           onChange={(e) => {
             setDate(e.target.value);
             setSaved(false);
           }}
-          className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          className="max-w-52"
         />
       </div>
 
       {/* Section Selector */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-end">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Select Subject/Section</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Select Subject/Section</label>
           {unitsLoading ? (
-            <div className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-500">Loading your subjects...</div>
+            <div className="px-4 py-2 bg-white dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg text-slate-500 dark:text-gray-400">Loading your subjects...</div>
           ) : (
             <div className="relative">
-              <select
+              <Select
                 value={selectedUnit}
                 onChange={(e) => {
                   setSelectedUnit(e.target.value);
                   setSaved(false);
                 }}
-                className="w-full appearance-none px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800"
+                className="appearance-none pr-10"
               >
                 <option value="">-- Select a subject and section --</option>
                 {units.map((unit) => (
@@ -250,8 +254,8 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
                     {unit.class_name} - {unit.section_name} ({unit.chatbot_name})
                   </option>
                 ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-500 pointer-events-none" />
+              </Select>
+              <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-500 dark:text-gray-400 pointer-events-none" />
             </div>
           )}
         </div>
@@ -259,13 +263,13 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
 
       {/* Saved Alert */}
       {saved && (
-        <div className="mb-4 p-3 bg-green-100 text-green-800 rounded-lg text-sm">
+        <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg text-sm">
           ✓ Attendance saved successfully
         </div>
       )}
 
       {!selectedUnit && !unitsLoading && (
-        <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
+        <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-lg text-sm">
           ⚠ Please select a subject/section to begin marking attendance
         </div>
       )}
@@ -273,19 +277,19 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
       {/* Students List */}
       <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
         {students.length === 0 ? (
-          <p className="text-center text-slate-500 py-8">No students enrolled</p>
+          <p className="text-center text-slate-500 dark:text-gray-400 py-8">No students enrolled</p>
         ) : (
           students.map((student) => {
             const rec = attendance.get(student.student_id) || { student_id: student.student_id, status: 'present' as const };
             return (
-              <div
+              <Card
                 key={student.student_id}
-                className="bg-white p-4 rounded-lg border border-slate-200 hover:shadow-md transition-shadow"
+                className="p-4 border border-slate-200 dark:border-gray-700 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="min-w-0 flex-1 pr-2">
-                    <p className="font-semibold text-slate-800 truncate text-sm sm:text-base">{student.full_name}</p>
-                    <p className="text-xs text-slate-500 truncate">{student.email}</p>
+                    <p className="font-semibold text-slate-800 dark:text-gray-100 truncate text-sm sm:text-base">{student.full_name}</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 truncate">{student.email}</p>
                   </div>
 
                   {/* Status Buttons */}
@@ -296,7 +300,7 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
                         onClick={() => updateAttendance(student.student_id, status)}
                         className={`flex items-center justify-center gap-1 flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-all text-[11px] sm:text-sm font-medium border ${rec.status === status
                           ? statusColors[status]
-                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                          : 'bg-white dark:bg-gray-800 text-slate-600 dark:text-gray-300 border-slate-300 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-700'
                           }`}
                       >
                         <span className="flex-shrink-0">{statusIcons[status]}</span>
@@ -307,14 +311,14 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
                 </div>
 
                 {/* Notes */}
-                <input
+                <Input
                   type="text"
                   placeholder="Notes (optional)"
                   value={rec.notes || ''}
                   onChange={(e) => updateNotes(student.student_id, e.target.value)}
-                  className="mt-3 w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                  className="mt-3 h-10 bg-slate-50 dark:bg-gray-800"
                 />
-              </div>
+              </Card>
             );
           })
         )}
@@ -322,27 +326,28 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
 
       {/* Save Button */}
       <div className="mt-6 flex justify-end gap-3">
-        <button
+        <Button
           onClick={saveAttendance}
           disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          variant="primary"
+          className="bg-blue-600 hover:bg-blue-700"
         >
           {loading ? 'Saving...' : 'Save Attendance'}
-        </button>
+        </Button>
       </div>
 
       {/* Summary */}
-      <div className="mt-6 p-4 bg-white rounded-lg border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <Card className="mt-6 p-4 border border-slate-200 dark:border-gray-700 grid grid-cols-2 sm:grid-cols-4 gap-4">
         {(['present', 'absent', 'late', 'excused'] as const).map((status) => {
           const count = Array.from(attendance.values()).filter((r) => r.status === status).length;
           return (
             <div key={status} className="text-center">
-              <p className="text-sm text-slate-600 capitalize">{status}</p>
-              <p className="text-2xl font-bold text-slate-800">{count}</p>
+              <p className="text-sm text-slate-600 dark:text-gray-400 capitalize">{status}</p>
+              <p className="text-2xl font-bold text-slate-800 dark:text-gray-100">{count}</p>
             </div>
           );
         })}
-      </div>
-    </div>
+      </Card>
+    </Card>
   );
 }

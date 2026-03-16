@@ -303,13 +303,13 @@ const AdminCourseManager: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
                         <div className="p-2 bg-indigo-100 rounded-xl">
                             <Brain className="w-6 h-6 text-indigo-600" />
                         </div>
                         {viewMode === 'list' ? 'Course Bots' : selectedBot?.name}
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         {viewMode === 'list'
                             ? `${bots.length} course bot${bots.length !== 1 ? 's' : ''} available`
                             : 'Manage documents & test bot responses'}
@@ -319,7 +319,7 @@ const AdminCourseManager: React.FC = () => {
                     {viewMode === 'detail' && (
                         <button
                             onClick={() => { setViewMode('list'); setSelectedBot(null); setShowChat(false); }}
-                            className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            className="px-4 py-2.5 border border-border rounded-xl text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
                         >
                             ← Back to List
                         </button>
@@ -338,25 +338,25 @@ const AdminCourseManager: React.FC = () => {
 
             {/* Create Form */}
             {showCreate && viewMode === 'list' && (
-                <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm animate-in slide-in-from-top-2 duration-300">
+                <div className="bg-card rounded-2xl border border-border p-6 shadow-sm animate-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center justify-between mb-5">
-                        <h3 className="text-lg font-semibold text-gray-900">Create Course Bot</h3>
-                        <button onClick={() => setShowCreate(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                            <X className="w-5 h-5 text-gray-400" />
+                        <h3 className="text-lg font-semibold text-foreground">Create Course Bot</h3>
+                        <button onClick={() => setShowCreate(false)} className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+                            <X className="w-5 h-5 text-muted-foreground" />
                         </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Bot Name *</label>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Bot Name *</label>
                             <input
                                 value={newName}
                                 onChange={e => setNewName(e.target.value)}
                                 placeholder="e.g. Grade 10 Science"
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm"
+                                className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Knowledge Ratio</label>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Knowledge Ratio</label>
                             <div className="flex items-center gap-3">
                                 <input
                                     type="range"
@@ -367,17 +367,17 @@ const AdminCourseManager: React.FC = () => {
                                     onChange={e => setNewRatio(parseFloat(e.target.value))}
                                     className="flex-1 accent-indigo-600"
                                 />
-                                <span className="text-sm font-mono text-gray-600 w-10">{newRatio.toFixed(1)}</span>
+                                <span className="text-sm font-mono text-muted-foreground w-10">{newRatio.toFixed(1)}</span>
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">0 = strict textbook only, 1 = allow external knowledge</p>
+                            <p className="text-xs text-muted-foreground mt-1">0 = strict textbook only, 1 = allow external knowledge</p>
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Greeting Message</label>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Greeting Message</label>
                             <textarea
                                 value={newGreeting}
                                 onChange={e => setNewGreeting(e.target.value)}
                                 rows={2}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm resize-none"
+                                className="w-full px-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm resize-none"
                             />
                         </div>
                     </div>
@@ -399,12 +399,12 @@ const AdminCourseManager: React.FC = () => {
                 <>
                     {/* Search */}
                     <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             placeholder="Search course bots..."
-                            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm"
+                            className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -414,14 +414,14 @@ const AdminCourseManager: React.FC = () => {
                             <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
                         </div>
                     ) : filteredBots.length === 0 ? (
-                        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+                        <div className="bg-card rounded-2xl border border-border p-12 text-center">
                             <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                 <Brain className="w-8 h-8 text-indigo-400" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                            <h3 className="text-lg font-semibold text-foreground mb-2">
                                 {searchQuery ? 'No bots match your search' : 'No course bots yet'}
                             </h3>
-                            <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                                 {searchQuery ? 'Try a different search term.' : 'Create your first course bot to start uploading textbook PDFs and powering AI-assisted learning.'}
                             </p>
                         </div>
@@ -430,7 +430,7 @@ const AdminCourseManager: React.FC = () => {
                             {filteredBots.map(bot => (
                                 <div
                                     key={bot.id}
-                                    className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group"
+                                    className="bg-card rounded-2xl border border-border p-5 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group"
                                     onClick={() => openBotDetail(bot)}
                                 >
                                     {editingId === bot.id ? (
@@ -438,14 +438,14 @@ const AdminCourseManager: React.FC = () => {
                                             <input
                                                 value={editName}
                                                 onChange={e => setEditName(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                                                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                                                 autoFocus
                                             />
                                             <textarea
                                                 value={editGreeting}
                                                 onChange={e => setEditGreeting(e.target.value)}
                                                 rows={2}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none resize-none"
+                                                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none resize-none"
                                             />
                                             <div className="flex gap-2">
                                                 <button
@@ -458,7 +458,7 @@ const AdminCourseManager: React.FC = () => {
                                                 </button>
                                                 <button
                                                     onClick={() => setEditingId(null)}
-                                                    className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-50"
+                                                    className="px-3 py-1.5 border border-border text-muted-foreground rounded-lg text-xs font-medium hover:bg-muted/40"
                                                 >
                                                     Cancel
                                                 </button>
@@ -473,10 +473,10 @@ const AdminCourseManager: React.FC = () => {
                                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                                                     <button
                                                         onClick={() => { setEditingId(bot.id); setEditName(bot.name); setEditGreeting(bot.greeting || ''); }}
-                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                                        className="p-1.5 hover:bg-muted rounded-lg transition-colors"
                                                         title="Edit"
                                                     >
-                                                        <Edit3 className="w-3.5 h-3.5 text-gray-500" />
+                                                        <Edit3 className="w-3.5 h-3.5 text-muted-foreground" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(bot.id)}
@@ -487,14 +487,14 @@ const AdminCourseManager: React.FC = () => {
                                                     </button>
                                                 </div>
                                             </div>
-                                            <h3 className="font-semibold text-gray-900 text-base mb-1 truncate">{bot.name}</h3>
-                                            <p className="text-xs text-gray-500 line-clamp-2 mb-3">{bot.greeting}</p>
+                                            <h3 className="font-semibold text-foreground text-base mb-1 truncate">{bot.name}</h3>
+                                            <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{bot.greeting}</p>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs text-gray-400">
+                                                <span className="text-xs text-muted-foreground">
                                                     Ratio: {(bot.external_knowledge_ratio * 100).toFixed(0)}%
                                                 </span>
                                                 {bot.created_at && (
-                                                    <span className="text-xs text-gray-400">
+                                                    <span className="text-xs text-muted-foreground">
                                                         {new Date(bot.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                     </span>
                                                 )}
@@ -514,15 +514,15 @@ const AdminCourseManager: React.FC = () => {
                     {/* Left: Documents & Upload */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Bot Info Card */}
-                        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                        <div className="bg-card rounded-2xl border border-border p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
                                         <Brain className="w-6 h-6 text-indigo-600" />
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-bold text-gray-900">{selectedBot.name}</h2>
-                                        <p className="text-sm text-gray-500">{selectedBot.greeting}</p>
+                                        <h2 className="text-lg font-bold text-foreground">{selectedBot.name}</h2>
+                                        <p className="text-sm text-muted-foreground">{selectedBot.greeting}</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -534,9 +534,9 @@ const AdminCourseManager: React.FC = () => {
                         </div>
 
                         {/* Upload Section */}
-                        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                        <div className="bg-card rounded-2xl border border-border p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                                     <Upload className="w-4 h-4 text-indigo-600" />
                                     Upload Document
                                 </h3>
@@ -545,7 +545,7 @@ const AdminCourseManager: React.FC = () => {
                                 onClick={() => !isUploading && fileInputRef.current?.click()}
                                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${isUploading
                                     ? 'border-indigo-300 bg-indigo-50'
-                                    : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50'
+                                    : 'border-border hover:border-indigo-300 hover:bg-indigo-50/50'
                                     }`}
                             >
                                 <input
@@ -559,51 +559,51 @@ const AdminCourseManager: React.FC = () => {
                                     <div className="flex flex-col items-center gap-3">
                                         <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
                                         <p className="text-sm font-medium text-indigo-700">{uploadProgress}</p>
-                                        <p className="text-xs text-gray-500">Processing PDF, extracting text, and generating embeddings...</p>
+                                        <p className="text-xs text-muted-foreground">Processing PDF, extracting text, and generating embeddings...</p>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center gap-2">
-                                        <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                                            <Upload className="w-5 h-5 text-gray-400" />
+                                        <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center">
+                                            <Upload className="w-5 h-5 text-muted-foreground" />
                                         </div>
-                                        <p className="text-sm font-medium text-gray-700">Click to upload a PDF</p>
-                                        <p className="text-xs text-gray-400">Textbooks, study materials, course content</p>
+                                        <p className="text-sm font-medium text-foreground">Click to upload a PDF</p>
+                                        <p className="text-xs text-muted-foreground">Textbooks, study materials, course content</p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         {/* Documents List */}
-                        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                            <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                        <div className="bg-card rounded-2xl border border-border p-6">
+                            <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
                                 <FileText className="w-4 h-4 text-indigo-600" />
                                 Documents ({documents.length})
                             </h3>
                             {documents.length === 0 ? (
                                 <div className="text-center py-8">
                                     <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                                    <p className="text-sm text-gray-500">No documents uploaded yet</p>
-                                    <p className="text-xs text-gray-400 mt-1">Upload a PDF above to get started</p>
+                                    <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Upload a PDF above to get started</p>
                                 </div>
                             ) : (
                                 <div className="space-y-2">
                                     {documents.map(doc => (
                                         <div
                                             key={doc.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors"
+                                            className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-border hover:bg-muted transition-colors"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
                                                     <FileText className="w-4 h-4 text-red-500" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-800 truncate max-w-xs">{doc.filename}</p>
-                                                    <p className="text-xs text-gray-400">
+                                                    <p className="text-sm font-medium text-foreground truncate max-w-xs">{doc.filename}</p>
+                                                    <p className="text-xs text-muted-foreground">
                                                         {doc.chunk_count} chunks • {new Date(doc.upload_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-xs text-gray-500">
+                                            <span className="px-2 py-1 bg-card border border-border rounded-md text-xs text-muted-foreground">
                                                 PDF
                                             </span>
                                         </div>
@@ -617,40 +617,40 @@ const AdminCourseManager: React.FC = () => {
                     <div className="space-y-4">
                         <button
                             onClick={() => setShowChat(!showChat)}
-                            className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-200 hover:border-indigo-200 hover:shadow-sm transition-all"
+                            className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border hover:border-indigo-200 hover:shadow-sm transition-all"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
                                     <MessageSquare className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <div className="text-left">
-                                    <h3 className="text-sm font-semibold text-gray-900">Test Bot</h3>
-                                    <p className="text-xs text-gray-500">Check for hallucinations</p>
+                                    <h3 className="text-sm font-semibold text-foreground">Test Bot</h3>
+                                    <p className="text-xs text-muted-foreground">Check for hallucinations</p>
                                 </div>
                             </div>
-                            {showChat ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                            {showChat ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                         </button>
 
                         {showChat && (
-                            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col" style={{ height: '500px' }}>
+                            <div className="bg-card rounded-2xl border border-border overflow-hidden flex flex-col" style={{ height: '500px' }}>
                                 {/* Chat Header */}
-                                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                                <div className="px-4 py-3 border-b border-border bg-muted/40 flex items-center gap-2">
                                     <Bot className="w-4 h-4 text-emerald-600" />
-                                    <span className="text-sm font-medium text-gray-700">{selectedBot.name}</span>
+                                    <span className="text-sm font-medium text-foreground">{selectedBot.name}</span>
                                     <span className="ml-auto flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                                         Test Mode
                                     </span>
                                 </div>
 
                                 {/* Chat Messages */}
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/40/50">
                                     {chatMessages.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center h-full text-center">
                                             <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
                                                 <Bot className="w-6 h-6 text-emerald-500" />
                                             </div>
-                                            <p className="text-sm font-medium text-gray-700 mb-1">Test this bot</p>
-                                            <p className="text-xs text-gray-400 max-w-[200px]">
+                                            <p className="text-sm font-medium text-foreground mb-1">Test this bot</p>
+                                            <p className="text-xs text-muted-foreground max-w-[200px]">
                                                 Ask questions to verify it responds accurately from uploaded materials.
                                             </p>
                                         </div>
@@ -664,14 +664,14 @@ const AdminCourseManager: React.FC = () => {
                                                 )}
                                                 <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${msg.role === 'user'
                                                     ? 'bg-indigo-600 text-white rounded-tr-sm'
-                                                    : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'
+                                                    : 'bg-card border border-border text-foreground rounded-tl-sm shadow-sm'
                                                     }`}>
                                                     <p className="whitespace-pre-wrap">{msg.content}</p>
                                                     {msg.sources && msg.sources.length > 0 && (
-                                                        <div className="mt-2 pt-2 border-t border-gray-100">
-                                                            <p className="text-[10px] font-semibold text-gray-400 mb-1 uppercase tracking-wide">Sources</p>
+                                                        <div className="mt-2 pt-2 border-t border-border">
+                                                            <p className="text-[10px] font-semibold text-muted-foreground mb-1 uppercase tracking-wide">Sources</p>
                                                             {msg.sources.slice(0, 3).map((s, i) => (
-                                                                <div key={i} className="text-[11px] text-gray-500 flex items-center gap-1 mb-0.5">
+                                                                <div key={i} className="text-[11px] text-muted-foreground flex items-center gap-1 mb-0.5">
                                                                     <BookOpen className="w-3 h-3 flex-shrink-0" />
                                                                     <span className="truncate">{s.source} {s.page && `p.${s.page}`}</span>
                                                                 </div>
@@ -681,7 +681,7 @@ const AdminCourseManager: React.FC = () => {
                                                 </div>
                                                 {msg.role === 'user' && (
                                                     <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                        <User className="w-4 h-4 text-gray-500" />
+                                                        <User className="w-4 h-4 text-muted-foreground" />
                                                     </div>
                                                 )}
                                             </div>
@@ -692,8 +692,8 @@ const AdminCourseManager: React.FC = () => {
                                             <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
                                                 <Bot className="w-4 h-4 text-emerald-600" />
                                             </div>
-                                            <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
-                                                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                            <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                                             </div>
                                         </div>
                                     )}
@@ -701,7 +701,7 @@ const AdminCourseManager: React.FC = () => {
                                 </div>
 
                                 {/* Chat Input */}
-                                <div className="p-3 border-t border-gray-100 bg-white">
+                                <div className="p-3 border-t border-border bg-card">
                                     <form onSubmit={handleChatSend} className="relative">
                                         <input
                                             type="text"
@@ -709,7 +709,7 @@ const AdminCourseManager: React.FC = () => {
                                             onChange={e => setChatInput(e.target.value)}
                                             placeholder="Test a question..."
                                             disabled={isChatting}
-                                            className="w-full pl-3 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none disabled:opacity-50"
+                                            className="w-full pl-3 pr-10 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none disabled:opacity-50"
                                         />
                                         <button
                                             type="submit"
@@ -724,16 +724,16 @@ const AdminCourseManager: React.FC = () => {
                         )}
 
                         {/* Quick Actions */}
-                        <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h4>
+                        <div className="bg-card rounded-2xl border border-border p-5">
+                            <h4 className="text-sm font-semibold text-foreground mb-3">Quick Actions</h4>
                             <div className="space-y-2">
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={isUploading}
-                                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors text-left"
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/40 transition-colors text-left"
                                 >
                                     <Upload className="w-4 h-4 text-indigo-500" />
-                                    <span className="text-sm text-gray-700">Upload PDF</span>
+                                    <span className="text-sm text-foreground">Upload PDF</span>
                                 </button>
                                 <button
                                     onClick={() => {
@@ -742,10 +742,10 @@ const AdminCourseManager: React.FC = () => {
                                         setEditGreeting(selectedBot.greeting || '');
                                         setViewMode('list');
                                     }}
-                                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors text-left"
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/40 transition-colors text-left"
                                 >
                                     <Edit3 className="w-4 h-4 text-amber-500" />
-                                    <span className="text-sm text-gray-700">Edit Bot Settings</span>
+                                    <span className="text-sm text-foreground">Edit Bot Settings</span>
                                 </button>
                                 <button
                                     onClick={() => handleDelete(selectedBot.id)}

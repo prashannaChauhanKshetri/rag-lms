@@ -474,32 +474,32 @@ const AdminClassManager: React.FC = () => {
                                 loadClasses();
                             }
                         }}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-muted rounded-lg transition-colors"
                     >
-                        <ChevronLeft className="w-5 h-5 text-gray-600" />
+                        <ChevronLeft className="w-5 h-5 text-muted-foreground" />
                     </button>
                     <div className="flex-1 min-w-0">
                         {selectedSection ? (
                             <>
-                                <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                                     <button onClick={() => setSelectedSection(null)} className="hover:text-[#6366F1] transition-colors">{selectedClass.name}</button>
                                     <span>/</span>
-                                    <span className="text-gray-900 font-medium">{selectedSection.name}</span>
+                                    <span className="text-foreground font-medium">{selectedSection.name}</span>
                                 </div>
-                                <h2 className="text-xl font-bold text-gray-900 truncate">{selectedSection.name} Details</h2>
+                                <h2 className="text-xl font-bold text-foreground truncate">{selectedSection.name} Details</h2>
                                 <div className="flex items-center gap-3 mt-0.5">
                                     <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">{sectionStudents.length} Students Enrolled</span>
                                 </div>
                             </>
                         ) : (
                             <>
-                                <h2 className="text-xl font-bold text-gray-900 truncate">{selectedClass.name}</h2>
+                                <h2 className="text-xl font-bold text-foreground truncate">{selectedClass.name}</h2>
                                 <div className="flex items-center gap-3 mt-0.5">
                                     {selectedClass.grade_level && (
                                         <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full font-medium">{selectedClass.grade_level}</span>
                                     )}
                                     {selectedClass.description && (
-                                        <span className="text-xs text-gray-500 truncate">{selectedClass.description}</span>
+                                        <span className="text-xs text-muted-foreground truncate">{selectedClass.description}</span>
                                     )}
                                 </div>
                             </>
@@ -533,9 +533,9 @@ const AdminClassManager: React.FC = () => {
                         ) : (
                             <>
                                 {/* Section Teachers */}
-                                <div className="bg-white rounded-xl shadow overflow-hidden">
-                                    <div className="px-4 py-4 border-b border-gray-100 bg-gray-50">
-                                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                <div className="bg-card rounded-xl shadow overflow-hidden">
+                                    <div className="px-4 py-4 border-b border-border bg-muted/40">
+                                        <h3 className="font-semibold text-foreground flex items-center gap-2">
                                             <GraduationCap className="w-4 h-4 text-[#6366F1]" />
                                             Assigned Teachers
                                         </h3>
@@ -550,7 +550,7 @@ const AdminClassManager: React.FC = () => {
 
                                             if (sectionTeachersList.length === 0) {
                                                 return (
-                                                    <div className="p-6 text-center text-sm text-gray-500">
+                                                    <div className="p-6 text-center text-sm text-muted-foreground">
                                                         No teachers specifically assigned to this section.
                                                     </div>
                                                 );
@@ -565,28 +565,28 @@ const AdminClassManager: React.FC = () => {
                                             return (
                                                 <>
                                                     {paginatedTeachers.map((ta) => (
-                                                        <div key={ta.assignment_id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                                                        <div key={ta.assignment_id} className="p-4 flex items-center justify-between hover:bg-muted/40">
                                                             <div>
-                                                                <p className="text-sm font-medium text-gray-900">{ta.teacher_name || ta.teacher_username}</p>
-                                                                <p className="text-xs text-gray-500 mt-0.5">Teaches <span className="text-indigo-600">{ta.subject_name}</span></p>
+                                                                <p className="text-sm font-medium text-foreground">{ta.teacher_name || ta.teacher_username}</p>
+                                                                <p className="text-xs text-muted-foreground mt-0.5">Teaches <span className="text-indigo-600">{ta.subject_name}</span></p>
                                                             </div>
                                                         </div>
                                                     ))}
                                                     {totalPages > 1 && (
-                                                        <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm">
-                                                            <span className="text-gray-500">Page {teacherPage} of {totalPages}</span>
+                                                        <div className="px-4 py-3 border-t border-border flex items-center justify-between text-sm">
+                                                            <span className="text-muted-foreground">Page {teacherPage} of {totalPages}</span>
                                                             <div className="flex gap-2">
                                                                 <button
                                                                     onClick={() => setTeacherPage(p => Math.max(1, p - 1))}
                                                                     disabled={teacherPage === 1}
-                                                                    className="px-2 py-1 border border-gray-300 rounded text-gray-600 disabled:opacity-50"
+                                                                    className="px-2 py-1 border border-border rounded text-muted-foreground disabled:opacity-50"
                                                                 >
                                                                     Prev
                                                                 </button>
                                                                 <button
                                                                     onClick={() => setTeacherPage(p => Math.min(totalPages, p + 1))}
                                                                     disabled={teacherPage === totalPages}
-                                                                    className="px-2 py-1 border border-gray-300 rounded text-gray-600 disabled:opacity-50"
+                                                                    className="px-2 py-1 border border-border rounded text-muted-foreground disabled:opacity-50"
                                                                 >
                                                                     Next
                                                                 </button>
@@ -600,16 +600,16 @@ const AdminClassManager: React.FC = () => {
                                 </div>
 
                                 {/* Section Students */}
-                                <div className="bg-white rounded-xl shadow overflow-hidden">
-                                    <div className="px-4 py-4 border-b border-gray-100 bg-gray-50">
-                                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                <div className="bg-card rounded-xl shadow overflow-hidden">
+                                    <div className="px-4 py-4 border-b border-border bg-muted/40">
+                                        <h3 className="font-semibold text-foreground flex items-center gap-2">
                                             <Users className="w-4 h-4 text-[#6366F1]" />
                                             Enrolled Students ({sectionStudents.length})
                                         </h3>
                                     </div>
                                     <div className="divide-y divide-gray-100">
                                         {sectionStudents.length === 0 ? (
-                                            <div className="p-8 text-center text-sm text-gray-500">
+                                            <div className="p-8 text-center text-sm text-muted-foreground">
                                                 No students enrolled in this section yet.
                                             </div>
                                         ) : (
@@ -623,7 +623,7 @@ const AdminClassManager: React.FC = () => {
                                                 return (
                                                     <>
                                                         <table className="w-full text-left">
-                                                            <thead className="bg-gray-50 text-xs text-gray-500 border-b">
+                                                            <thead className="bg-muted/40 text-xs text-muted-foreground border-b">
                                                                 <tr>
                                                                     <th className="px-4 py-2 font-medium">Student</th>
                                                                     <th className="px-4 py-2 font-medium">Email</th>
@@ -632,34 +632,34 @@ const AdminClassManager: React.FC = () => {
                                                             </thead>
                                                             <tbody className="divide-y divide-gray-100">
                                                                 {paginatedStudents.map(student => (
-                                                                    <tr key={student.student_id} className="hover:bg-gray-50 text-sm">
+                                                                    <tr key={student.student_id} className="hover:bg-muted/40 text-sm">
                                                                         <td className="px-4 py-3">
                                                                             <div className="flex items-center gap-2">
                                                                                 <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-mono">{student.display_id || student.student_id.slice(0, 6)}</span>
-                                                                                <span className="font-medium text-gray-900">{student.full_name || student.username}</span>
+                                                                                <span className="font-medium text-foreground">{student.full_name || student.username}</span>
                                                                             </div>
                                                                         </td>
-                                                                        <td className="px-4 py-3 text-gray-600">{student.email}</td>
-                                                                        <td className="px-4 py-3 text-gray-600">{student.roll_number || '—'}</td>
+                                                                        <td className="px-4 py-3 text-muted-foreground">{student.email}</td>
+                                                                        <td className="px-4 py-3 text-muted-foreground">{student.roll_number || '—'}</td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>
                                                         </table>
                                                         {totalPages > 1 && (
-                                                            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm bg-white">
-                                                                <span className="text-gray-500">Page {studentPage} of {totalPages}</span>
+                                                            <div className="px-4 py-3 border-t border-border flex items-center justify-between text-sm bg-card">
+                                                                <span className="text-muted-foreground">Page {studentPage} of {totalPages}</span>
                                                                 <div className="flex gap-2">
                                                                     <button
                                                                         onClick={() => setStudentPage(p => Math.max(1, p - 1))}
                                                                         disabled={studentPage === 1}
-                                                                        className="px-2 py-1 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                                                                        className="px-2 py-1 border border-border rounded text-muted-foreground hover:bg-muted/40 disabled:opacity-50"
                                                                     >
                                                                         Prev
                                                                     </button>
                                                                     <button
                                                                         onClick={() => setStudentPage(p => Math.min(totalPages, p + 1))}
                                                                         disabled={studentPage === totalPages}
-                                                                        className="px-2 py-1 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                                                                        className="px-2 py-1 border border-border rounded text-muted-foreground hover:bg-muted/40 disabled:opacity-50"
                                                                     >
                                                                         Next
                                                                     </button>
@@ -678,7 +678,7 @@ const AdminClassManager: React.FC = () => {
                 ) : (
                     <>
                         {/* Detail Tabs */}
-                        <div className="border-b border-gray-200">
+                        <div className="border-b border-border">
                             <div className="flex gap-4">
                                 {([
                                     { key: 'subjects' as const, label: 'Subjects', icon: BookOpen, count: selectedClass.subjects?.length || 0 },
@@ -690,12 +690,12 @@ const AdminClassManager: React.FC = () => {
                                         onClick={() => { setDetailTab(key); setError(''); setSuccess(''); }}
                                         className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 whitespace-nowrap flex items-center gap-1.5 ${detailTab === key
                                             ? 'text-[#6366F1] border-[#6366F1]'
-                                            : 'text-gray-500 border-transparent hover:text-gray-700'
+                                            : 'text-muted-foreground border-transparent hover:text-foreground'
                                             }`}
                                     >
                                         <Icon className="w-4 h-4" />
                                         {label}
-                                        <span className="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>
+                                        <span className="ml-1 text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">{count}</span>
                                     </button>
                                 ))}
                             </div>
@@ -717,14 +717,14 @@ const AdminClassManager: React.FC = () => {
 
                                 {/* Add Subject Form */}
                                 {showAddSubject && (
-                                    <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
+                                    <div className="bg-card rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
                                         <form onSubmit={handleAddSubject} className="flex flex-col sm:flex-row items-end gap-3">
                                             <div className="flex-1 relative w-full">
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Select Course Bot</label>
+                                                <label className="block text-sm font-medium text-foreground mb-1">Select Course Bot</label>
                                                 <select
                                                     value={newSubjectChatbotId}
                                                     onChange={(e) => setNewSubjectChatbotId(e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-card pr-10"
                                                     required
                                                 >
                                                     <option value="">— Select Course Bot —</option>
@@ -732,10 +732,10 @@ const AdminClassManager: React.FC = () => {
                                                         <option key={c.id} value={c.id}>{c.name}</option>
                                                     ))}
                                                 </select>
-                                                <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
+                                                <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-muted-foreground pointer-events-none" />
                                             </div>
                                             <div className="flex gap-2">
-                                                <button type="button" onClick={() => setShowAddSubject(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                                                <button type="button" onClick={() => setShowAddSubject(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
                                                 <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
                                                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                                                     Add
@@ -746,9 +746,9 @@ const AdminClassManager: React.FC = () => {
                                 )}
 
                                 {/* Subjects List */}
-                                <div className="bg-white rounded-xl shadow">
+                                <div className="bg-card rounded-xl shadow">
                                     {(selectedClass.subjects || []).length === 0 ? (
-                                        <div className="text-center py-12 text-gray-500">
+                                        <div className="text-center py-12 text-muted-foreground">
                                             <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
                                             <p className="text-sm">No subjects added yet</p>
                                             <button onClick={() => setShowAddSubject(true)} className="mt-3 text-sm text-[#6366F1] hover:underline">
@@ -758,19 +758,19 @@ const AdminClassManager: React.FC = () => {
                                     ) : (
                                         <div className="divide-y divide-gray-100">
                                             {(selectedClass.subjects || []).map((subject) => (
-                                                <div key={subject.class_subject_id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+                                                <div key={subject.class_subject_id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                                             <BookOpen className="w-4 h-4 text-indigo-600" />
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="text-sm font-medium text-gray-900 truncate">{subject.chatbot_name}</p>
-                                                            {subject.greeting && <p className="text-xs text-gray-500 truncate">{subject.greeting}</p>}
+                                                            <p className="text-sm font-medium text-foreground truncate">{subject.chatbot_name}</p>
+                                                            {subject.greeting && <p className="text-xs text-muted-foreground truncate">{subject.greeting}</p>}
                                                         </div>
                                                     </div>
                                                     <button
                                                         onClick={() => handleRemoveSubject(subject.class_subject_id, subject.chatbot_name)}
-                                                        className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
+                                                        className="text-muted-foreground hover:text-red-600 transition-colors flex-shrink-0 ml-3"
                                                         title="Remove subject"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -805,15 +805,15 @@ const AdminClassManager: React.FC = () => {
 
                                 {/* Assign Teacher Form */}
                                 {showAssignTeacher && (
-                                    <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
+                                    <div className="bg-card rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
                                         <form onSubmit={handleAssignTeacher} className="space-y-3">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                 <div className="relative">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                                    <label className="block text-sm font-medium text-foreground mb-1">Subject</label>
                                                     <select
                                                         value={assignSubjectId}
                                                         onChange={(e) => setAssignSubjectId(e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                                        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-card pr-10"
                                                         required
                                                     >
                                                         <option value="">— Select Subject —</option>
@@ -821,14 +821,14 @@ const AdminClassManager: React.FC = () => {
                                                             <option key={s.class_subject_id} value={s.class_subject_id}>{s.chatbot_name}</option>
                                                         ))}
                                                     </select>
-                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
+                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-muted-foreground pointer-events-none" />
                                                 </div>
                                                 <div className="relative">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
+                                                    <label className="block text-sm font-medium text-foreground mb-1">Teacher</label>
                                                     <select
                                                         value={assignTeacherId}
                                                         onChange={(e) => setAssignTeacherId(e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                                        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-card pr-10"
                                                         required
                                                     >
                                                         <option value="">— Select Teacher —</option>
@@ -836,25 +836,25 @@ const AdminClassManager: React.FC = () => {
                                                             <option key={t.id} value={t.id}>{t.full_name || t.username}</option>
                                                         ))}
                                                     </select>
-                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
+                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-muted-foreground pointer-events-none" />
                                                 </div>
                                                 <div className="relative">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Section (Optional)</label>
+                                                    <label className="block text-sm font-medium text-foreground mb-1">Section (Optional)</label>
                                                     <select
                                                         value={assignSectionId}
                                                         onChange={(e) => setAssignSectionId(e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-white pr-10"
+                                                        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] appearance-none bg-card pr-10"
                                                     >
                                                         <option value="">— All Sections —</option>
                                                         {(selectedClass.sections || []).map(s => (
                                                             <option key={s.id} value={s.id}>{s.name}</option>
                                                         ))}
                                                     </select>
-                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-gray-400 pointer-events-none" />
+                                                    <ChevronDown className="absolute right-3 top-[34px] w-4 h-4 text-muted-foreground pointer-events-none" />
                                                 </div>
                                             </div>
                                             <div className="flex justify-end gap-2">
-                                                <button type="button" onClick={() => setShowAssignTeacher(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                                                <button type="button" onClick={() => setShowAssignTeacher(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
                                                 <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
                                                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                                                     Assign
@@ -865,9 +865,9 @@ const AdminClassManager: React.FC = () => {
                                 )}
 
                                 {/* Teacher Assignments List */}
-                                <div className="bg-white rounded-xl shadow">
+                                <div className="bg-card rounded-xl shadow">
                                     {(selectedClass.teacher_assignments || []).length === 0 ? (
-                                        <div className="text-center py-12 text-gray-500">
+                                        <div className="text-center py-12 text-muted-foreground">
                                             <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-30" />
                                             <p className="text-sm">No teachers assigned yet</p>
                                             {(selectedClass.subjects || []).length > 0 && (
@@ -879,22 +879,22 @@ const AdminClassManager: React.FC = () => {
                                     ) : (
                                         <div className="divide-y divide-gray-100">
                                             {(selectedClass.teacher_assignments || []).map((ta) => (
-                                                <div key={ta.assignment_id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+                                                <div key={ta.assignment_id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors">
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                                             <GraduationCap className="w-4 h-4 text-emerald-600" />
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="text-sm font-medium text-gray-900 truncate">{ta.teacher_name || ta.teacher_username}</p>
-                                                            <p className="text-xs text-gray-500">
+                                                            <p className="text-sm font-medium text-foreground truncate">{ta.teacher_name || ta.teacher_username}</p>
+                                                            <p className="text-xs text-muted-foreground">
                                                                 Teaches <span className="text-indigo-600 font-medium">{ta.subject_name}</span>
-                                                                {ta.section_name && <span className="text-gray-500"> ({ta.section_name})</span>}
+                                                                {ta.section_name && <span className="text-muted-foreground"> ({ta.section_name})</span>}
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <button
                                                         onClick={() => handleRemoveTeacherAssignment(ta.assignment_id, ta.teacher_name, ta.subject_name)}
-                                                        className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
+                                                        className="text-muted-foreground hover:text-red-600 transition-colors flex-shrink-0 ml-3"
                                                         title="Remove assignment"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -922,21 +922,21 @@ const AdminClassManager: React.FC = () => {
 
                                 {/* Create Section Form */}
                                 {showCreateSection && (
-                                    <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
+                                    <div className="bg-card rounded-xl shadow-lg border border-[#6366F1]/20 p-4">
                                         <form onSubmit={handleCreateSection} className="flex flex-col sm:flex-row items-end gap-3">
                                             <div className="flex-1 w-full">
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Section Name</label>
+                                                <label className="block text-sm font-medium text-foreground mb-1">Section Name</label>
                                                 <input
                                                     type="text"
                                                     value={newSectionName}
                                                     onChange={(e) => setNewSectionName(e.target.value)}
                                                     placeholder="e.g. Section A"
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
+                                                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
                                                     required
                                                 />
                                             </div>
                                             <div className="flex gap-2">
-                                                <button type="button" onClick={() => setShowCreateSection(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                                                <button type="button" onClick={() => setShowCreateSection(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
                                                 <button type="submit" disabled={isSaving} className="px-4 py-2 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#4F46E5] disabled:opacity-50 flex items-center gap-2">
                                                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                                                     Create
@@ -947,9 +947,9 @@ const AdminClassManager: React.FC = () => {
                                 )}
 
                                 {/* Sections List */}
-                                <div className="bg-white rounded-xl shadow">
+                                <div className="bg-card rounded-xl shadow">
                                     {(selectedClass.sections || []).length === 0 ? (
-                                        <div className="text-center py-12 text-gray-500">
+                                        <div className="text-center py-12 text-muted-foreground">
                                             <Layers className="w-12 h-12 mx-auto mb-3 opacity-30" />
                                             <p className="text-sm">No sections created yet</p>
                                             <button onClick={() => setShowCreateSection(true)} className="mt-3 text-sm text-[#6366F1] hover:underline">
@@ -961,7 +961,7 @@ const AdminClassManager: React.FC = () => {
                                             {(selectedClass.sections || []).map((section) => (
                                                 <div
                                                     key={section.id}
-                                                    className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                                                    className="flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer"
                                                     onClick={() => loadSectionDetail(section)}
                                                 >
                                                     <div className="flex items-center gap-3 min-w-0">
@@ -969,15 +969,15 @@ const AdminClassManager: React.FC = () => {
                                                             <Layers className="w-4 h-4 text-blue-600" />
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="text-sm font-medium text-gray-900 truncate hover:text-[#6366F1]">{section.name}</p>
-                                                            <p className="text-xs text-gray-500">
+                                                            <p className="text-sm font-medium text-foreground truncate hover:text-[#6366F1]">{section.name}</p>
+                                                            <p className="text-xs text-muted-foreground">
                                                                 {section.student_count ?? 0} students
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleDeleteSection(section.id, section.name); }}
-                                                        className="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-3"
+                                                        className="text-muted-foreground hover:text-red-600 transition-colors flex-shrink-0 ml-3"
                                                         title="Delete section"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -1020,8 +1020,8 @@ const AdminClassManager: React.FC = () => {
                         <BookOpen className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Class Management</h2>
-                        <p className="text-sm text-gray-500 mt-0.5">Create classes, add subjects, assign teachers</p>
+                        <h2 className="text-xl sm:text-2xl font-bold text-foreground">Class Management</h2>
+                        <p className="text-sm text-muted-foreground mt-0.5">Create classes, add subjects, assign teachers</p>
                     </div>
                 </div>
                 <button
@@ -1051,49 +1051,49 @@ const AdminClassManager: React.FC = () => {
 
             {/* Create Class Form */}
             {showCreateClass && (
-                <div className="bg-white rounded-xl shadow-lg border border-[#6366F1]/20 p-4 sm:p-6">
+                <div className="bg-card rounded-xl shadow-lg border border-[#6366F1]/20 p-4 sm:p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Create New Class</h3>
+                        <h3 className="text-lg font-semibold text-foreground">Create New Class</h3>
                         <button onClick={() => setShowCreateClass(false)}>
-                            <X className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                            <X className="w-5 h-5 text-muted-foreground hover:text-muted-foreground" />
                         </button>
                     </div>
                     <form onSubmit={handleCreateClass} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Class Name *</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">Class Name *</label>
                                 <input
                                     type="text"
                                     value={newClassName}
                                     onChange={(e) => setNewClassName(e.target.value)}
                                     placeholder="e.g. Class 10"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
+                                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">Grade Level</label>
                                 <input
                                     type="text"
                                     value={newClassGradeLevel}
                                     onChange={(e) => setNewClassGradeLevel(e.target.value)}
                                     placeholder="e.g. Grade 10"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
+                                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <label className="block text-sm font-medium text-foreground mb-1">Description</label>
                             <textarea
                                 value={newClassDescription}
                                 onChange={(e) => setNewClassDescription(e.target.value)}
                                 placeholder="Optional description..."
                                 rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] resize-y"
+                                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1] resize-y"
                             />
                         </div>
                         <div className="flex justify-end gap-3">
-                            <button type="button" onClick={() => setShowCreateClass(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                            <button type="button" onClick={() => setShowCreateClass(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
                             <button
                                 type="submit"
                                 disabled={isSaving}
@@ -1109,24 +1109,24 @@ const AdminClassManager: React.FC = () => {
 
             {/* Search */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                     type="text"
                     value={classSearch}
                     onChange={(e) => setClassSearch(e.target.value)}
                     placeholder="Search classes..."
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
+                    className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]"
                 />
             </div>
 
             {/* Classes List */}
-            <div className="bg-white rounded-xl shadow">
+            <div className="bg-card rounded-xl shadow">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-16">
                         <Loader2 className="w-8 h-8 animate-spin text-[#6366F1]" />
                     </div>
                 ) : filteredClasses.length === 0 ? (
-                    <div className="text-center py-16 text-gray-500">
+                    <div className="text-center py-16 text-muted-foreground">
                         <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
                         <p className="text-sm">{classSearch ? 'No matching classes found' : 'No classes created yet'}</p>
                         {!classSearch && (
@@ -1140,18 +1140,18 @@ const AdminClassManager: React.FC = () => {
                         {/* Desktop Table */}
                         <div className="hidden md:block overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50 border-b">
+                                <thead className="bg-muted/40 border-b">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Class Name</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Grade</th>
-                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Subjects</th>
-                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Sections</th>
-                                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Class Name</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Grade</th>
+                                        <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">Subjects</th>
+                                        <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">Sections</th>
+                                        <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {filteredClasses.map((cls) => (
-                                        <tr key={cls.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => { loadClassDetail(cls.id); setDetailTab('subjects'); }}>
+                                        <tr key={cls.id} className="hover:bg-muted/40 cursor-pointer" onClick={() => { loadClassDetail(cls.id); setDetailTab('subjects'); }}>
                                             <td className="px-4 py-3">
                                                 {editingClassId === cls.id ? (
                                                     <input
@@ -1162,13 +1162,13 @@ const AdminClassManager: React.FC = () => {
                                                     />
                                                 ) : (
                                                     <>
-                                                        <p className="text-sm font-medium text-gray-900">{cls.name}</p>
-                                                        {cls.description && <p className="text-xs text-gray-500 mt-0.5">{cls.description}</p>}
+                                                        <p className="text-sm font-medium text-foreground">{cls.name}</p>
+                                                        {cls.description && <p className="text-xs text-muted-foreground mt-0.5">{cls.description}</p>}
                                                     </>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className="text-sm text-gray-600">{cls.grade_level || '—'}</span>
+                                                <span className="text-sm text-muted-foreground">{cls.grade_level || '—'}</span>
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
@@ -1187,16 +1187,16 @@ const AdminClassManager: React.FC = () => {
                                                             <button onClick={() => handleUpdateClass(cls.id)} disabled={isSaving} className="text-[#6366F1] hover:text-[#4F46E5] transition-colors" title="Save">
                                                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                                             </button>
-                                                            <button onClick={() => setEditingClassId(null)} className="text-gray-400 hover:text-gray-600" title="Cancel">
+                                                            <button onClick={() => setEditingClassId(null)} className="text-muted-foreground hover:text-muted-foreground" title="Cancel">
                                                                 <X className="w-4 h-4" />
                                                             </button>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <button onClick={() => startEditClass(cls)} className="text-gray-400 hover:text-[#6366F1] transition-colors" title="Edit class">
+                                                            <button onClick={() => startEditClass(cls)} className="text-muted-foreground hover:text-[#6366F1] transition-colors" title="Edit class">
                                                                 <Edit3 className="w-4 h-4" />
                                                             </button>
-                                                            <button onClick={() => handleDeleteClass(cls.id, cls.name)} className="text-gray-400 hover:text-red-600 transition-colors" title="Delete class">
+                                                            <button onClick={() => handleDeleteClass(cls.id, cls.name)} className="text-muted-foreground hover:text-red-600 transition-colors" title="Delete class">
                                                                 <Trash2 className="w-4 h-4" />
                                                             </button>
                                                         </>
@@ -1212,12 +1212,12 @@ const AdminClassManager: React.FC = () => {
                         {/* Mobile Cards */}
                         <div className="md:hidden space-y-3 p-4">
                             {filteredClasses.map((cls) => (
-                                <div key={cls.id} className="border border-gray-200 rounded-lg p-3 cursor-pointer hover:border-indigo-300 transition-colors" onClick={() => { loadClassDetail(cls.id); setDetailTab('subjects'); }}>
+                                <div key={cls.id} className="border border-border rounded-lg p-3 cursor-pointer hover:border-indigo-300 transition-colors" onClick={() => { loadClassDetail(cls.id); setDetailTab('subjects'); }}>
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-gray-900 truncate">{cls.name}</p>
+                                            <p className="text-sm font-medium text-foreground truncate">{cls.name}</p>
                                             <div className="flex items-center gap-2 mt-1.5">
-                                                {cls.grade_level && <span className="text-xs text-gray-500">{cls.grade_level}</span>}
+                                                {cls.grade_level && <span className="text-xs text-muted-foreground">{cls.grade_level}</span>}
                                                 <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
                                                     {cls.subject_count ?? 0} subjects
                                                 </span>
@@ -1227,10 +1227,10 @@ const AdminClassManager: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                                            <button onClick={() => startEditClass(cls)} className="text-gray-400 hover:text-[#6366F1]">
+                                            <button onClick={() => startEditClass(cls)} className="text-muted-foreground hover:text-[#6366F1]">
                                                 <Edit3 className="w-4 h-4" />
                                             </button>
-                                            <button onClick={() => handleDeleteClass(cls.id, cls.name)} className="text-gray-400 hover:text-red-600">
+                                            <button onClick={() => handleDeleteClass(cls.id, cls.name)} className="text-muted-foreground hover:text-red-600">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>

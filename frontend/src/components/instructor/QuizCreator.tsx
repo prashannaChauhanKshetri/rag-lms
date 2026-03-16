@@ -12,6 +12,10 @@ import {
     Trash2,
     Check
 } from 'lucide-react';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
 
 export function QuizCreator() {
     const [courses, setCourses] = useState<Chatbot[]>([]);
@@ -137,58 +141,60 @@ export function QuizCreator() {
     return (
         <div className="flex h-full gap-6">
             {/* Left: Configuration Panel */}
-            <div className="w-1/3 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full overflow-y-auto">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+            <Card className="w-1/3 p-6 border border-gray-100 dark:border-gray-700 flex flex-col h-full overflow-y-auto">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-[#10B981]" />
                     Quiz Creator
                 </h2>
 
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Course</label>
-                    <select
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Course</label>
+                    <Select
                         value={selectedCourseId}
                         onChange={(e) => setSelectedCourseId(e.target.value)}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none bg-white"
+                        className="focus-visible:ring-[#10B981]"
                     >
                         {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    </Select>
                 </div>
 
-                <div className="flex gap-2 p-1 bg-gray-100 rounded-lg mb-6">
-                    <button
+                <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg mb-6">
+                    <Button
                         onClick={() => setMode('ai')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === 'ai' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 hover:text-gray-700'
+                        variant="ghost"
+                        className={`flex-1 h-9 text-sm font-medium rounded-md transition-all ${mode === 'ai' ? 'bg-white dark:bg-gray-700 shadow text-[#10B981]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                             }`}
                     >
                         AI Generator
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={() => setMode('manual')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === 'manual' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 hover:text-gray-700'
+                        variant="ghost"
+                        className={`flex-1 h-9 text-sm font-medium rounded-md transition-all ${mode === 'manual' ? 'bg-white dark:bg-gray-700 shadow text-[#10B981]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                             }`}
                     >
                         Manual Entry
-                    </button>
+                    </Button>
                 </div>
 
                 {mode === 'ai' ? (
                     <form onSubmit={handleGenerate} className="space-y-6 flex-1">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
-                            <input
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Topic</label>
+                            <Input
                                 type="text"
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
                                 placeholder="e.g. Newton's Laws"
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none"
+                                className="focus-visible:ring-[#10B981]"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Question Types</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Question Types</label>
                             <div className="space-y-2">
                                 {questionTypes.map(t => (
-                                    <label key={t.id} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <label key={t.id} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={selectedTypes.includes(t.id)}
@@ -203,65 +209,62 @@ export function QuizCreator() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
-                                <select
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Difficulty</label>
+                                <Select
                                     value={difficulty}
                                     onChange={(e) => setDifficulty(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-lg outline-none"
                                 >
                                     <option value="easy">Easy</option>
                                     <option value="medium">Medium</option>
                                     <option value="hard">Hard</option>
-                                </select>
+                                </Select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Count</label>
-                                <input
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Count</label>
+                                <Input
                                     type="number"
                                     min="1" max="20"
                                     value={questionCount}
                                     onChange={(e) => setQuestionCount(parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 border rounded-lg outline-none"
                                 />
                             </div>
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
                             disabled={isGenerating || !selectedCourseId}
-                            className="w-full flex items-center justify-center gap-2 bg-[#10B981] text-white py-3 rounded-xl hover:bg-[#059669] disabled:opacity-50 transition-colors font-semibold"
+                            className="w-full h-11 bg-[#10B981] hover:bg-[#059669]"
                         >
                             {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCcw className="w-5 h-5" />}
                             Generate Quiz
-                        </button>
+                        </Button>
                     </form>
                 ) : (
                     <form onSubmit={handleAddManual} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <select
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                            <Select
                                 value={manualQType}
                                 onChange={(e) => setManualQType(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg outline-none"
                             >
                                 {questionTypes.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-                            </select>
+                            </Select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Question Text</label>
                             <textarea
                                 value={manualQText}
                                 onChange={(e) => setManualQText(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg outline-none h-20"
+                                className="w-full px-3 py-2 border border-border rounded-xl outline-none h-20 bg-card text-foreground"
                                 placeholder="Enter question..."
                             />
                         </div>
 
                         {manualQType === 'mcq' && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">Options (A-D)</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Options (A-D)</label>
                                 {manualOptions.map((opt, i) => (
-                                    <input
+                                    <Input
                                         key={i}
                                         value={opt}
                                         onChange={(e) => {
@@ -270,89 +273,90 @@ export function QuizCreator() {
                                             setManualOptions(newOps);
                                         }}
                                         placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                                        className="w-full px-3 py-2 border rounded-lg outline-none text-sm"
+                                        className="text-sm"
                                     />
                                 ))}
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
-                            <input
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correct Answer</label>
+                            <Input
                                 value={manualCorrect}
                                 onChange={(e) => setManualCorrect(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg outline-none"
                                 placeholder={manualQType === 'mcq' ? 'e.g. A' : 'Enter answer...'}
                             />
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
-                            className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 transition-colors font-semibold"
+                            className="w-full h-11 bg-indigo-600 hover:bg-indigo-700"
                         >
                             <Plus className="w-5 h-5" />
                             Add Question
-                        </button>
+                        </Button>
                     </form>
                 )}
 
                 {error && (
-                    <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2 mt-4">
+                    <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg text-sm flex items-start gap-2 mt-4">
                         <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         {error}
                     </div>
                 )}
                 {successMsg && (
-                    <div className="p-3 bg-green-50 text-green-600 rounded-lg text-sm flex items-start gap-2 mt-4">
+                    <div className="p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300 rounded-lg text-sm flex items-start gap-2 mt-4">
                         <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         {successMsg}
                     </div>
                 )}
-            </div>
+            </Card>
 
             {/* Right: Preview Panel */}
-            <div className="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
-                <div className="flex justify-between items-center mb-6 pb-4 border-b">
-                    <h2 className="text-xl font-bold text-gray-800">Preview Quiz ({generatedQuestions.length})</h2>
+            <Card className="flex-1 p-6 border border-gray-100 dark:border-gray-700 flex flex-col h-full overflow-hidden">
+                <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Preview Quiz ({generatedQuestions.length})</h2>
                     {generatedQuestions.length > 0 && (
-                        <button
+                        <Button
                             onClick={handlePublish}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors text-sm font-medium shadow-sm"
+                            size="sm"
+                            className="bg-[#10B981] hover:bg-[#059669]"
                         >
                             <Save className="w-4 h-4" />
                             Publish to Students
-                        </button>
+                        </Button>
                     )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-6">
                     {generatedQuestions.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <div className="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
                                 <FileText className="w-8 h-8 opacity-20" />
                             </div>
                             <p>Generated or added questions will appear here.</p>
                         </div>
                     ) : (
                         generatedQuestions.map((q, idx) => (
-                            <div key={idx} className="p-4 rounded-xl border border-gray-200 bg-gray-50 hover:border-[#10B981]/30 transition-colors relative group">
+                            <div key={idx} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-[#10B981]/30 transition-colors relative group">
                                 <div className="flex justify-between items-start mb-2">
                                     <span className="text-xs font-bold text-[#10B981] uppercase tracking-wide bg-[#10B981]/10 px-2 py-1 rounded">
                                         Q{idx + 1} • {q.question_type.replace(/_/g, ' ')}
                                     </span>
-                                    <button
+                                    <Button
                                         onClick={() => setGeneratedQuestions(prev => prev.filter((_, i) => i !== idx))}
-                                        className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        variant="ghost"
+                                        className="h-7 w-7 p-0 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                         <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    </Button>
                                 </div>
-                                <p className="text-gray-900 font-medium mb-3">{q.question_text}</p>
+                                <p className="text-gray-900 dark:text-gray-100 font-medium mb-3">{q.question_text}</p>
 
                                 {q.options && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                                         {q.options.map((opt, i) => (
-                                            <div key={i} className={`text-sm p-2 rounded border ${opt === q.correct_answer ? 'bg-green-50 border-green-200 text-green-700 font-medium' : 'bg-white border-gray-200 text-gray-600'}`}>
+                                            <div key={i} className={`text-sm p-2 rounded border ${opt === q.correct_answer ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 font-medium' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}`}>
                                                 {String.fromCharCode(65 + i)}. {opt}
                                             </div>
                                         ))}
@@ -360,7 +364,7 @@ export function QuizCreator() {
                                 )}
 
                                 {(!q.options || q.options.length === 0) && (
-                                    <div className="p-3 bg-green-50 border border-green-100 rounded-lg text-sm text-green-800">
+                                    <div className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-100 dark:border-green-700 rounded-lg text-sm text-green-800 dark:text-green-300">
                                         <strong>Answer:</strong> {q.correct_answer}
                                     </div>
                                 )}
@@ -368,7 +372,7 @@ export function QuizCreator() {
                         ))
                     )}
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }

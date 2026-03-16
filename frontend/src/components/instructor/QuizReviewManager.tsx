@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
 import type { Chatbot } from '../../types';
 import { CheckCircle2, Eye, Loader2, Megaphone, RefreshCw } from 'lucide-react';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { Textarea } from '../ui/Textarea';
 
 interface QuizOption {
   id: string;
@@ -272,73 +277,70 @@ export function QuizReviewManager() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-6 shadow-sm">
-        <h2 className="text-2xl font-bold text-gray-900">Quiz Review & Manual Grading</h2>
-        <p className="text-sm text-gray-600 mt-1">Choose a quiz, review each attempt, assign per-question marks, then publish selected attempt results.</p>
+      <Card className="p-4 sm:p-6 space-y-2" elevated>
+        <h2 className="text-2xl font-bold text-foreground">Quiz Review & Manual Grading</h2>
+        <p className="text-sm text-muted-foreground">Choose a quiz, review each attempt, assign per-question marks, then publish selected attempt results.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
-            <select
+            <label className="block text-sm font-medium text-foreground mb-1">Course</label>
+            <Select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg bg-white"
               disabled={isLoadingCourses}
             >
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Quiz</label>
-            <select
+            <label className="block text-sm font-medium text-foreground mb-1">Quiz</label>
+            <Select
               value={selectedQuizId}
               onChange={(e) => setSelectedQuizId(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg bg-white"
               disabled={isLoadingQuizzes || quizzes.length === 0}
             >
               {quizzes.map((q) => (
                 <option key={q.id} value={q.id}>{q.title}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div className="flex items-end gap-2">
-            <button
+            <Button
               onClick={() => loadSubmissions(selectedQuizId)}
-              className="px-4 py-2 border rounded-lg text-sm font-medium hover:bg-gray-50"
+              variant="secondary"
               disabled={!selectedQuizId || isLoadingSubmissions}
             >
               <span className="inline-flex items-center gap-1"><RefreshCw className="w-4 h-4" /> Refresh</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleBulkPublish}
               disabled={selectedSubmissionIds.length === 0 || isPublishingBulk}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
               {isPublishingBulk ? 'Publishing...' : `Publish Selected (${selectedSubmissionIds.length})`}
-            </button>
+            </Button>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mt-3">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Status</label>
-            <select
+            <label className="text-sm font-medium text-foreground">Status</label>
+            <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'draft_review' | 'reviewed' | 'published')}
-              className="px-3 py-2 border rounded-lg text-sm bg-white"
             >
               <option value="all">All</option>
               <option value="draft_review">Draft Review</option>
               <option value="reviewed">Reviewed</option>
               <option value="published">Published</option>
-            </select>
+            </Select>
           </div>
 
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="inline-flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
               checked={onlyUnpublished}
@@ -348,26 +350,26 @@ export function QuizReviewManager() {
           </label>
         </div>
 
-        {error && <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>}
-        {success && <div className="mt-4 p-3 rounded-lg bg-emerald-50 text-emerald-700 text-sm">{success}</div>}
-      </div>
+        {error && <div className="mt-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">{error}</div>}
+        {success && <div className="mt-4 p-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">{success}</div>}
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+        <Card className="p-4" elevated>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-gray-900">Attempts</h3>
-            {isLoadingSubmissions && <Loader2 className="w-4 h-4 animate-spin text-gray-500" />}
+            <h3 className="font-bold text-foreground">Attempts</h3>
+            {isLoadingSubmissions && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
           </div>
 
           <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
             {!isLoadingSubmissions && submissions.length === 0 && (
-              <p className="text-sm text-gray-500 py-6 text-center">No attempts yet for this quiz.</p>
+              <p className="text-sm text-muted-foreground py-6 text-center">No attempts yet for this quiz.</p>
             )}
 
             {submissions.map((s) => {
               const isSelected = selectedSubmissionIds.includes(s.id);
               return (
-                <div key={s.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                <div key={s.id} className="border border-border rounded-xl p-3 hover:bg-muted/60 transition-colors">
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
@@ -380,32 +382,34 @@ export function QuizReviewManager() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-gray-900 truncate">{s.student_name || s.student_id}</p>
+                        <p className="font-semibold text-foreground truncate">{s.student_name || s.student_id}</p>
                         <span className={`text-xs px-2 py-1 rounded-full ${s.is_result_published ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700'}`}>
                           {s.is_result_published ? 'Published' : (s.grading_status || 'draft_review')}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Submitted: {new Date(s.submitted_at).toLocaleString()}</p>
-                      <p className="text-xs text-gray-600 mt-1">Current score: {Math.round((s.display_score ?? 0) * 10) / 10}%</p>
+                      <p className="text-xs text-muted-foreground mt-1">Submitted: {new Date(s.submitted_at).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Current score: {Math.round((s.display_score ?? 0) * 10) / 10}%</p>
 
                       <div className="flex items-center gap-2 mt-2">
-                        <button
+                        <Button
                           onClick={() => loadSubmissionDetail(s.id)}
-                          className="px-3 py-1.5 text-xs border rounded-md hover:bg-white"
+                          variant="secondary"
+                          size="sm"
                         >
                           <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" /> Review</span>
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={async () => {
                             await loadSubmissionDetail(s.id);
                             await api.post(`/instructor/quizzes/submissions/${s.id}/publish`, {});
                             await loadSubmissions(selectedQuizId);
                             setSuccess('Attempt published.');
                           }}
-                          className="px-3 py-1.5 text-xs bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
+                          size="sm"
+                          className="bg-emerald-600 text-white hover:bg-emerald-700"
                         >
                           <span className="inline-flex items-center gap-1"><Megaphone className="w-3 h-3" /> Publish This</span>
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -413,37 +417,37 @@ export function QuizReviewManager() {
               );
             })}
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+        <Card className="p-4" elevated>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-gray-900">Review Panel</h3>
-            {isLoadingDetail && <Loader2 className="w-4 h-4 animate-spin text-gray-500" />}
+            <h3 className="font-bold text-foreground">Review Panel</h3>
+            {isLoadingDetail && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
           </div>
 
           {!detail && !isLoadingDetail && (
-            <p className="text-sm text-gray-500 py-6 text-center">Select an attempt to start grading.</p>
+            <p className="text-sm text-muted-foreground py-6 text-center">Select an attempt to start grading.</p>
           )}
 
           {detail && (
             <div className="space-y-4 max-h-[560px] overflow-y-auto pr-1">
-              <div className="p-3 rounded-lg bg-gray-50 border">
-                <p className="text-sm text-gray-700"><strong>Quiz:</strong> {detail.quiz.title}</p>
-                <p className="text-sm text-gray-700"><strong>Attempt:</strong> {detail.submission.id}</p>
-                <p className="text-sm text-gray-700"><strong>Status:</strong> {detail.submission.is_result_published ? 'Published' : (detail.submission.grading_status || 'draft_review')}</p>
+              <div className="p-3 rounded-xl bg-muted/50 border border-border">
+                <p className="text-sm text-foreground"><strong>Quiz:</strong> {detail.quiz.title}</p>
+                <p className="text-sm text-foreground"><strong>Attempt:</strong> {detail.submission.id}</p>
+                <p className="text-sm text-foreground"><strong>Status:</strong> {detail.submission.is_result_published ? 'Published' : (detail.submission.grading_status || 'draft_review')}</p>
               </div>
 
               {detail.questions.map((q, idx) => {
                 const studentAnswer = detail.submission.answers?.[q.id] || '';
                 return (
-                  <div key={q.id} className="border rounded-lg p-3">
-                    <p className="text-sm font-semibold text-gray-900">Q{idx + 1}. {q.question_text}</p>
-                    <p className="text-xs text-gray-500 mt-1">Type: {q.question_type} | Max: {q.points}</p>
-                    <p className="text-sm mt-2"><strong>Student answer:</strong> {studentAnswer || 'No answer submitted'}</p>
-                    <p className="text-sm mt-1 text-gray-700"><strong>Expected:</strong> {q.correct_answer}</p>
+                  <div key={q.id} className="border border-border rounded-xl p-3">
+                    <p className="text-sm font-semibold text-foreground">Q{idx + 1}. {q.question_text}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Type: {q.question_type} | Max: {q.points}</p>
+                    <p className="text-sm mt-2 text-foreground"><strong>Student answer:</strong> {studentAnswer || 'No answer submitted'}</p>
+                    <p className="text-sm mt-1 text-muted-foreground"><strong>Expected:</strong> {q.correct_answer}</p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
-                      <input
+                      <Input
                         type="number"
                         min="0"
                         max={q.points}
@@ -459,10 +463,9 @@ export function QuizReviewManager() {
                             }
                           }));
                         }}
-                        className="px-3 py-2 border rounded-md text-sm"
                         placeholder="Points"
                       />
-                      <input
+                      <Input
                         type="text"
                         value={gradeDrafts[q.id]?.comment || ''}
                         onChange={(e) => {
@@ -475,7 +478,7 @@ export function QuizReviewManager() {
                             }
                           }));
                         }}
-                        className="sm:col-span-2 px-3 py-2 border rounded-md text-sm"
+                        className="sm:col-span-2"
                         placeholder="Optional comment for this question"
                       />
                     </div>
@@ -484,49 +487,47 @@ export function QuizReviewManager() {
               })}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Overall feedback</label>
-                <textarea
+                <label className="block text-sm font-medium text-foreground mb-1">Overall feedback</label>
+                <Textarea
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border rounded-md text-sm"
                   placeholder="Optional summary feedback"
                 />
               </div>
 
-              <div className="p-3 rounded-lg border bg-gray-50 flex items-center justify-between">
-                <p className="text-sm text-gray-800">
+              <div className="p-3 rounded-xl border border-border bg-muted/50 flex items-center justify-between">
+                <p className="text-sm text-foreground">
                   Total: <strong>{totalAwarded.toFixed(2)}</strong> / {totalPossible.toFixed(2)} points
                 </p>
-                <p className="text-sm text-gray-800">
+                <p className="text-sm text-foreground">
                   Percent: <strong>{totalPossible > 0 ? ((totalAwarded / totalPossible) * 100).toFixed(2) : '0.00'}%</strong>
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2 pb-2">
-                <button
+                <Button
                   onClick={handleSaveGrades}
                   disabled={isSavingGrade}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {isSavingGrade ? 'Saving...' : 'Save Grades'}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handlePublishOne}
                   disabled={isPublishingOne}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
+                  className="bg-emerald-600 text-white hover:bg-emerald-700"
                 >
                   {isPublishingOne ? 'Publishing...' : 'Publish This Attempt'}
-                </button>
+                </Button>
                 {detail.submission.is_result_published && (
-                  <span className="inline-flex items-center gap-1 text-emerald-700 text-sm font-medium px-2 py-1">
+                  <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300 text-sm font-medium px-2 py-1">
                     <CheckCircle2 className="w-4 h-4" /> Published
                   </span>
                 )}
               </div>
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );
