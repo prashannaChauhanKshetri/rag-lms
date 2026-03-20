@@ -55,7 +55,31 @@ class ApiClient {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.detail || 'API Request Failed');
+                let detailMessage = 'API Request Failed';
+
+                if (typeof data?.detail === 'string') {
+                    detailMessage = data.detail;
+                } else if (Array.isArray(data?.detail)) {
+                    detailMessage = data.detail
+                        .map((item: unknown) => {
+                            if (typeof item === 'string') return item;
+                            if (item && typeof item === 'object' && 'msg' in item) {
+                                return String((item as { msg: unknown }).msg);
+                            }
+                            return JSON.stringify(item);
+                        })
+                        .join('; ');
+                } else if (data?.detail && typeof data.detail === 'object') {
+                    detailMessage = JSON.stringify(data.detail);
+                }
+
+                const apiError = new Error(detailMessage) as Error & {
+                    status?: number;
+                    payload?: unknown;
+                };
+                apiError.status = response.status;
+                apiError.payload = data;
+                throw apiError;
             }
 
             return data;

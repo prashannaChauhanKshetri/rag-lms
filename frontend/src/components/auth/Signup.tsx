@@ -86,8 +86,9 @@ const Signup: React.FC<SignupProps> = ({ onBackToLogin }) => {
       setError('Username can only contain alphanumeric characters, underscore, and hyphen');
       return false;
     }
-    if (!formData.email || !formData.email.includes('@')) {
-      setError('Please enter a valid email');
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email || !emailPattern.test(formData.email)) {
+      setError('Please enter a valid email address (e.g., name@example.com)');
       return false;
     }
     if (formData.password.length < 8) {
@@ -135,8 +136,8 @@ const Signup: React.FC<SignupProps> = ({ onBackToLogin }) => {
       setSuccess('Signup successful! Please check your email for verification link.');
       setStep('verification');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } };
-      setError(error.response?.data?.detail || 'Signup failed. Please try again.');
+      const message = err instanceof Error ? err.message : 'Signup failed. Please try again.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
