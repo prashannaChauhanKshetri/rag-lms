@@ -207,6 +207,61 @@ def update_user_password(user_id: str, password_hash: str) -> bool:
                        (password_hash, user_id))
     return True
 
+
+def get_user_settings(user_id: str) -> Dict[str, Any]:
+    """Get persisted settings for a user."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                    settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            cur.execute("SELECT settings FROM user_settings WHERE user_id = %s", (user_id,))
+            row = cur.fetchone()
+
+    if not row:
+        return {}
+
+    settings = row.get('settings')
+    return dict(settings) if isinstance(settings, dict) else {}
+
+
+def upsert_user_settings(user_id: str, settings: Dict[str, Any]) -> Dict[str, Any]:
+    """Create or update persisted settings for a user."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                    settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            cur.execute(
+                """
+                INSERT INTO user_settings (user_id, settings, updated_at)
+                VALUES (%s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (user_id)
+                DO UPDATE SET settings = EXCLUDED.settings, updated_at = CURRENT_TIMESTAMP
+                RETURNING settings
+                """,
+                (user_id, psycopg2.extras.Json(settings))
+            )
+            row = cur.fetchone()
+
+    if not row:
+        return {}
+
+    saved = row.get('settings')
+    return dict(saved) if isinstance(saved, dict) else {}
+
 def list_users(institution_id: str = None) -> List[Dict]:
     """List all users (optionally filtered by institution)"""
     with get_db_connection() as conn:

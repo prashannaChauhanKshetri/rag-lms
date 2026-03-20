@@ -5,7 +5,8 @@ import database_postgres as db
 import utils_auth
 import secrets
 import re
-from typing import Optional
+from datetime import datetime
+from typing import Optional, Dict, Any
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -358,6 +359,10 @@ class ChangePasswordRequest(BaseModel):
         return v
 
 
+class UpdateSettingsRequest(BaseModel):
+    settings: Dict[str, Any]
+
+
 def _get_current_user(request: Request) -> dict:
     """Helper: extract and validate the JWT token from Authorization header or cookie."""
     auth_header = request.headers.get("Authorization", "")
@@ -372,6 +377,354 @@ def _get_current_user(request: Request) -> dict:
     if not user_data:
         raise HTTPException(status_code=401, detail="Invalid session")
     return user_data
+
+
+def _deep_merge_dict(base: Dict[str, Any], patch: Dict[str, Any]) -> Dict[str, Any]:
+    """Deep merge nested dicts while replacing non-dict leaf values."""
+    merged = dict(base)
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge_dict(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+@router.get("/settings")
+async def get_settings(request: Request):
+    """Get persisted settings for the currently authenticated user."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid session")
+
+    try:
+        settings = db.get_user_settings(user_id)
+        return {
+            "settings": settings,
+            "message": "Settings retrieved successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve settings: {str(e)}")
+
+
+@router.put("/settings")
+async def update_settings(request: Request, data: UpdateSettingsRequest):
+    """Merge and persist settings for the currently authenticated user."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid session")
+
+    if not isinstance(data.settings, dict):
+        raise HTTPException(status_code=400, detail="Settings payload must be an object")
+
+    try:
+        existing = db.get_user_settings(user_id)
+        merged = _deep_merge_dict(existing, data.settings)
+        saved = db.upsert_user_settings(user_id, merged)
+        return {
+            "message": "Settings updated successfully",
+            "settings": saved
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update settings: {str(e)}")
+
+
+@router.get("/activity-log")
+async def get_activity_log(request: Request, limit: int = 20):
+    """Get a normalized activity feed for the authenticated user."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid session")
+
+    safe_limit = max(1, min(limit, 100))
+
+    try:
+        with db.get_db_connection() as conn:
+            with db.get_dict_cursor(conn) as cur:
+                cur.execute(
+                    """
+                    SELECT * FROM (
+                        SELECT created_at AS timestamp, 'account_created'::text AS event_type, 'Account created'::text AS description
+                        FROM users
+                        WHERE id = %s
+
+                        UNION ALL
+
+                        SELECT updated_at AS timestamp, 'account_updated'::text AS event_type, 'Account profile updated'::text AS description
+                        FROM users
+                        WHERE id = %s
+
+                        UNION ALL
+
+                        SELECT submitted_at AS timestamp, 'quiz_submitted'::text AS event_type, ('Submitted quiz ' || quiz_id)::text AS description
+                        FROM quiz_submissions
+                        WHERE student_id = %s
+
+                        UNION ALL
+
+                        SELECT submitted_at AS timestamp, 'assignment_submitted'::text AS event_type, ('Submitted assignment ' || assignment_id)::text AS description
+                        FROM assignment_submissions
+                        WHERE student_id = %s
+
+                        UNION ALL
+
+                        SELECT created_at AS timestamp, 'attendance_marked'::text AS event_type, ('Marked attendance for section ' || section_id)::text AS description
+                        FROM attendance
+                        WHERE marked_by = %s
+
+                        UNION ALL
+
+                        SELECT created_at AS timestamp, 'enrollment_action'::text AS event_type, (action || ' enrollment in section ' || section_id)::text AS description
+                        FROM enrollment_audit
+                        WHERE performed_by = %s
+                    ) events
+                    ORDER BY timestamp DESC
+                    LIMIT %s
+                    """,
+                    (user_id, user_id, user_id, user_id, user_id, user_id, safe_limit)
+                )
+                rows = cur.fetchall() or []
+
+        return {
+            "activities": [dict(row) for row in rows],
+            "count": len(rows)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve activity log: {str(e)}")
+
+
+@router.get("/export-data")
+async def export_user_data(request: Request):
+    """Export user account data used by the settings privacy section."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid session")
+
+    user = db.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    try:
+        settings = db.get_user_settings(user_id)
+        with db.get_db_connection() as conn:
+            with db.get_dict_cursor(conn) as cur:
+                cur.execute(
+                    """
+                    SELECT id, quiz_id, score, submitted_at
+                    FROM quiz_submissions
+                    WHERE student_id = %s
+                    ORDER BY submitted_at DESC
+                    LIMIT 500
+                    """,
+                    (user_id,)
+                )
+                quiz_submissions = [dict(row) for row in (cur.fetchall() or [])]
+
+                cur.execute(
+                    """
+                    SELECT id, assignment_id, score, feedback, submitted_at
+                    FROM assignment_submissions
+                    WHERE student_id = %s
+                    ORDER BY submitted_at DESC
+                    LIMIT 500
+                    """,
+                    (user_id,)
+                )
+                assignment_submissions = [dict(row) for row in (cur.fetchall() or [])]
+
+                cur.execute(
+                    """
+                    SELECT id, section_id, date, status, notes, created_at
+                    FROM attendance
+                    WHERE student_id = %s
+                    ORDER BY date DESC
+                    LIMIT 500
+                    """,
+                    (user_id,)
+                )
+                attendance_rows = [dict(row) for row in (cur.fetchall() or [])]
+
+        quiz_scores = [float(row["score"]) for row in quiz_submissions if row.get("score") is not None]
+        assignment_scores = [float(row["score"]) for row in assignment_submissions if row.get("score") is not None]
+
+        attendance_by_status = {
+            "present": 0,
+            "absent": 0,
+            "late": 0,
+            "excused": 0
+        }
+        for row in attendance_rows:
+            status = row.get("status")
+            if status in attendance_by_status:
+                attendance_by_status[status] += 1
+
+        total_attendance = len(attendance_rows)
+        engaged_attendance = (
+            attendance_by_status["present"]
+            + attendance_by_status["late"]
+            + attendance_by_status["excused"]
+        )
+        attendance_rate = round((engaged_attendance / total_attendance) * 100, 2) if total_attendance else None
+
+        export_payload = {
+            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "export_version": "2.0",
+            "download_guide": {
+                "sections": [
+                    "profile",
+                    "preferences",
+                    "academics.quiz_results",
+                    "academics.assignment_results",
+                    "academics.attendance"
+                ],
+                "format": "json",
+                "description": "Structured student data export for profile, grades, submissions, and attendance."
+            },
+            "profile": {
+                "id": user.get("id"),
+                "username": user.get("username"),
+                "email": user.get("email"),
+                "full_name": user.get("full_name"),
+                "role": user.get("role"),
+                "institution_id": user.get("institution_id"),
+                "created_at": user.get("created_at"),
+                "updated_at": user.get("updated_at"),
+            },
+            "preferences": settings,
+            "academics": {
+                "summary": {
+                    "quiz_attempts": len(quiz_submissions),
+                    "graded_quizzes": len(quiz_scores),
+                    "quiz_average_score": round(sum(quiz_scores) / len(quiz_scores), 2) if quiz_scores else None,
+                    "assignment_submissions": len(assignment_submissions),
+                    "graded_assignments": len(assignment_scores),
+                    "assignment_average_score": round(sum(assignment_scores) / len(assignment_scores), 2) if assignment_scores else None,
+                    "attendance_records": total_attendance,
+                    "attendance_rate_percent": attendance_rate
+                },
+                "quiz_results": {
+                    "records": quiz_submissions
+                },
+                "assignment_results": {
+                    "records": assignment_submissions
+                },
+                "attendance": {
+                    "by_status": attendance_by_status,
+                    "records": attendance_rows
+                }
+            }
+        }
+
+        return export_payload
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to export user data: {str(e)}")
+
+
+@router.get("/export-summary")
+async def export_user_data_summary(request: Request):
+    """Return a compact preview of what will be included in data export."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid session")
+
+    try:
+        settings = db.get_user_settings(user_id)
+        with db.get_db_connection() as conn:
+            with db.get_dict_cursor(conn) as cur:
+                cur.execute("SELECT COUNT(*) AS count FROM quiz_submissions WHERE student_id = %s", (user_id,))
+                quiz_count = int((cur.fetchone() or {}).get("count", 0))
+
+                cur.execute("SELECT COUNT(*) AS count FROM assignment_submissions WHERE student_id = %s", (user_id,))
+                assignment_count = int((cur.fetchone() or {}).get("count", 0))
+
+                cur.execute(
+                    """
+                    SELECT
+                        COUNT(*) AS total,
+                        COUNT(*) FILTER (WHERE status = 'present') AS present,
+                        COUNT(*) FILTER (WHERE status = 'absent') AS absent,
+                        COUNT(*) FILTER (WHERE status = 'late') AS late,
+                        COUNT(*) FILTER (WHERE status = 'excused') AS excused
+                    FROM attendance
+                    WHERE student_id = %s
+                    """,
+                    (user_id,)
+                )
+                attendance_stats = dict(cur.fetchone() or {})
+
+        total_attendance = int(attendance_stats.get("total") or 0)
+        engaged_attendance = int(attendance_stats.get("present") or 0) + int(attendance_stats.get("late") or 0) + int(attendance_stats.get("excused") or 0)
+        attendance_rate = round((engaged_attendance / total_attendance) * 100, 2) if total_attendance else None
+
+        return {
+            "includes": [
+                "Profile information",
+                "Saved settings/preferences",
+                "Quiz attempts and scores",
+                "Assignment submissions and grades",
+                "Attendance records"
+            ],
+            "counts": {
+                "profile_fields": 8,
+                "settings_keys": len(settings.keys()) if isinstance(settings, dict) else 0,
+                "quiz_attempts": quiz_count,
+                "assignment_submissions": assignment_count,
+                "attendance_records": total_attendance,
+                "attendance_rate_percent": attendance_rate
+            },
+            "attendance_breakdown": {
+                "present": int(attendance_stats.get("present") or 0),
+                "absent": int(attendance_stats.get("absent") or 0),
+                "late": int(attendance_stats.get("late") or 0),
+                "excused": int(attendance_stats.get("excused") or 0)
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to build export summary: {str(e)}")
+
+
+@router.get("/institution-summary")
+async def get_institution_summary(request: Request):
+    """Get institution summary stats for settings pages."""
+    user_data = _get_current_user(request)
+    role = user_data.get("role")
+    institution_id = user_data.get("institution_id")
+
+    try:
+        with db.get_db_connection() as conn:
+            with db.get_dict_cursor(conn) as cur:
+                if role == 'super_admin':
+                    cur.execute("SELECT COUNT(*) AS total FROM institutions")
+                    total = int((cur.fetchone() or {}).get('total', 0))
+                    cur.execute("SELECT COUNT(*) AS active FROM institutions WHERE is_active = TRUE")
+                    active = int((cur.fetchone() or {}).get('active', 0))
+                else:
+                    if not institution_id:
+                        raise HTTPException(status_code=400, detail="Institution context missing")
+                    cur.execute("SELECT COUNT(*) AS total FROM institutions WHERE id = %s", (institution_id,))
+                    total = int((cur.fetchone() or {}).get('total', 0))
+                    cur.execute("SELECT COUNT(*) AS active FROM institutions WHERE id = %s AND is_active = TRUE", (institution_id,))
+                    active = int((cur.fetchone() or {}).get('active', 0))
+
+        return {
+            "total_institutions": total,
+            "active_institutions": active,
+            "api_version": "v1.0"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch institution summary: {str(e)}")
 
 
 @router.put("/profile")

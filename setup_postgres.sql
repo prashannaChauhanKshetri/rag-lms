@@ -45,6 +45,16 @@ CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_institution_id ON users(institution_id);
+
+-- ============================================
+-- USER SETTINGS (PERSISTENT PREFERENCES)
+-- ============================================
+CREATE TABLE IF NOT EXISTS user_settings (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_user_settings_updated_at ON user_settings(updated_at DESC);
 -- ============================================
 -- INSTITUTION ADMINS (ROLE ASSIGNMENT)
 -- ============================================

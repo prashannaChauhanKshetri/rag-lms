@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     User,
     Lock,
@@ -18,6 +18,7 @@ import {
     ClipboardList,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { getUserSettings, updateUserSettings } from '../../lib/settings';
 import { useTheme } from '../../contexts/ThemeContext';
 
 type SectionId = 'profile' | 'security' | 'teaching' | 'notifications' | 'appearance' | 'danger';
@@ -204,12 +205,51 @@ function TeachingPreferencesSection() {
     const [gradeDisplay, setGradeDisplay] = useState<'percentage' | 'letter' | 'points'>('percentage');
     const [defaultDueTime, setDefaultDueTime] = useState('23:59');
     const [autoPublish, setAutoPublish] = useState(false);
-    const [saved, setSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const settings = await getUserSettings();
+                const teaching = settings.teaching_preferences;
+                if (teaching) {
+                    setGradeDisplay(teaching.grade_display ?? 'percentage');
+                    setDefaultDueTime(teaching.default_due_time ?? '23:59');
+                    setAutoPublish(Boolean(teaching.auto_publish_quiz_results));
+                }
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load teaching preferences.' });
+            }
+        };
+
+        void loadSettings();
+    }, []);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setMsg(null);
+        try {
+            await updateUserSettings({
+                teaching_preferences: {
+                    grade_display: gradeDisplay,
+                    default_due_time: defaultDueTime,
+                    auto_publish_quiz_results: autoPublish,
+                }
+            });
+            setMsg({ type: 'success', text: 'Teaching preferences saved.' });
+        } catch (err: unknown) {
+            const e = err as Error;
+            setMsg({ type: 'error', text: e.message || 'Failed to save teaching preferences.' });
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <SectionCard title="Teaching Preferences" subtitle="Defaults for your classes and grading">
+            {msg && <Alert type={msg.type} message={msg.text} />}
             <div className="space-y-5">
                 <div>
                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5"><ClipboardList className="w-3.5 h-3.5" /> Grade Display Format</label>
@@ -235,9 +275,9 @@ function TeachingPreferencesSection() {
                     </button>
                 </div>
             </div>
-            <button onClick={handleSave} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                {saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                {saved ? 'Saved!' : 'Save Preferences'}
+            <button onClick={() => { void handleSave(); }} disabled={saving} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Preferences
             </button>
         </SectionCard>
     );
@@ -245,28 +285,84 @@ function TeachingPreferencesSection() {
 
 function NotificationsSection() {
     const [prefs, setPrefs] = useState({ newSubmission: true, lateSubmission: true, attendanceReminder: true, quizCompleted: false, systemUpdates: true });
+    const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const settings = await getUserSettings();
+                const incoming = settings.notifications;
+                if (incoming) {
+                    setPrefs(prev => ({
+                        ...prev,
+                        newSubmission: incoming.newSubmission ?? prev.newSubmission,
+                        lateSubmission: incoming.lateSubmission ?? prev.lateSubmission,
+                        attendanceReminder: incoming.attendanceReminder ?? prev.attendanceReminder,
+                        quizCompleted: incoming.quizCompleted ?? prev.quizCompleted,
+                        systemUpdates: incoming.systemUpdates ?? prev.systemUpdates,
+                    }));
+                }
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load notification settings.' });
+            }
+        };
+
+        void loadSettings();
+    }, []);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setMsg(null);
+        try {
+            await updateUserSettings({ notifications: prefs });
+            setMsg({ type: 'success', text: 'Notification settings saved.' });
+        } catch (err: unknown) {
+            const e = err as Error;
+            setMsg({ type: 'error', text: e.message || 'Failed to save notification settings.' });
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const set = (k: keyof typeof prefs) => (v: boolean) => setPrefs(p => ({ ...p, [k]: v }));
     return (
         <SectionCard title="Notifications" subtitle="Control which events notify you">
+            {msg && <Alert type={msg.type} message={msg.text} />}
             <Toggle enabled={prefs.newSubmission} onChange={set('newSubmission')} label="New Submission" description="When a student submits an assignment" />
             <Toggle enabled={prefs.lateSubmission} onChange={set('lateSubmission')} label="Late Submission" description="When a student submits after the deadline" />
             <Toggle enabled={prefs.attendanceReminder} onChange={set('attendanceReminder')} label="Attendance Reminder" description="Daily reminder to mark attendance" />
             <Toggle enabled={prefs.quizCompleted} onChange={set('quizCompleted')} label="Quiz Completed" description="When all students have completed a quiz" />
             <Toggle enabled={prefs.systemUpdates} onChange={set('systemUpdates')} label="System Updates" description="Platform announcements and maintenance" />
+            <button onClick={() => { void handleSave(); }} disabled={saving} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Preferences
+            </button>
         </SectionCard>
     );
 }
 
 function AppearanceSection() {
     const { isDark, setDarkMode } = useTheme();
+
+    const persistTheme = async (darkMode: boolean) => {
+        setDarkMode(darkMode);
+        try {
+            await updateUserSettings({ appearance: { theme: darkMode ? 'dark' : 'light' } });
+        } catch {
+            // Ignore persistence failures because local theme switch already succeeded.
+        }
+    };
+
     return (
         <SectionCard title="Appearance" subtitle="Customize the platform look">
             <div className="flex gap-4">
-                <button onClick={() => setDarkMode(false)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                <button onClick={() => { void persistTheme(false); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
                     <Sun className={`w-6 h-6 ${!isDark ? 'text-blue-600' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${!isDark ? 'text-blue-700' : 'text-gray-500'}`}>Light</span>
                 </button>
-                <button onClick={() => setDarkMode(true)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                <button onClick={() => { void persistTheme(true); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
                     <Moon className={`w-6 h-6 ${isDark ? 'text-blue-400' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${isDark ? 'text-blue-400' : 'text-gray-500'}`}>Dark</span>
                 </button>

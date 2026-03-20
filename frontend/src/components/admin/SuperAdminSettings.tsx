@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     User,
     Lock,
@@ -20,6 +20,7 @@ import {
     ToggleLeft,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { getUserSettings, updateUserSettings } from '../../lib/settings';
 import { useTheme } from '../../contexts/ThemeContext';
 
 type SectionId = 'profile' | 'security' | 'platform' | 'institutions' | 'notifications' | 'appearance' | 'danger';
@@ -194,11 +195,59 @@ function PlatformConfigSection() {
     const [maxInstitutions, setMaxInstitutions] = useState('100');
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [registrationOpen, setRegistrationOpen] = useState(true);
-    const [saved, setSaved] = useState(false);
-    const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+    const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const settings = await getUserSettings();
+                const incoming = settings.platform_config;
+                if (incoming) {
+                    setPlatformName(incoming.platform_name ?? 'Gyana Learning');
+                    setMaxInstitutions(String(incoming.max_institutions ?? 100));
+                    setMaintenanceMode(Boolean(incoming.maintenance_mode));
+                    setRegistrationOpen(incoming.registration_open ?? true);
+                }
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load platform configuration.' });
+            }
+        };
+
+        void loadSettings();
+    }, []);
+
+    const handleSave = async () => {
+        const max = Number(maxInstitutions);
+        if (!Number.isFinite(max) || max < 1) {
+            setMsg({ type: 'error', text: 'Max institutions must be a positive number.' });
+            return;
+        }
+
+        setSaving(true);
+        setMsg(null);
+        try {
+            await updateUserSettings({
+                platform_config: {
+                    platform_name: platformName.trim() || 'Gyana Learning',
+                    max_institutions: max,
+                    maintenance_mode: maintenanceMode,
+                    registration_open: registrationOpen,
+                }
+            });
+            setMsg({ type: 'success', text: 'Platform configuration saved.' });
+        } catch (err: unknown) {
+            const e = err as Error;
+            setMsg({ type: 'error', text: e.message || 'Failed to save platform configuration.' });
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <SectionCard title="Platform Configuration" subtitle="Global platform settings">
+            {msg && <Alert type={msg.type} message={msg.text} />}
             <div className="space-y-5">
                 <div>
                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5"><Server className="w-3.5 h-3.5" /> Platform Name</label>
@@ -230,22 +279,48 @@ function PlatformConfigSection() {
                     </div>
                 )}
             </div>
-            <button onClick={handleSave} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                {saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                {saved ? 'Saved!' : 'Save Configuration'}
+            <button onClick={() => { void handleSave(); }} disabled={saving} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Configuration
             </button>
         </SectionCard>
     );
 }
 
 function InstitutionMgmtSection() {
-    const stats = [
+    const [stats, setStats] = useState([
         { label: 'Total Institutions', value: '—', icon: Building2 },
         { label: 'Active Institutions', value: '—', icon: CheckCircle },
         { label: 'API Version', value: 'v1.0', icon: Server },
-    ];
+    ]);
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const loadSummary = async () => {
+            try {
+                const response = await api.get('/auth/institution-summary') as {
+                    total_institutions: number;
+                    active_institutions: number;
+                    api_version: string;
+                };
+
+                setStats([
+                    { label: 'Total Institutions', value: String(response.total_institutions), icon: Building2 },
+                    { label: 'Active Institutions', value: String(response.active_institutions), icon: CheckCircle },
+                    { label: 'API Version', value: response.api_version || 'v1.0', icon: Server },
+                ]);
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load institution summary.' });
+            }
+        };
+
+        void loadSummary();
+    }, []);
+
     return (
         <SectionCard title="Institution Management" subtitle="Platform-wide institution overview">
+            {msg && <Alert type={msg.type} message={msg.text} />}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                 {stats.map(({ label, value, icon: Icon }) => (
                     <div key={label} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
@@ -265,27 +340,82 @@ function InstitutionMgmtSection() {
 
 function NotificationsSection() {
     const [prefs, setPrefs] = useState({ newInstitution: true, adminAlerts: true, apiErrors: true, usageReports: false });
+    const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const settings = await getUserSettings();
+                const incoming = settings.notifications;
+                if (incoming) {
+                    setPrefs(prev => ({
+                        ...prev,
+                        newInstitution: incoming.newInstitution ?? prev.newInstitution,
+                        adminAlerts: incoming.adminAlerts ?? prev.adminAlerts,
+                        apiErrors: incoming.apiErrors ?? prev.apiErrors,
+                        usageReports: incoming.usageReports ?? prev.usageReports,
+                    }));
+                }
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load notification settings.' });
+            }
+        };
+
+        void loadSettings();
+    }, []);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setMsg(null);
+        try {
+            await updateUserSettings({ notifications: prefs });
+            setMsg({ type: 'success', text: 'Notification settings saved.' });
+        } catch (err: unknown) {
+            const e = err as Error;
+            setMsg({ type: 'error', text: e.message || 'Failed to save notification settings.' });
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const set = (k: keyof typeof prefs) => (v: boolean) => setPrefs(p => ({ ...p, [k]: v }));
     return (
         <SectionCard title="Notifications" subtitle="System-level notification preferences">
+            {msg && <Alert type={msg.type} message={msg.text} />}
             <Toggle enabled={prefs.newInstitution} onChange={set('newInstitution')} label="New Institution Registered" description="When a new institution joins the platform" />
             <Toggle enabled={prefs.adminAlerts} onChange={set('adminAlerts')} label="Admin Account Alerts" description="Admin account creation and removal events" />
             <Toggle enabled={prefs.apiErrors} onChange={set('apiErrors')} label="Critical API Errors" description="Platform-wide API failures and alerts" />
             <Toggle enabled={prefs.usageReports} onChange={set('usageReports')} label="Weekly Usage Reports" description="Platform usage statistics delivered weekly" />
+            <button onClick={() => { void handleSave(); }} disabled={saving} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Preferences
+            </button>
         </SectionCard>
     );
 }
 
 function AppearanceSection() {
     const { isDark, setDarkMode } = useTheme();
+
+    const persistTheme = async (darkMode: boolean) => {
+        setDarkMode(darkMode);
+        try {
+            await updateUserSettings({ appearance: { theme: darkMode ? 'dark' : 'light' } });
+        } catch {
+            // Ignore persistence errors because local theme switch already succeeded.
+        }
+    };
+
     return (
         <SectionCard title="Appearance" subtitle="Customize your view">
             <div className="flex gap-4">
-                <button onClick={() => setDarkMode(false)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                <button onClick={() => { void persistTheme(false); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
                     <Sun className={`w-6 h-6 ${!isDark ? 'text-rose-600' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${!isDark ? 'text-rose-700' : 'text-gray-500'}`}>Light</span>
                 </button>
-                <button onClick={() => setDarkMode(true)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                <button onClick={() => { void persistTheme(true); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
                     <Moon className={`w-6 h-6 ${isDark ? 'text-rose-400' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${isDark ? 'text-rose-400' : 'text-gray-500'}`}>Dark</span>
                 </button>

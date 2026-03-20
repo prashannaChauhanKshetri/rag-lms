@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     User,
     Lock,
@@ -19,6 +19,7 @@ import {
     Info,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { getUserSettings, updateUserSettings } from '../../lib/settings';
 import { useTheme } from '../../contexts/ThemeContext';
 
 type SectionId = 'profile' | 'security' | 'institution' | 'userdefaults' | 'notifications' | 'appearance' | 'danger';
@@ -217,10 +218,57 @@ function UserDefaultsSection() {
     const [maxEnrollment, setMaxEnrollment] = useState('60');
     const [defaultRole, setDefaultRole] = useState<'student' | 'instructor'>('student');
     const [autoApprove, setAutoApprove] = useState(true);
-    const [saved, setSaved] = useState(false);
-    const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+    const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const settings = await getUserSettings();
+                const incoming = settings.admin_user_defaults;
+                if (incoming) {
+                    setDefaultRole(incoming.default_role ?? 'student');
+                    setMaxEnrollment(String(incoming.max_enrollment ?? 60));
+                    setAutoApprove(Boolean(incoming.auto_approve_enrollments));
+                }
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load user defaults.' });
+            }
+        };
+
+        void loadSettings();
+    }, []);
+
+    const handleSave = async () => {
+        const max = Number(maxEnrollment);
+        if (!Number.isFinite(max) || max < 1 || max > 200) {
+            setMsg({ type: 'error', text: 'Max enrollment must be between 1 and 200.' });
+            return;
+        }
+
+        setSaving(true);
+        setMsg(null);
+        try {
+            await updateUserSettings({
+                admin_user_defaults: {
+                    default_role: defaultRole,
+                    max_enrollment: max,
+                    auto_approve_enrollments: autoApprove,
+                }
+            });
+            setMsg({ type: 'success', text: 'User defaults saved.' });
+        } catch (err: unknown) {
+            const e = err as Error;
+            setMsg({ type: 'error', text: e.message || 'Failed to save user defaults.' });
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <SectionCard title="User Defaults" subtitle="Default settings applied to new users">
+            {msg && <Alert type={msg.type} message={msg.text} />}
             <div className="space-y-5">
                 <div>
                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Default Role for New Signups</label>
@@ -244,9 +292,9 @@ function UserDefaultsSection() {
                     </button>
                 </div>
             </div>
-            <button onClick={handleSave} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                {saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                {saved ? 'Saved!' : 'Save Defaults'}
+            <button onClick={() => { void handleSave(); }} disabled={saving} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Defaults
             </button>
         </SectionCard>
     );
@@ -254,27 +302,82 @@ function UserDefaultsSection() {
 
 function NotificationsSection() {
     const [prefs, setPrefs] = useState({ newTeacher: true, newStudent: true, courseCreated: false, systemAlerts: true });
+    const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const settings = await getUserSettings();
+                const incoming = settings.notifications;
+                if (incoming) {
+                    setPrefs(prev => ({
+                        ...prev,
+                        newTeacher: incoming.newTeacher ?? prev.newTeacher,
+                        newStudent: incoming.newStudent ?? prev.newStudent,
+                        courseCreated: incoming.courseCreated ?? prev.courseCreated,
+                        systemAlerts: incoming.systemAlerts ?? prev.systemAlerts,
+                    }));
+                }
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load notification settings.' });
+            }
+        };
+
+        void loadSettings();
+    }, []);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setMsg(null);
+        try {
+            await updateUserSettings({ notifications: prefs });
+            setMsg({ type: 'success', text: 'Notification settings saved.' });
+        } catch (err: unknown) {
+            const e = err as Error;
+            setMsg({ type: 'error', text: e.message || 'Failed to save notification settings.' });
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const set = (k: keyof typeof prefs) => (v: boolean) => setPrefs(p => ({ ...p, [k]: v }));
     return (
         <SectionCard title="Notifications" subtitle="Admin-level notification preferences">
+            {msg && <Alert type={msg.type} message={msg.text} />}
             <Toggle enabled={prefs.newTeacher} onChange={set('newTeacher')} label="New Teacher Joined" description="When a new instructor registers" />
             <Toggle enabled={prefs.newStudent} onChange={set('newStudent')} label="New Student Enrolled" description="When a new student joins" />
             <Toggle enabled={prefs.courseCreated} onChange={set('courseCreated')} label="Course Created" description="When an instructor creates a new course" />
             <Toggle enabled={prefs.systemAlerts} onChange={set('systemAlerts')} label="System Alerts" description="Critical platform alerts and warnings" />
+            <button onClick={() => { void handleSave(); }} disabled={saving} className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Preferences
+            </button>
         </SectionCard>
     );
 }
 
 function AppearanceSection() {
     const { isDark, setDarkMode } = useTheme();
+
+    const persistTheme = async (darkMode: boolean) => {
+        setDarkMode(darkMode);
+        try {
+            await updateUserSettings({ appearance: { theme: darkMode ? 'dark' : 'light' } });
+        } catch {
+            // Ignore persistence errors because local theme has already changed.
+        }
+    };
+
     return (
         <SectionCard title="Appearance" subtitle="Customize the platform look">
             <div className="flex gap-4">
-                <button onClick={() => setDarkMode(false)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                <button onClick={() => { void persistTheme(false); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
                     <Sun className={`w-6 h-6 ${!isDark ? 'text-purple-600' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${!isDark ? 'text-purple-700' : 'text-gray-500'}`}>Light</span>
                 </button>
-                <button onClick={() => setDarkMode(true)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
+                <button onClick={() => { void persistTheme(true); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
                     <Moon className={`w-6 h-6 ${isDark ? 'text-purple-400' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${isDark ? 'text-purple-400' : 'text-gray-500'}`}>Dark</span>
                 </button>
