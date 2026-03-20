@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     User,
     Lock,
@@ -15,10 +15,24 @@ import {
     EyeOff,
     Sun,
     Moon,
-    Download,
-    Activity,
+    FileSpreadsheet,
+    BookOpen,
+    ClipboardList,
+    CalendarCheck,
+    TrendingUp,
 } from 'lucide-react';
+import {
+    PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
+    BarChart, Bar, XAxis, YAxis, CartesianGrid,
+} from 'recharts';
 import { api } from '../../lib/api';
+import {
+    getExportData,
+    exportMyDataAsCSV,
+    getUserSettings,
+    updateUserSettings,
+    type ExportData,
+} from '../../lib/settings';
 import { useTheme } from '../../contexts/ThemeContext';
 
 type SectionId = 'profile' | 'security' | 'notifications' | 'appearance' | 'privacy' | 'danger';
@@ -248,29 +262,93 @@ function NotificationsSection() {
         attendanceAlerts: false,
         systemUpdates: true,
     });
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            setLoading(true);
+            try {
+                const settings = await getUserSettings();
+                const incoming = settings.notifications;
+                if (incoming) {
+                    setPrefs(prev => ({
+                        ...prev,
+                        assignments: incoming.assignments ?? prev.assignments,
+                        quizAlerts: incoming.quizAlerts ?? prev.quizAlerts,
+                        gradePublished: incoming.gradePublished ?? prev.gradePublished,
+                        attendanceAlerts: incoming.attendanceAlerts ?? prev.attendanceAlerts,
+                        systemUpdates: incoming.systemUpdates ?? prev.systemUpdates,
+                    }));
+                }
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load notification preferences.' });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        void loadSettings();
+    }, []);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setMsg(null);
+        try {
+            await updateUserSettings({ notifications: prefs });
+            setMsg({ type: 'success', text: 'Notification preferences saved.' });
+        } catch (err: unknown) {
+            const e = err as Error;
+            setMsg({ type: 'error', text: e.message || 'Failed to save notification preferences.' });
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const set = (key: keyof typeof prefs) => (v: boolean) => setPrefs(p => ({ ...p, [key]: v }));
+
     return (
         <SectionCard title="Notifications" subtitle="Choose what you want to be notified about">
+            {msg && <Alert type={msg.type} message={msg.text} />}
             <Toggle enabled={prefs.assignments} onChange={set('assignments')} label="Assignment Reminders" description="Get notified before assignment deadlines" />
             <Toggle enabled={prefs.quizAlerts} onChange={set('quizAlerts')} label="Quiz Alerts" description="Notifications for upcoming quizzes" />
             <Toggle enabled={prefs.gradePublished} onChange={set('gradePublished')} label="Grades Published" description="Notify when an instructor posts your grade" />
             <Toggle enabled={prefs.attendanceAlerts} onChange={set('attendanceAlerts')} label="Attendance Alerts" description="Warnings when attendance drops below threshold" />
             <Toggle enabled={prefs.systemUpdates} onChange={set('systemUpdates')} label="System Updates" description="Platform maintenance and announcements" />
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-4">Notification preferences are saved locally for this session.</p>
+            <button
+                onClick={handleSave}
+                disabled={saving || loading}
+                className="mt-5 flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-60"
+            >
+                {saving || loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Preferences
+            </button>
         </SectionCard>
     );
 }
 
 function AppearanceSection() {
     const { isDark, setDarkMode } = useTheme();
+
+    const persistTheme = async (isDarkMode: boolean) => {
+        setDarkMode(isDarkMode);
+        try {
+            await updateUserSettings({ appearance: { theme: isDarkMode ? 'dark' : 'light' } });
+        } catch {
+            // Theme has already been applied locally; ignore persistence failures.
+        }
+    };
+
     return (
         <SectionCard title="Appearance" subtitle="Customize how the platform looks">
             <div className="flex gap-4">
-                <button onClick={() => setDarkMode(false)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
+                <button onClick={() => { void persistTheme(false); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
                     <Sun className={`w-6 h-6 ${!isDark ? 'text-green-600' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${!isDark ? 'text-green-700' : 'text-gray-500'}`}>Light</span>
                 </button>
-                <button onClick={() => setDarkMode(true)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
+                <button onClick={() => { void persistTheme(true); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
                     <Moon className={`w-6 h-6 ${isDark ? 'text-green-500' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${isDark ? 'text-green-400' : 'text-gray-500'}`}>Dark</span>
                 </button>
@@ -279,31 +357,327 @@ function AppearanceSection() {
     );
 }
 
-function PrivacySection() {
+type DataTab = 'quiz' | 'assignments' | 'attendance';
+
+const DONUT_COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6'];
+
+function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: string | number; color: string }) {
     return (
-        <SectionCard title="Privacy & Data" subtitle="Manage your data and privacy preferences">
-            <div className="space-y-3">
-                <button className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-                    <div className="flex items-center gap-3">
-                        <Download className="w-5 h-5 text-gray-500 group-hover:text-green-600" />
-                        <div className="text-left">
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Download My Data</p>
-                            <p className="text-xs text-gray-500">Export your profile, submissions, and grades</p>
-                        </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                </button>
-                <button className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-                    <div className="flex items-center gap-3">
-                        <Activity className="w-5 h-5 text-gray-500 group-hover:text-green-600" />
-                        <div className="text-left">
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Activity Log</p>
-                            <p className="text-xs text-gray-500">View your recent activity and login history</p>
-                        </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                </button>
+        <div className={`rounded-2xl p-4 border ${color} flex items-center gap-3`}>
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/60 dark:bg-black/20 flex items-center justify-center">
+                <Icon className="w-5 h-5" />
             </div>
+            <div>
+                <p className="text-xs font-medium opacity-70">{label}</p>
+                <p className="text-xl font-bold">{value}</p>
+            </div>
+        </div>
+    );
+}
+
+function PrivacySection() {
+    const [loadingPreview, setLoadingPreview] = useState(true);
+    const [loadingCSV, setLoadingCSV] = useState(false);
+    const [exportData, setExportData] = useState<ExportData | null>(null);
+    const [activeTab, setActiveTab] = useState<DataTab>('quiz');
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const load = async () => {
+            setLoadingPreview(true);
+            try {
+                const data = await getExportData();
+                setExportData(data);
+            } catch (err: unknown) {
+                const e = err as Error;
+                setMsg({ type: 'error', text: e.message || 'Failed to load data preview.' });
+            } finally {
+                setLoadingPreview(false);
+            }
+        };
+        void load();
+    }, []);
+
+    const handleCSVDownload = async () => {
+        setLoadingCSV(true);
+        setMsg(null);
+        try {
+            await exportMyDataAsCSV();
+            setMsg({ type: 'success', text: 'CSV export downloaded successfully.' });
+        } catch (err: unknown) {
+            const e = err as Error;
+            setMsg({ type: 'error', text: e.message || 'Failed to export data.' });
+        } finally {
+            setLoadingCSV(false);
+        }
+    };
+
+    const summary = exportData?.academics.summary;
+    const breakdown = exportData?.academics.attendance.by_status;
+
+    const donutData = breakdown ? [
+        { name: 'Present', value: breakdown.present },
+        { name: 'Absent', value: breakdown.absent },
+        { name: 'Late', value: breakdown.late },
+        { name: 'Excused', value: breakdown.excused },
+    ].filter(d => d.value > 0) : [];
+
+    const averagesData = summary ? [
+        { label: 'Quiz Avg', value: summary.quiz_average_score ?? 0 },
+        { label: 'Assignment Avg', value: summary.assignment_average_score ?? 0 },
+    ] : [];
+
+    const statusBadge = (status: string) => {
+        const map: Record<string, string> = {
+            present: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400',
+            absent: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400',
+            late: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400',
+            excused: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400',
+        };
+        return (
+            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${map[status] ?? 'bg-gray-100 text-gray-600'}`}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
+        );
+    };
+
+    return (
+        <SectionCard title="Privacy & Data" subtitle="Preview your academic data and download a copy">
+            {msg && <Alert type={msg.type} message={msg.text} />}
+
+            {/* Loading skeleton */}
+            {loadingPreview && (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-green-500" />
+                    <p className="text-sm text-gray-500">Loading your data preview…</p>
+                </div>
+            )}
+
+            {!loadingPreview && exportData && (
+                <>
+                    {/* ── Stat Cards ── */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                        <StatCard
+                            icon={BookOpen}
+                            label="Quiz Attempts"
+                            value={summary?.quiz_attempts ?? 0}
+                            color="border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300"
+                        />
+                        <StatCard
+                            icon={ClipboardList}
+                            label="Assignments"
+                            value={summary?.assignment_submissions ?? 0}
+                            color="border-indigo-200 bg-indigo-50 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300"
+                        />
+                        <StatCard
+                            icon={CalendarCheck}
+                            label="Attendance Records"
+                            value={summary?.attendance_records ?? 0}
+                            color="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
+                        />
+                        <StatCard
+                            icon={TrendingUp}
+                            label="Attendance Rate"
+                            value={summary?.attendance_rate_percent != null ? `${summary.attendance_rate_percent}%` : 'N/A'}
+                            color="border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                        />
+                    </div>
+
+                    {/* ── Charts Row ── */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        {/* Attendance Donut */}
+                        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
+                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Attendance Breakdown</p>
+                            {donutData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={180}>
+                                    <PieChart>
+                                        <Pie
+                                            data={donutData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={48}
+                                            outerRadius={72}
+                                            paddingAngle={3}
+                                            dataKey="value"
+                                        >
+                                            {donutData.map((_, index) => (
+                                                <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip formatter={(value: unknown) => [value as number, 'Sessions']} />
+                                        <Legend
+                                            iconType="circle"
+                                            iconSize={8}
+                                            formatter={(value) => <span className="text-xs text-gray-600 dark:text-gray-400">{value}</span>}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-[180px] flex items-center justify-center">
+                                    <p className="text-sm text-gray-400">No attendance data</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Score Averages Bar Chart */}
+                        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
+                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Score Averages</p>
+                            {(summary?.quiz_average_score != null || summary?.assignment_average_score != null) ? (
+                                <ResponsiveContainer width="100%" height={180}>
+                                    <BarChart data={averagesData} barSize={40}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                                        <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                                        <Tooltip formatter={(value: unknown) => [`${value as number}`, 'Avg Score']} />
+                                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                                            {averagesData.map((_, index) => (
+                                                <Cell key={`bar-${index}`} fill={index === 0 ? '#22c55e' : '#6366f1'} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-[180px] flex items-center justify-center">
+                                    <p className="text-sm text-gray-400">No graded scores yet</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ── Tabs ── */}
+                    <div className="mb-2">
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Detailed Records</p>
+                        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                            {(['quiz', 'assignments', 'attendance'] as DataTab[]).map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                        activeTab === tab
+                                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                                            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                    }`}
+                                >
+                                    {tab === 'quiz' ? 'Quiz Results' : tab === 'assignments' ? 'Assignments' : 'Attendance'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+                        {activeTab === 'quiz' && (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 dark:bg-gray-800 text-left">
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 w-10">#</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Quiz ID</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Score</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Submitted At</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                    {exportData.academics.quiz_results.records.length === 0 ? (
+                                        <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">No quiz attempts yet</td></tr>
+                                    ) : exportData.academics.quiz_results.records.map((r, i) => (
+                                        <tr key={r.id} className={i % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'}>
+                                            <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
+                                            <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300 font-mono text-xs">{r.quiz_id.slice(0, 12)}…</td>
+                                            <td className="px-4 py-2.5">
+                                                {r.score != null ? (
+                                                    <span className={`font-semibold ${
+                                                        r.score >= 80 ? 'text-green-600 dark:text-green-400' :
+                                                        r.score >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
+                                                    }`}>{r.score}</span>
+                                                ) : <span className="text-gray-400">—</span>}
+                                            </td>
+                                            <td className="px-4 py-2.5 text-gray-500 text-xs">{new Date(r.submitted_at).toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+
+                        {activeTab === 'assignments' && (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 dark:bg-gray-800 text-left">
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 w-10">#</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Assignment ID</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Score</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Feedback</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Submitted At</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                    {exportData.academics.assignment_results.records.length === 0 ? (
+                                        <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">No assignment submissions yet</td></tr>
+                                    ) : exportData.academics.assignment_results.records.map((r, i) => (
+                                        <tr key={r.id} className={i % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'}>
+                                            <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
+                                            <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300 font-mono text-xs">{r.assignment_id.slice(0, 12)}…</td>
+                                            <td className="px-4 py-2.5">
+                                                {r.score != null ? (
+                                                    <span className={`font-semibold ${
+                                                        r.score >= 80 ? 'text-green-600 dark:text-green-400' :
+                                                        r.score >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
+                                                    }`}>{r.score}</span>
+                                                ) : <span className="text-gray-400">—</span>}
+                                            </td>
+                                            <td className="px-4 py-2.5 text-gray-500 text-xs max-w-[160px] truncate">{r.feedback ?? '—'}</td>
+                                            <td className="px-4 py-2.5 text-gray-500 text-xs">{new Date(r.submitted_at).toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+
+                        {activeTab === 'attendance' && (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 dark:bg-gray-800 text-left">
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 w-10">#</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Section ID</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Date</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Status</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                    {exportData.academics.attendance.records.length === 0 ? (
+                                        <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">No attendance records found</td></tr>
+                                    ) : exportData.academics.attendance.records.map((r, i) => (
+                                        <tr key={r.id} className={i % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'}>
+                                            <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
+                                            <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300 font-mono text-xs">{r.section_id.slice(0, 12)}…</td>
+                                            <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300 text-xs">{r.date}</td>
+                                            <td className="px-4 py-2.5">{statusBadge(r.status)}</td>
+                                            <td className="px-4 py-2.5 text-gray-500 text-xs">{r.notes ?? '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+
+                    {/* ── Download Button ── */}
+                    <button
+                        onClick={() => { void handleCSVDownload(); }}
+                        disabled={loadingCSV}
+                        className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold text-sm shadow-md shadow-green-500/20 hover:shadow-green-500/30 transition-all disabled:opacity-60 group"
+                    >
+                        {loadingCSV ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <FileSpreadsheet className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        )}
+                        {loadingCSV ? 'Generating CSV…' : 'Download My Data as CSV'}
+                        {!loadingCSV && (
+                            <span className="text-xs font-normal opacity-80 ml-1">(Profile · Quizzes · Assignments · Attendance)</span>
+                        )}
+                    </button>
+                </>
+            )}
         </SectionCard>
     );
 }
