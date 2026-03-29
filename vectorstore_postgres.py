@@ -70,38 +70,53 @@ def add_documents(chatbot_id: str, embeddings: np.ndarray, metadatas: List[Dict]
         raise ValueError(f"Embeddings count ({len(embeddings)}) must match metadata count ({len(metadatas)})")
     
     n = embeddings.shape[0]
+
+    # Build all rows first, then batch-insert in one round-trip
+    rows = []
+    for i in range(n):
+        metadata = metadatas[i]
+        text = metadata.get('text', '')
+        original_text = metadata.get('original_text', text)
+        source = metadata.get('source', '')
+        page = metadata.get('page')
+        heading = metadata.get('heading', '')
+        is_feedback = metadata.get('is_feedback', False)
+        extra_metadata = {k: v for k, v in metadata.items()
+                          if k not in ['text', 'original_text', 'source', 'page', 'heading', 'is_feedback']}
+        rows.append((
+            chatbot_id, text, original_text, embeddings[i].tolist(),
+            source, page, heading, is_feedback,
+            psycopg2.extras.Json(extra_metadata)
+        ))
+
     added_count = 0
-    
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            for i in range(n):
-                embedding_list = embeddings[i].tolist()
-                metadata = metadatas[i]
-                
-                # Extract fields from metadata
-                text = metadata.get('text', '')
-                original_text = metadata.get('original_text', text)
-                source = metadata.get('source', '')
-                page = metadata.get('page')
-                heading = metadata.get('heading', '')
-                is_feedback = metadata.get('is_feedback', False)
-                
-                # Store additional metadata as JSONB
-                extra_metadata = {k: v for k, v in metadata.items() 
-                                if k not in ['text', 'original_text', 'source', 'page', 'heading', 'is_feedback']}
-                
-                try:
-                    cur.execute(
-                        """INSERT INTO document_chunks 
-                           (chatbot_id, text, original_text, embedding, source, page, heading, is_feedback, metadata)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                        (chatbot_id, text, original_text, embedding_list, source, page, 
-                         heading, is_feedback, psycopg2.extras.Json(extra_metadata))
-                    )
-                    added_count += 1
-                except Exception as e:
-                    logger.error(f"Error inserting chunk {i}: {e}")
-                    # Continue with other chunks
+            try:
+                psycopg2.extras.execute_values(
+                    cur,
+                    """INSERT INTO document_chunks
+                       (chatbot_id, text, original_text, embedding, source, page, heading, is_feedback, metadata)
+                       VALUES %s""",
+                    rows,
+                    page_size=100
+                )
+                added_count = n
+            except Exception as e:
+                logger.error(f"Batch insert failed: {e}")
+                conn.rollback()  # clear aborted transaction before fallback
+                # Row-by-row fallback so partial failures don't lose everything
+                for idx, row in enumerate(rows):
+                    try:
+                        cur.execute(
+                            """INSERT INTO document_chunks
+                               (chatbot_id, text, original_text, embedding, source, page, heading, is_feedback, metadata)
+                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                            row
+                        )
+                        added_count += 1
+                    except Exception as e2:
+                        logger.error(f"Error inserting chunk {idx}: {e2}")
     
     # Get total document count
     with get_db_connection() as conn:
