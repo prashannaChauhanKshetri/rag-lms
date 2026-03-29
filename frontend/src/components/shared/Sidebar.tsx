@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { Menu, X, Settings } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 interface SidebarProps {
     activeTab: string;
@@ -75,12 +75,6 @@ export function Sidebar({ activeTab, onTabChange, tabs }: SidebarProps) {
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-white/10">
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-all">
-                        <Settings className="w-5 h-5" />
-                        <span>Settings</span>
-                    </button>
-                </div>
             </aside>
         </>
     );

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Search, LogOut, Settings, User, Building2 } from 'lucide-react';
+import { Search, LogOut, Settings, User, Building2 } from 'lucide-react';
 import ThemeToggle from '../ThemeToggle';
 import { ProfileModal } from './ProfileModal';
+import { NotificationBell } from './NotificationBell';
 
 interface HeaderProps {
     userName: string;
@@ -13,6 +14,7 @@ interface HeaderProps {
     onLogout?: () => void;
     canEditProfile?: boolean;
     onSettingsClick?: () => void;
+    onNavigate?: (tab: string) => void;
 }
 
 export function Header({
@@ -25,6 +27,7 @@ export function Header({
     onLogout,
     canEditProfile = false,
     onSettingsClick,
+    onNavigate,
 }: HeaderProps) {
     const [showProfile, setShowProfile] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -72,10 +75,7 @@ export function Header({
                     <ThemeToggle />
 
                     {/* Bell */}
-                    <button className="relative p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-colors">
-                        <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
-                    </button>
+                    <NotificationBell userRole={userRole} onNavigate={onNavigate} />
 
                     <div className="h-8 w-[1px] bg-gray-200 dark:bg-gray-700" />
 

@@ -169,6 +169,7 @@ function App() {
               userId={user.id}
               canEditProfile={true}
               onSettingsClick={() => setActiveTab('settings')}
+              onNavigate={handleNavigate}
               onLogout={handleLogout}
             />
 
@@ -241,6 +242,7 @@ function App() {
               userId={user.id}
               canEditProfile={true}
               onSettingsClick={() => setActiveTab('settings')}
+              onNavigate={handleNavigate}
               onLogout={handleLogout}
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
@@ -340,6 +342,7 @@ function App() {
               userId={user.id}
               canEditProfile={true}
               onSettingsClick={() => setActiveTab('settings')}
+              onNavigate={handleNavigate}
               onLogout={handleLogout}
             />
             <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">

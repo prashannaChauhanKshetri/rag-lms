@@ -115,6 +115,15 @@ class ApiClient {
         });
     }
 
+    patch<T>(endpoint: string, body: unknown, options?: RequestOptions) {
+        const isFormData = body instanceof FormData;
+        return this.request<T>(endpoint, {
+            ...options,
+            method: 'PATCH',
+            body: isFormData ? body : JSON.stringify(body),
+        });
+    }
+
     delete<T>(endpoint: string, options?: RequestOptions) {
         return this.request<T>(endpoint, { ...options, method: 'DELETE' });
     }
