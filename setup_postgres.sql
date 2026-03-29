@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS document_chunks (
 -- Vector similarity index (IVFFlat for cosine similarity)
 CREATE INDEX idx_chunks_embedding ON document_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 -- Full-text search index for BM25-style keyword search
-CREATE INDEX idx_chunks_text_search ON document_chunks USING gin (to_tsvector('english', text));
+CREATE INDEX idx_chunks_text_search ON document_chunks USING gin (to_tsvector('simple', text));
 -- Filter indexes
 CREATE INDEX idx_chunks_chatbot ON document_chunks(chatbot_id);
 CREATE INDEX idx_chunks_source ON document_chunks(source);
@@ -509,12 +509,12 @@ CREATE OR REPLACE FUNCTION hybrid_search(
             dc.heading,
             dc.is_feedback,
             ts_rank(
-                to_tsvector('english', dc.text),
-                plainto_tsquery('english', p_query_text)
+                to_tsvector('simple', dc.text),
+                plainto_tsquery('simple', p_query_text)
             ) AS rank
         FROM document_chunks dc
         WHERE dc.chatbot_id = p_chatbot_id
-            AND to_tsvector('english', dc.text) @@ plainto_tsquery('english', p_query_text)
+            AND to_tsvector('simple', dc.text) @@ plainto_tsquery('simple', p_query_text)
         ORDER BY rank DESC
         LIMIT p_limit * 2
     ), combined AS (

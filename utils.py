@@ -16,8 +16,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-utils")
 
 # Constants
-CHUNK_SIZE = 600  # Smaller chunks for better granularity
-CHUNK_OVERLAP = 100  # Moderate overlap for context continuity
+CHUNK_SIZE = 800   # Larger chunks capture full concepts in dense textbooks
+CHUNK_OVERLAP = 150  # Higher overlap preserves cross-boundary context
 
 
 def count_tokens(text: str) -> int:
