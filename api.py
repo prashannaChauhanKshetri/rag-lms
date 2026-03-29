@@ -21,7 +21,7 @@ if missing_vars:
     sys.exit(1)
 
 # Import local routers
-from routes import auth, admin, chatbots, chat, instructor, student, super_admin
+from routes import auth, admin, chatbots, chat, instructor, student, super_admin, notifications
 from models import get_embed_model
 import database_postgres as db
 
@@ -88,6 +88,7 @@ app.include_router(chatbots.router)
 app.include_router(chat.router)
 app.include_router(instructor.router)
 app.include_router(student.router)
+app.include_router(notifications.router)
 
 # --- Root Page Routes ---
 @app.get("/")
