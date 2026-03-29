@@ -516,6 +516,18 @@ async def publish_quiz_submission(submission_id: str, user=Depends(utils_auth.ge
 
     _ensure_instructor_can_access_quiz(user, submission["quiz_id"])
     published = db.publish_quiz_submission_result(submission_id, utils_auth.get_user_id(user))
+
+    try:
+        quiz = db.get_quiz(submission["quiz_id"])
+        quiz_title = quiz["title"] if quiz else "Quiz"
+        db.create_notification(
+            submission["student_id"], "gradePublished",
+            "Quiz Result Available",
+            f'Your result for "{quiz_title}" is now available.'
+        )
+    except Exception:
+        pass
+
     return {"message": "Quiz result published", "submission": published}
 
 @router.post("/quizzes/{quiz_id}/publish-results")
@@ -528,6 +540,21 @@ async def bulk_publish_quiz_results(quiz_id: str, request: QuizPublishResultsReq
         submission_ids=request.submission_ids,
         publisher_id=utils_auth.get_user_id(user)
     )
+
+    try:
+        quiz = db.get_quiz(quiz_id)
+        quiz_title = quiz["title"] if quiz else "Quiz"
+        for sub_id in request.submission_ids:
+            sub = db.get_quiz_submission_by_id(sub_id)
+            if sub and sub.get("student_id"):
+                db.create_notification(
+                    sub["student_id"], "gradePublished",
+                    "Quiz Result Available",
+                    f'Your result for "{quiz_title}" is now available.'
+                )
+    except Exception:
+        pass
+
     return {"message": "Quiz results published", "updated": updated}
 
 @router.post("/flashcards/generate")
@@ -776,6 +803,20 @@ async def list_assignments_endpoint(chatbot_id: str):
 async def publish_assignment_endpoint(assignment_id: str):
     """Publish assignment"""
     db.publish_assignment(assignment_id)
+
+    try:
+        assignment = db.get_assignment(assignment_id)
+        if assignment:
+            enrollments = db.list_enrollments(assignment["section_id"])
+            for enrollment in enrollments:
+                db.create_notification(
+                    enrollment["student_id"], "assignments",
+                    "New Assignment Posted",
+                    f'"{assignment["title"]}" has been published. Due: {str(assignment.get("due_date", ""))[:10]}'
+                )
+    except Exception:
+        pass
+
     return {"message": "Assignment published"}
 
 @router.delete("/assignments/{assignment_id}")

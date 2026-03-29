@@ -203,13 +203,26 @@ async def submit_assignment_endpoint(
     
     # Save to database
     db.submit_assignment(
-        submission_id=submission_id, 
-        assignment_id=assignment_id, 
-        student_id=student_id, 
-        text="", 
+        submission_id=submission_id,
+        assignment_id=assignment_id,
+        student_id=student_id,
+        text="",
         file_path=file_path
     )
-    
+
+    try:
+        assignment = db.get_assignment(assignment_id)
+        if assignment:
+            teachers = db.get_section_teachers(assignment["section_id"])
+            for teacher in teachers:
+                db.create_notification(
+                    teacher["id"], "newSubmission",
+                    "New Assignment Submission",
+                    f'{student_name} submitted "{assignment["title"]}".'
+                )
+    except Exception:
+        pass
+
     return {
         "message": "Assignment submitted successfully",
         "submission_id": submission_id
