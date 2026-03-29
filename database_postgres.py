@@ -2608,6 +2608,203 @@ def update_student_profile(user_id: str, **kwargs) -> bool:
                 return True
     return False
 
+# --- Notifications ---
+
+def create_notification(user_id: str, type: str, title: str, body: str = None) -> str:
+    """Insert a notification for a user. Returns the new notification id."""
+    notif_id = str(uuid.uuid4())
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO notifications (id, user_id, type, title, body)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (notif_id, user_id, type, title, body),
+            )
+    return notif_id
+
+
+def get_notifications(user_id: str, limit: int = 20) -> List[Dict]:
+    """Return the most recent notifications for a user."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT id, user_id, type, title, body, is_read, created_at
+                   FROM notifications
+                   WHERE user_id = %s
+                   ORDER BY created_at DESC
+                   LIMIT %s""",
+                (user_id, limit),
+            )
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_unread_notification_count(user_id: str) -> int:
+    """Return the count of unread notifications for a user."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                "SELECT COUNT(*) AS cnt FROM notifications WHERE user_id = %s AND is_read = FALSE",
+                (user_id,),
+            )
+            row = cur.fetchone()
+    return row["cnt"] if row else 0
+
+
+def mark_notifications_read(user_id: str, notification_ids: List[str] = None) -> int:
+    """Mark all (or specified) notifications as read. Returns number of rows updated."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            if notification_ids:
+                cur.execute(
+                    """UPDATE notifications SET is_read = TRUE
+                       WHERE user_id = %s AND id = ANY(%s::uuid[])""",
+                    (user_id, notification_ids),
+                )
+            else:
+                cur.execute(
+                    "UPDATE notifications SET is_read = TRUE WHERE user_id = %s AND is_read = FALSE",
+                    (user_id,),
+                )
+            return cur.rowcount
+
+
+# --- User Settings ---
+
+def _ensure_user_settings_table():
+    """Create user_settings table if it doesn't exist (auto-migration)."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                    settings JSONB NOT NULL DEFAULT '{}',
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+try:
+    _ensure_user_settings_table()
+except Exception:
+    pass
+
+
+def get_user_settings(user_id: str) -> Dict:
+    """Return the settings dict for a user (empty dict if none saved yet)."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT settings FROM user_settings WHERE user_id = %s", (user_id,))
+            row = cur.fetchone()
+    if not row:
+        return {}
+    s = row["settings"]
+    if isinstance(s, str):
+        try:
+            s = json.loads(s)
+        except Exception:
+            s = {}
+    return s or {}
+
+
+def update_user_settings(user_id: str, patch: Dict) -> Dict:
+    """Deep-merge patch into the user's existing settings and return the result."""
+    current = get_user_settings(user_id)
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(current.get(key), dict):
+            current[key] = {**current[key], **value}
+        else:
+            current[key] = value
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO user_settings (user_id, settings, updated_at)
+                   VALUES (%s, %s::jsonb, CURRENT_TIMESTAMP)
+                   ON CONFLICT (user_id) DO UPDATE
+                   SET settings = %s::jsonb, updated_at = CURRENT_TIMESTAMP""",
+                (user_id, json.dumps(current), json.dumps(current)),
+            )
+    return current
+
+
+def get_student_export_data(user_id: str) -> Dict:
+    """Gather all academic data for a student (for Privacy & Data export)."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            # Profile
+            cur.execute("SELECT id, username, email, full_name, role, institution_id, created_at, updated_at FROM users WHERE id = %s", (user_id,))
+            profile_row = cur.fetchone()
+            profile = dict(profile_row) if profile_row else {}
+            for k in ("created_at", "updated_at"):
+                if profile.get(k):
+                    profile[k] = profile[k].isoformat()
+
+            # Quiz submissions
+            cur.execute("""
+                SELECT id, quiz_id, score, manual_total_score, submitted_at
+                FROM quiz_submissions WHERE student_id = %s ORDER BY submitted_at DESC
+            """, (user_id,))
+            quiz_rows = [dict(r) for r in cur.fetchall()]
+            for r in quiz_rows:
+                if r.get("submitted_at"):
+                    r["submitted_at"] = r["submitted_at"].isoformat()
+
+            # Assignment submissions
+            cur.execute("""
+                SELECT id, assignment_id, score, feedback, submitted_at
+                FROM assignment_submissions WHERE student_id = %s ORDER BY submitted_at DESC
+            """, (user_id,))
+            assign_rows = [dict(r) for r in cur.fetchall()]
+            for r in assign_rows:
+                if r.get("submitted_at"):
+                    r["submitted_at"] = r["submitted_at"].isoformat()
+
+            # Attendance
+            cur.execute("""
+                SELECT id, section_id, date::text as date, status, notes, created_at
+                FROM attendance WHERE student_id = %s ORDER BY date DESC
+            """, (user_id,))
+            attend_rows = [dict(r) for r in cur.fetchall()]
+            for r in attend_rows:
+                if r.get("created_at"):
+                    r["created_at"] = r["created_at"].isoformat()
+
+    # Summaries
+    graded_quizzes = [r for r in quiz_rows if r.get("manual_total_score") is not None or r.get("score") is not None]
+    quiz_avg = round(sum((r.get("manual_total_score") or r.get("score") or 0) for r in graded_quizzes) / len(graded_quizzes), 1) if graded_quizzes else None
+    graded_assigns = [r for r in assign_rows if r.get("score") is not None]
+    assign_avg = round(sum(r["score"] for r in graded_assigns) / len(graded_assigns), 1) if graded_assigns else None
+    by_status = {"present": 0, "absent": 0, "late": 0, "excused": 0}
+    for r in attend_rows:
+        s = r.get("status", "")
+        if s in by_status:
+            by_status[s] += 1
+    total_attend = len(attend_rows)
+    attend_rate = round(by_status["present"] / total_attend * 100, 1) if total_attend else None
+
+    return {
+        "generated_at": datetime.utcnow().isoformat(),
+        "profile": profile,
+        "academics": {
+            "summary": {
+                "quiz_attempts": len(quiz_rows),
+                "graded_quizzes": len(graded_quizzes),
+                "quiz_average_score": quiz_avg,
+                "assignment_submissions": len(assign_rows),
+                "graded_assignments": len(graded_assigns),
+                "assignment_average_score": assign_avg,
+                "attendance_records": total_attend,
+                "attendance_rate_percent": attend_rate,
+            },
+            "quiz_results": {"records": quiz_rows},
+            "assignment_results": {"records": assign_rows},
+            "attendance": {
+                "by_status": by_status,
+                "records": attend_rows,
+            },
+        },
+    }
+
+
 # Initialize on import
 try:
     init_db()
