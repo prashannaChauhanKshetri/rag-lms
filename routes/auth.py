@@ -782,6 +782,62 @@ async def change_password(request: Request, data: ChangePasswordRequest):
         raise HTTPException(status_code=500, detail=f"Failed to change password: {str(e)}")
 
 
+@router.get("/settings")
+async def get_settings(request: Request):
+    """Return the current user's saved settings."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    settings = db.get_user_settings(user_id)
+    return {"settings": settings}
+
+
+@router.put("/settings")
+async def update_settings(request: Request, body: dict = Body(...)):
+    """Merge-update the current user's settings."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    patch = body.get("settings", body)
+    updated = db.update_user_settings(user_id, patch)
+    return {"settings": updated}
+
+
+@router.get("/export-data")
+async def export_data(request: Request):
+    """Return all academic data for the current student (Privacy & Data preview)."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        data = db.get_student_export_data(user_id)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to export data: {e}")
+
+
+@router.get("/activity-log")
+async def activity_log(request: Request, limit: int = 20):
+    """Return recent notification activity as an activity log."""
+    user_data = _get_current_user(request)
+    user_id = user_data.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    notifications = db.get_notifications(user_id, limit=limit)
+    activities = []
+    for n in notifications:
+        created = n.get("created_at")
+        activities.append({
+            "timestamp": created.isoformat() if hasattr(created, "isoformat") else str(created),
+            "event_type": n.get("type", ""),
+            "description": n.get("title", ""),
+        })
+    return {"activities": activities}
+
+
 @router.delete("/account")
 async def delete_account(request: Request, password: str = Body(..., embed=True)):
     """Delete (deactivate) the current user's account after password confirmation"""
