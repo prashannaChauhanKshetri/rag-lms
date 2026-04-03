@@ -80,12 +80,13 @@ def add_documents(chatbot_id: str, embeddings: np.ndarray, metadatas: List[Dict]
         source = metadata.get('source', '')
         page = metadata.get('page')
         heading = metadata.get('heading', '')
+        section_type = metadata.get('section_type', 'content')
         is_feedback = metadata.get('is_feedback', False)
         extra_metadata = {k: v for k, v in metadata.items()
-                          if k not in ['text', 'original_text', 'source', 'page', 'heading', 'is_feedback']}
+                          if k not in ['text', 'original_text', 'source', 'page', 'heading', 'section_type', 'is_feedback']}
         rows.append((
             chatbot_id, text, original_text, embeddings[i].tolist(),
-            source, page, heading, is_feedback,
+            source, page, heading, section_type, is_feedback,
             psycopg2.extras.Json(extra_metadata)
         ))
 
@@ -96,7 +97,7 @@ def add_documents(chatbot_id: str, embeddings: np.ndarray, metadatas: List[Dict]
                 psycopg2.extras.execute_values(
                     cur,
                     """INSERT INTO document_chunks
-                       (chatbot_id, text, original_text, embedding, source, page, heading, is_feedback, metadata)
+                       (chatbot_id, text, original_text, embedding, source, page, heading, section_type, is_feedback, metadata)
                        VALUES %s""",
                     rows,
                     page_size=100
@@ -110,8 +111,8 @@ def add_documents(chatbot_id: str, embeddings: np.ndarray, metadatas: List[Dict]
                     try:
                         cur.execute(
                             """INSERT INTO document_chunks
-                               (chatbot_id, text, original_text, embedding, source, page, heading, is_feedback, metadata)
-                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                               (chatbot_id, text, original_text, embedding, source, page, heading, section_type, is_feedback, metadata)
+                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                             row
                         )
                         added_count += 1
@@ -159,7 +160,7 @@ def query_index(chatbot_id: str, query_embedding: np.ndarray, top_k: int = 5, us
         with get_dict_cursor(conn) as cur:
             # Cosine similarity search using pgvector
             cur.execute(
-                """SELECT id, text, original_text, source, page, heading, is_feedback,
+                """SELECT id, text, original_text, source, page, heading, section_type, is_feedback,
                           1 - (embedding <=> %s) as similarity
                    FROM document_chunks
                    WHERE chatbot_id = %s
@@ -167,34 +168,92 @@ def query_index(chatbot_id: str, query_embedding: np.ndarray, top_k: int = 5, us
                    LIMIT %s""",
                 (query_vector, chatbot_id, query_vector, top_k)
             )
-            
+
             rows = cur.fetchall()
-            
+
             for row in rows:
                 results.append({
                     "id": row['id'],
-                    "score": float(1 - row['similarity']),  # Convert to distance for compatibility
+                    "score": float(1 - row['similarity']),
                     "text": row['text'],
                     "original_text": row['original_text'],
                     "source": row['source'],
                     "page": row['page'],
-                    "heading": row['heading'] or ""
+                    "heading": row['heading'] or "",
+                    "section_type": row.get('section_type', 'content'),
                 })
     
     return results
 
 
+def _rerank_results(query: str, results: List[Dict], top_k: int) -> List[Dict]:
+    """
+    Stage-3 reranking using a multilingual cross-encoder.
+
+    The cross-encoder reads (query, passage) jointly — far more accurate than
+    bi-encoder cosine similarity for deciding relevance.
+    Supports 100+ languages including Nepali.
+
+    Each passage is enriched with chapter + heading + section_type metadata
+    so the cross-encoder can see context (e.g. a trig exercise chunk knows
+    it belongs to 'Trigonometry | Exercise 20.1 | exercise').
+
+    Combines: 50% cross-encoder + 50% hybrid (preserves section/chapter boosts
+    and keyword/vector signals from earlier stages).
+    """
+    from models import get_rerank_model
+    reranker = get_rerank_model()
+
+    # Build (query, enriched_passage) pairs
+    pairs = []
+    for r in results:
+        # Prepend chapter + heading + section_type so the cross-encoder
+        # sees the structural context, not just raw text
+        prefix_parts = []
+        if r.get('chapter'):
+            prefix_parts.append(r['chapter'])
+        if r.get('heading'):
+            prefix_parts.append(r['heading'])
+        sec_type = r.get('section_type', 'content')
+        if sec_type != 'content':
+            prefix_parts.append(sec_type.replace('_', ' '))
+        prefix = " | ".join(prefix_parts)
+        passage = f"{prefix}: {r['text'][:480]}" if prefix else r['text'][:512]
+        pairs.append((query, passage))
+
+    ce_scores = reranker.predict(pairs, batch_size=32)
+
+    # Normalise cross-encoder scores to [0, 1]
+    ce_min, ce_max = float(min(ce_scores)), float(max(ce_scores))
+    ce_range = ce_max - ce_min if ce_max > ce_min else 1.0
+
+    for r, ce_raw in zip(results, ce_scores):
+        ce_norm = (float(ce_raw) - ce_min) / ce_range
+        r['rerank_score'] = float(ce_raw)
+        # Final score: 50% cross-encoder + 50% hybrid (preserves section/chapter boosts)
+        r['hybrid_score'] = 0.5 * ce_norm + 0.5 * r['hybrid_score']
+
+    results.sort(key=lambda r: r['hybrid_score'], reverse=True)
+    return results[:top_k]
+
+
 def hybrid_query(
-    chatbot_id: str, 
-    query: str, 
-    query_embedding: np.ndarray, 
+    chatbot_id: str,
+    query: str,
+    query_embedding: np.ndarray,
     top_k: int = 15,
     bm25_weight: float = 0.3,
-    faiss_weight: float = 0.7
+    faiss_weight: float = 0.7,
+    section_type_filter: str = None,
+    use_reranker: bool = True,
 ) -> List[Dict]:
     """
-    Hybrid query combining PostgreSQL full-text search and pgvector similarity
-    
+    3-stage hybrid retrieval pipeline:
+
+      Stage 1 — BM25 + pgvector hybrid search  (SQL function, fast)
+      Stage 2 — Section-type & chapter boosting (lightweight rule-based)
+      Stage 3 — Cross-encoder reranking         (accurate, ~30 passages/s)
+
     Args:
         chatbot_id: Chatbot identifier
         query: Query text for full-text search
@@ -202,27 +261,31 @@ def hybrid_query(
         top_k: Number of results to return
         bm25_weight: Weight for text search scores (default 0.3)
         faiss_weight: Weight for vector similarity scores (default 0.7)
-    
+        section_type_filter: Optional section type prefix to boost (e.g. "exercise")
+        use_reranker: Whether to apply cross-encoder reranking (default True)
+
     Returns:
         List of documents with hybrid scores
     """
     if query_embedding.ndim == 1:
         query_embedding = query_embedding.reshape(1, -1)
-    
+
     query_vector = query_embedding[0].tolist()
-    
+
+    # Always over-fetch candidates so re-ranking has enough to work with
+    fetch_k = top_k * 3
+
     results = []
-    
+
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
-            # Use the hybrid_search function defined in the database
             cur.execute(
                 """SELECT * FROM hybrid_search(%s, %s, %s::vector, %s, %s::real, %s::real)""",
-                (chatbot_id, query, query_vector, top_k, bm25_weight, faiss_weight)
+                (chatbot_id, query, query_vector, fetch_k, bm25_weight, faiss_weight)
             )
-            
+
             rows = cur.fetchall()
-            
+
             for row in rows:
                 results.append({
                     "id": row['id'],
@@ -231,13 +294,14 @@ def hybrid_query(
                     "source": row['source'],
                     "page": row['page'],
                     "heading": row['heading'] or "",
+                    "section_type": row.get('section_type', 'content'),
                     "is_feedback": row['is_feedback'],
                     "hybrid_score": float(row['hybrid_score']),
                     "bm25_score": float(row['bm25_score']),
                     "faiss_similarity": float(row['vector_similarity']),
                     "retrieval_method": "hybrid"
                 })
-    
+
     # Enrich results with chapter metadata from JSONB column
     if results:
         chunk_ids = [r['id'] for r in results]
@@ -248,12 +312,53 @@ def hybrid_query(
                     (chunk_ids,)
                 )
                 meta_rows = {row['id']: row['metadata'] for row in cur.fetchall()}
-                
+
                 for result in results:
                     meta = meta_rows.get(result['id']) or {}
                     result['chapter'] = meta.get('chapter', '')
-                    result['section_type'] = meta.get('section_type', 'content')
-    
+
+    # ── Stage 2: Section-type & chapter boosting ──
+    if section_type_filter and results:
+        q_lower = query.lower()
+        noise_words = {
+            "exercise", "exercises", "problem", "problems", "question",
+            "questions", "example", "examples", "activity", "activities",
+            "glossary", "program", "programs", "code", "list", "show",
+            "me", "the", "all", "from", "of", "in", "a", "an", "can",
+            "you", "what", "are", "is", "give", "find",
+        }
+        topic_words = [w for w in q_lower.split() if w not in noise_words and len(w) > 2]
+
+        SECTION_BOOST = 0.10
+        CHAPTER_BOOST = 0.15
+
+        for r in results:
+            boost = 0.0
+            sec = r.get('section_type', '')
+            if sec.startswith(section_type_filter):
+                boost += SECTION_BOOST
+            chapter_lower = r.get('chapter', '').lower()
+            heading_lower = r.get('heading', '').lower()
+            text_first_200 = r.get('text', '')[:200].lower()
+            if topic_words and any(
+                tw in chapter_lower or tw in heading_lower or tw in text_first_200
+                for tw in topic_words
+            ):
+                boost += CHAPTER_BOOST
+            r['hybrid_score'] += boost
+
+    # ── Stage 3: Cross-encoder reranking ──
+    if use_reranker and results:
+        try:
+            results = _rerank_results(query, results, top_k)
+        except Exception as e:
+            logger.warning(f"Reranker failed, falling back to hybrid scores: {e}")
+            results.sort(key=lambda r: r['hybrid_score'], reverse=True)
+            results = results[:top_k]
+    else:
+        results.sort(key=lambda r: r['hybrid_score'], reverse=True)
+        results = results[:top_k]
+
     return results
 
 
