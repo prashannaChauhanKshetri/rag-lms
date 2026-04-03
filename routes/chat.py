@@ -22,60 +22,144 @@ class ChatRequest(BaseModel):
 # QUERY CLASSIFICATION
 # =============================================================================
 
+def _detect_section_type_filter(q_lower: str) -> Optional[str]:
+    """
+    Detect the most specific section_type hint from a query.
+
+    Checks specific types FIRST (grammar, comprehension, code, etc.)
+    before falling back to the generic 'exercise' catch-all.
+    Works for all book types: CS, Science, Math, English, Nepali.
+    """
+    # ── English reading passages (story/poem content) ──
+    if any(k in q_lower for k in ["reading passage", "story", "poem", "passage"]):
+        return "reading"
+
+    # ── English language-skill sections (most specific — check first) ──
+    if any(k in q_lower for k in ["grammar"]):
+        return "grammar"
+    if any(k in q_lower for k in ["comprehension"]):
+        return "comprehension"
+    if any(k in q_lower for k in ["vocabulary", "working with words"]):
+        return "vocabulary"
+    if any(k in q_lower for k in ["critical thinking"]):
+        return "critical_thinking"
+    if any(k in q_lower for k in ["writing", "essay", "letter writing"]):
+        return "writing"
+    if any(k in q_lower for k in ["speaking", "dialogue"]):
+        return "speaking"
+    if any(k in q_lower for k in ["listening"]):
+        return "listening"
+
+    # ── CS-specific sections ──
+    if any(k in q_lower for k in ["program", "code", "qbasic", "c program", "कार्यक्रम"]):
+        return "code_program"
+    if any(k in q_lower for k in ["glossary", "technical term", "शब्दावली"]):
+        return "glossary"
+
+    # ── Science-specific ──
+    if any(k in q_lower for k in ["activity", "lab", "क्रियाकलाप"]):
+        return "activity"
+
+    # ── Math-specific ──
+    if any(k in q_lower for k in ["example", "worked example", "solved example", "उदाहरण"]):
+        return "example"
+    if any(k in q_lower for k in ["project work", "project", "परियोजना"]):
+        return "project"
+
+    # ── Generic exercise (broadest — checked LAST) ──
+    if any(k in q_lower for k in ["exercise", "problem", "question", "अभ्यास"]):
+        return "exercise"
+
+    return None
+
+
 def classify_query(question: str) -> Dict[str, Any]:
     """
     Classify the query type to optimize retrieval strategy.
-    
+    Works across all book types: CS, Science, Math, English, Nepali.
+
     Returns:
-        Dict with: query_type, top_k, bm25_weight, faiss_weight
+        Dict with: query_type, top_k, bm25_weight, faiss_weight,
+                    section_type_filter (optional)
     """
     q_lower = question.lower()
-    
+
     # Structural queries: about book organization
     structural_keywords = [
-        "chapter", "unit", "table of contents", "toc", "topics", 
+        "chapter", "unit", "table of contents", "toc", "topics",
         "syllabus", "index", "how many units", "how many chapters",
-        "what are the", "list all", "list the", "contents of"
+        "what are the", "list all", "list the", "contents of",
+        # Nepali
+        "अध्याय", "एकाइ", "विषय सूची", "पाठ",
     ]
-    
+
     # Exercise/problem queries
     exercise_keywords = [
-        "question", "exercise", "problem", "solve", "quiz", 
-        "practice", "homework", "assignment"
+        "question", "exercise", "problem", "solve", "quiz",
+        "practice", "homework", "assignment",
+        # English-skill keywords (these are exercise-like)
+        "grammar", "comprehension", "vocabulary", "writing",
+        "speaking", "listening", "critical thinking",
+        # Nepali
+        "अभ्यास", "प्रश्न",
     ]
-    
+
     # Definition queries
     definition_keywords = [
-        "what is", "define", "meaning of", "definition", 
-        "explain", "describe"
+        "what is", "define", "meaning of", "definition",
+        "explain", "describe",
+        # Nepali
+        "परिभाषा", "व्याख्या",
     ]
-    
-    if any(k in q_lower for k in structural_keywords):
+
+    section_type_filter = _detect_section_type_filter(q_lower)
+
+    has_exercise_kw = any(k in q_lower for k in exercise_keywords)
+    has_structural_kw = any(k in q_lower for k in structural_keywords)
+    has_definition_kw = any(k in q_lower for k in definition_keywords)
+
+    # When a specific section type is detected (grammar, comprehension, code, etc.)
+    # AND the query also has exercise-like keywords, prefer the exercise path —
+    # "grammar exercises from unit 3" is about grammar content, not book structure.
+    if section_type_filter and has_exercise_kw:
+        return {
+            "query_type": "exercise",
+            "top_k": 20,
+            "bm25_weight": 0.4,
+            "faiss_weight": 0.6,
+            "fallback_bm25": 0.2,
+            "fallback_faiss": 0.8,
+            "section_type_filter": section_type_filter,
+        }
+    elif has_structural_kw and not section_type_filter:
         return {
             "query_type": "structural",
             "top_k": 15,
             "bm25_weight": 0.6,   # Keyword-heavy: TOC chunks match on keywords
             "faiss_weight": 0.4,
             "fallback_bm25": 0.3,
-            "fallback_faiss": 0.7
+            "fallback_faiss": 0.7,
+            "section_type_filter": None,
         }
-    elif any(k in q_lower for k in exercise_keywords):
+    elif has_exercise_kw:
         return {
             "query_type": "exercise",
             "top_k": 20,          # Fetch more for exercise listings
-            "bm25_weight": 0.5,   # Balanced: headers contain "Exercise"
-            "faiss_weight": 0.5,
+            "bm25_weight": 0.4,   # Lean more on vectors — BM25 "exercise" matches too broadly
+            "faiss_weight": 0.6,
             "fallback_bm25": 0.2,
-            "fallback_faiss": 0.8
+            "fallback_faiss": 0.8,
+            "section_type_filter": section_type_filter,
         }
-    elif any(k in q_lower for k in definition_keywords):
+    elif has_definition_kw:
         return {
             "query_type": "definition",
             "top_k": 8,           # Definitions are usually concise
             "bm25_weight": 0.3,
             "faiss_weight": 0.7,
             "fallback_bm25": 0.1,
-            "fallback_faiss": 0.9
+            "fallback_faiss": 0.9,
+            "section_type_filter": None,
         }
     else:
         return {
@@ -84,7 +168,8 @@ def classify_query(question: str) -> Dict[str, Any]:
             "bm25_weight": 0.4,
             "faiss_weight": 0.6,
             "fallback_bm25": 0.1,
-            "fallback_faiss": 0.9
+            "fallback_faiss": 0.9,
+            "section_type_filter": section_type_filter,
         }
 
 
@@ -118,19 +203,21 @@ async def chat_endpoint(
         raise HTTPException(status_code=500, detail=f"Embedding error: {e}")
     
     # Primary retrieval with classified weights
+    section_filter = query_config.get("section_type_filter")
     hits = vs.hybrid_query(
-        chatbot_id, 
-        question, 
-        q_emb, 
+        chatbot_id,
+        question,
+        q_emb,
         top_k=final_top_k,
         bm25_weight=query_config["bm25_weight"],
-        faiss_weight=query_config["faiss_weight"]
+        faiss_weight=query_config["faiss_weight"],
+        section_type_filter=section_filter,
     )
-    
+
     if not hits:
-        # Fallback: Relaxed search with different weights
+        # Fallback: Relaxed search without section filter
         hits = vs.hybrid_query(
-            chatbot_id, question, q_emb, top_k=final_top_k, 
+            chatbot_id, question, q_emb, top_k=final_top_k,
             bm25_weight=query_config["fallback_bm25"],
             faiss_weight=query_config["fallback_faiss"]
         )
