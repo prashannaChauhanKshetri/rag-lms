@@ -423,8 +423,8 @@ function PrivacySection() {
     ].filter(d => d.value > 0) : [];
 
     const averagesData = summary ? [
-        { label: 'Quiz Avg', value: summary.quiz_average_score ?? 0 },
-        { label: 'Assignment Avg', value: summary.assignment_average_score ?? 0 },
+        { label: 'Quiz Avg', value: summary.quiz_average_score ?? 5, hasData: summary.quiz_average_score != null },
+        { label: 'Assignment Avg', value: summary.assignment_average_score ?? 5, hasData: summary.assignment_average_score != null },
     ] : [];
 
     const statusBadge = (status: string) => {
@@ -522,16 +522,23 @@ function PrivacySection() {
                         {/* Score Averages Bar Chart */}
                         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
                             <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Score Averages</p>
-                            {(summary?.quiz_average_score != null || summary?.assignment_average_score != null) ? (
+                            {averagesData.some(d => d.hasData) ? (
                                 <ResponsiveContainer width="100%" height={180}>
                                     <BarChart data={averagesData} barSize={40}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                         <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                                         <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                                        <Tooltip formatter={(value: unknown) => [`${value as number}`, 'Avg Score']} />
+                                        <Tooltip
+                                            formatter={(value: unknown, _name: unknown, props: { payload?: { hasData?: boolean } }) =>
+                                                props.payload?.hasData ? [`${value as number}`, 'Avg Score'] : ['Not graded yet', 'Avg Score']
+                                            }
+                                        />
                                         <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                                            {averagesData.map((_, index) => (
-                                                <Cell key={`bar-${index}`} fill={index === 0 ? '#22c55e' : '#6366f1'} />
+                                            {averagesData.map((entry, index) => (
+                                                <Cell
+                                                    key={`bar-${index}`}
+                                                    fill={!entry.hasData ? '#d1d5db' : index === 0 ? '#22c55e' : '#6366f1'}
+                                                />
                                             ))}
                                         </Bar>
                                     </BarChart>
