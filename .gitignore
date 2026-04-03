@@ -32,3 +32,8 @@ Thumbs.db
 DEPLOYMENT_READY.md
 SYSTEM_ARCHITECTURE.md
 .github/
+
+# Large binary files & generated data
+Books/
+fin_ed_docs/
+uploads/
