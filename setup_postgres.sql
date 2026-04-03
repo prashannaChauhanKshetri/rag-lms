@@ -124,6 +124,8 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     page INTEGER,
     heading TEXT,
     -- Chapter/section name
+    section_type TEXT DEFAULT 'content',
+    -- content, exercise, exercise_mcq, exercise_fitb, code_program, glossary, activity, example, project
     is_feedback BOOLEAN DEFAULT FALSE,
     metadata JSONB,
     -- Additional metadata
@@ -137,6 +139,7 @@ CREATE INDEX idx_chunks_text_search ON document_chunks USING gin (to_tsvector('s
 CREATE INDEX idx_chunks_chatbot ON document_chunks(chatbot_id);
 CREATE INDEX idx_chunks_source ON document_chunks(source);
 CREATE INDEX idx_chunks_feedback ON document_chunks(is_feedback);
+CREATE INDEX idx_chunks_section_type ON document_chunks(chatbot_id, section_type);
 CREATE INDEX idx_chunks_created ON document_chunks(created_at DESC);
 -- ============================================
 -- CONVERSATIONS
@@ -483,6 +486,7 @@ CREATE OR REPLACE FUNCTION hybrid_search(
         source TEXT,
         page INTEGER,
         heading TEXT,
+        section_type TEXT,
         is_feedback BOOLEAN,
         hybrid_score REAL,
         bm25_score REAL,
@@ -494,6 +498,7 @@ CREATE OR REPLACE FUNCTION hybrid_search(
             dc.source,
             dc.page,
             dc.heading,
+            dc.section_type,
             dc.is_feedback,
             (1 - (dc.embedding <=> p_query_embedding)) AS similarity
         FROM document_chunks dc
@@ -507,6 +512,7 @@ CREATE OR REPLACE FUNCTION hybrid_search(
             dc.source,
             dc.page,
             dc.heading,
+            dc.section_type,
             dc.is_feedback,
             ts_rank(
                 to_tsvector('simple', dc.text),
@@ -524,6 +530,7 @@ CREATE OR REPLACE FUNCTION hybrid_search(
             dc.source,
             dc.page,
             dc.heading,
+            dc.section_type,
             dc.is_feedback,
             COALESCE(vr.similarity, 0) AS vec_sim,
             COALESCE(tr.rank, 0) AS txt_rank
@@ -554,6 +561,7 @@ SELECT n.id,
     n.source,
     n.page,
     n.heading,
+    n.section_type,
     n.is_feedback,
     (
         p_vector_weight * n.norm_vec + p_bm25_weight * n.norm_txt
