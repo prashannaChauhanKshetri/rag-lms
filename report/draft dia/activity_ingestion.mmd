@@ -1,0 +1,55 @@
+stateDiagram-v2
+    direction TB
+
+    [*] --> Upload : Instructor uploads PDF
+
+    Upload --> Validate
+    Validate --> InvalidFile : file not PDF or size over 50MB
+    InvalidFile --> [*] : Return error to instructor
+
+    Validate --> DetectType : file is valid
+
+    state DetectType {
+        direction LR
+        [*] --> CheckTextLayer
+        CheckTextLayer --> Digital : native text layer found
+        CheckTextLayer --> Scanned : no text layer image only
+    }
+
+    DetectType --> DoclingExtract : Digital PDF
+    DetectType --> TesseractOCR : Scanned PDF
+
+    DoclingExtract --> ExtractTOC
+    TesseractOCR --> ExtractTOC
+
+    ExtractTOC --> Chunking : chapter headings and page ranges extracted
+
+    state Chunking {
+        direction LR
+        [*] --> SplitText
+        SplitText --> ApplyOverlap : chunk size 1200 tokens
+        ApplyOverlap --> [*] : overlap 150 tokens
+    }
+
+    Chunking --> EmbeddingGeneration
+
+    state EmbeddingGeneration {
+        direction LR
+        [*] --> LoadModel : all-MiniLM-L6-v2
+        LoadModel --> Encode : SentenceTransformer
+        Encode --> [*] : 384-dimensional vector per chunk
+    }
+
+    EmbeddingGeneration --> StoreToDatabase
+
+    state StoreToDatabase {
+        direction LR
+        [*] --> InsertChunk
+        InsertChunk --> StoreText : text content and metadata
+        InsertChunk --> StoreVector : pgvector embedding column
+        StoreText --> [*]
+        StoreVector --> [*]
+    }
+
+    StoreToDatabase --> MarkProcessed
+    MarkProcessed --> [*] : Success notification to instructor

@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 480" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="6" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 9 3, 0 6" fill="#455A64"/>
+    </marker>
+    <marker id="arrR" markerWidth="9" markerHeight="6" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 9 3, 0 6" fill="#B71C1C"/>
+    </marker>
+    <filter id="sh"><feDropShadow dx="1" dy="2" stdDeviation="2.5" flood-opacity="0.12"/></filter>
+  </defs>
+
+  <rect width="860" height="480" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="430" y="34" text-anchor="middle" font-size="21" font-weight="700" fill="#1a1a2e">PDF Processing Pipeline</text>
+  <line x1="200" y1="44" x2="660" y2="44" stroke="#E65100" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- ════ ROW 1: Input Types ════ -->
+  <text x="430" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#546E7A" letter-spacing="1">INPUT — THREE PDF TYPES</text>
+
+  <rect x="40" y="78" width="235" height="55" rx="10" fill="#E3F2FD" stroke="#0288D1" stroke-width="2" filter="url(#sh)"/>
+  <text x="157" y="99" text-anchor="middle" font-size="11" font-weight="700" fill="#01579B">Digital PDF</text>
+  <text x="157" y="116" text-anchor="middle" font-size="9.5" fill="#555">Standard fonts &bull; English text</text>
+  <text x="157" y="130" text-anchor="middle" font-size="9.5" fill="#555">Math, Science, English books</text>
+
+  <rect x="313" y="78" width="235" height="55" rx="10" fill="#FFF8E1" stroke="#F9A825" stroke-width="2" filter="url(#sh)"/>
+  <text x="430" y="99" text-anchor="middle" font-size="11" font-weight="700" fill="#E65100">Preeti-Encoded PDF</text>
+  <text x="430" y="116" text-anchor="middle" font-size="9.5" fill="#555">Legacy Nepali fonts (Sun, Kantipur)</text>
+  <text x="430" y="130" text-anchor="middle" font-size="9.5" fill="#555">Social Studies, Nepali books Gr 6–9</text>
+
+  <rect x="586" y="78" width="235" height="55" rx="10" fill="#FCE4EC" stroke="#C62828" stroke-width="2" filter="url(#sh)"/>
+  <text x="703" y="99" text-anchor="middle" font-size="11" font-weight="700" fill="#B71C1C">Scanned PDF</text>
+  <text x="703" y="116" text-anchor="middle" font-size="9.5" fill="#555">Image-only pages &bull; 0 text chars</text>
+  <text x="703" y="130" text-anchor="middle" font-size="9.5" fill="#555">Gr 10 Social Studies, some Science</text>
+
+  <!-- arrows down -->
+  <line x1="157" y1="133" x2="157" y2="163" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="430" y1="133" x2="430" y2="163" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="703" y1="133" x2="703" y2="163" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ════ ROW 2: Detection & Extraction ════ -->
+  <text x="430" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#546E7A" letter-spacing="1">DETECTION &amp; EXTRACTION</text>
+
+  <rect x="40" y="163" width="235" height="72" rx="10" fill="#E8F5E9" stroke="#388E3C" stroke-width="2" filter="url(#sh)"/>
+  <text x="157" y="185" text-anchor="middle" font-size="11" font-weight="700" fill="#1B5E20">PyMuPDF + Docling</text>
+  <text x="157" y="203" text-anchor="middle" font-size="9.5" fill="#555">Direct text extraction</text>
+  <text x="157" y="218" text-anchor="middle" font-size="9.5" fill="#555">Unicode text preserved</text>
+  <text x="157" y="230" text-anchor="middle" font-size="9" fill="#2E7D32" font-weight="600">Fast • Accurate layout</text>
+
+  <rect x="313" y="163" width="235" height="72" rx="10" fill="#FFF3E0" stroke="#E65100" stroke-width="2" filter="url(#sh)"/>
+  <text x="430" y="185" text-anchor="middle" font-size="11" font-weight="700" fill="#BF360C">Font Detection → Force OCR</text>
+  <text x="430" y="203" text-anchor="middle" font-size="9.5" fill="#555">Checks pages 10 &amp; 20 for Devanagari</text>
+  <text x="430" y="218" text-anchor="middle" font-size="9.5" fill="#555">Tesseract &bull; lang=nep+eng</text>
+  <text x="430" y="230" text-anchor="middle" font-size="9" fill="#E65100" font-weight="600">PSM 6 &bull; 300 DPI &bull; Parallel threads</text>
+
+  <rect x="586" y="163" width="235" height="72" rx="10" fill="#FCE4EC" stroke="#C62828" stroke-width="2" filter="url(#sh)"/>
+  <text x="703" y="185" text-anchor="middle" font-size="11" font-weight="700" fill="#B71C1C">Tesseract OCR (all pages)</text>
+  <text x="703" y="203" text-anchor="middle" font-size="9.5" fill="#555">pdf2image → Pillow → Tesseract</text>
+  <text x="703" y="218" text-anchor="middle" font-size="9.5" fill="#555">ThreadPoolExecutor (8 workers)</text>
+  <text x="703" y="230" text-anchor="middle" font-size="9" fill="#B71C1C" font-weight="600">96–99% accuracy on clean print</text>
+
+  <!-- converge arrows -->
+  <line x1="157" y1="235" x2="360" y2="285" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="430" y1="235" x2="430" y2="285" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="703" y1="235" x2="510" y2="285" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ════ ROW 3: TOC + Chunking ════ -->
+  <text x="430" y="278" text-anchor="middle" font-size="11" font-weight="700" fill="#546E7A" letter-spacing="1">TOC EXTRACTION + SECTION-AWARE CHUNKING</text>
+
+  <!-- TOC -->
+  <rect x="40" y="286" width="380" height="88" rx="10" fill="#E8EAF6" stroke="#3949AB" stroke-width="2" filter="url(#sh)"/>
+  <text x="230" y="306" text-anchor="middle" font-size="11" font-weight="700" fill="#1A237E">4-Tier TOC Extraction</text>
+  <rect x="58" y="316" width="80" height="22" rx="5" fill="#fff" stroke="#9FA8DA" stroke-width="1"/>
+  <text x="98" y="331" text-anchor="middle" font-size="8.5" fill="#3949AB">PyMuPDF</text>
+  <rect x="150" y="316" width="80" height="22" rx="5" fill="#fff" stroke="#9FA8DA" stroke-width="1"/>
+  <text x="190" y="331" text-anchor="middle" font-size="8.5" fill="#3949AB">Text Regex</text>
+  <rect x="242" y="316" width="70" height="22" rx="5" fill="#fff" stroke="#9FA8DA" stroke-width="1"/>
+  <text x="277" y="331" text-anchor="middle" font-size="8.5" fill="#3949AB">Docling</text>
+  <rect x="324" y="316" width="82" height="22" rx="5" fill="#fff" stroke="#9FA8DA" stroke-width="1"/>
+  <text x="365" y="331" text-anchor="middle" font-size="8.5" fill="#3949AB">Groq LLM</text>
+  <text x="230" y="355" text-anchor="middle" font-size="9.5" fill="#555">English &bull; Devanagari Unicode &bull; Preeti-OCR</text>
+  <text x="230" y="370" text-anchor="middle" font-size="9.5" fill="#555">Page → Chapter name mapping</text>
+
+  <!-- Chunking -->
+  <rect x="440" y="286" width="380" height="88" rx="10" fill="#F3E5F5" stroke="#7B1FA2" stroke-width="2" filter="url(#sh)"/>
+  <text x="630" y="306" text-anchor="middle" font-size="11" font-weight="700" fill="#4A148C">Section-Aware Chunking (19+ types)</text>
+  <text x="630" y="324" text-anchor="middle" font-size="9.5" fill="#555">600 tokens &bull; 120 overlap &bull; Atomic: 1200 max</text>
+
+  <!-- section type pills -->
+  <rect x="452" y="332" width="68" height="18" rx="5" fill="#CE93D8"/>
+  <text x="486" y="345" text-anchor="middle" font-size="8" fill="#fff">Exercise</text>
+  <rect x="530" y="332" width="54" height="18" rx="5" fill="#CE93D8"/>
+  <text x="557" y="345" text-anchor="middle" font-size="8" fill="#fff">Reading</text>
+  <rect x="594" y="332" width="46" height="18" rx="5" fill="#CE93D8"/>
+  <text x="617" y="345" text-anchor="middle" font-size="8" fill="#fff">Code</text>
+  <rect x="650" y="332" width="60" height="18" rx="5" fill="#CE93D8"/>
+  <text x="680" y="345" text-anchor="middle" font-size="8" fill="#fff">Glossary</text>
+  <rect x="720" y="332" width="62" height="18" rx="5" fill="#CE93D8"/>
+  <text x="751" y="345" text-anchor="middle" font-size="8" fill="#fff">Grammar</text>
+  <text x="630" y="368" text-anchor="middle" font-size="9.5" fill="#555">Metadata: page &bull; chapter &bull; heading &bull; section_type</text>
+
+  <!-- final arrow -->
+  <line x1="230" y1="374" x2="380" y2="415" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="630" y1="374" x2="490" y2="415" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ════ OUTPUT ════ -->
+  <rect x="260" y="418" width="340" height="50" rx="10" fill="#263238" filter="url(#sh)"/>
+  <text x="430" y="438" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Vector Store (pgvector)</text>
+  <text x="430" y="457" text-anchor="middle" font-size="10" fill="#80CBC4">384-dim embeddings &bull; JSONB metadata &bull; BM25 GIN index</text>
+</svg>

@@ -1,0 +1,45 @@
+sequenceDiagram
+    autonumber
+    actor Admin
+    participant UI as React Frontend
+    participant Auth as AuthRouter
+    participant API as AdminRouter
+    participant DB as PostgreSQL Database
+
+    Note over Admin,Auth: Admin Login
+    Admin->>UI: Enter admin credentials
+    UI->>Auth: POST /login
+    Auth->>DB: Verify credentials and role is admin
+    DB-->>Auth: Confirmed admin user
+    Auth-->>UI: JWT in HTTP-only cookie
+    UI-->>Admin: Redirect to Admin Dashboard
+
+    Note over Admin,DB: Single Student Enrollment
+    Admin->>UI: Select institution class and section
+    Admin->>UI: Enter student ID in Single Enrol tab
+    UI->>API: POST /admin/sections/{id}/enroll with student_id
+    API->>DB: Check if student_id exists and not already enrolled
+    DB-->>API: Student found and eligible
+    API->>DB: INSERT into enrollments
+    API->>DB: INSERT into enrollment_audit with action enrolled
+    DB-->>API: Success
+    API-->>UI: 201 Created
+    UI-->>Admin: Student appears in enrolled list
+
+    Note over Admin,DB: Bulk CSV Enrollment
+    Admin->>UI: Upload CSV file with student IDs
+    UI->>API: POST /admin/sections/{id}/csv-enroll with CSV file
+    API->>API: Parse CSV rows into student ID list
+    loop For each student ID
+        API->>DB: Enroll student and write audit entry
+    end
+    API-->>UI: Summary of enrolled and failed IDs
+    UI-->>Admin: Show enrollment results with count
+
+    Note over Admin,DB: View Enrollment Audit Trail
+    Admin->>UI: Click History tab on Enrollment Center
+    UI->>API: GET /admin/sections/{id}/enrollment-history
+    API->>DB: SELECT from enrollment_audit JOIN users
+    DB-->>API: Log entries with timestamps and performed_by
+    API-->>UI: Audit history array
+    UI-->>Admin: Display audit table with all actions

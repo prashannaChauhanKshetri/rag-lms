@@ -1,0 +1,114 @@
+classDiagram
+    class FastAPI_App {
+        +include_router()
+        +add_middleware()
+        +startup_event()
+    }
+
+    class AuthRouter {
+        +login(credentials) Token
+        +logout()
+        +change_password()
+        -verify_bcrypt(plain, hashed) bool
+    }
+
+    class AdminRouter {
+        +list_teachers()
+        +enroll_student()
+        +bulk_enroll()
+        +csv_enroll()
+        +remove_student()
+        +enrollment_history()
+        +institution_analytics()
+    }
+
+    class InstructorRouter {
+        +create_class()
+        +create_section()
+        +upload_textbook()
+        +create_assignment()
+        +grade_submission()
+        +mark_attendance()
+        +generate_lesson_plan()
+        +generate_quiz()
+        +generate_flashcards()
+        +course_analytics()
+    }
+
+    class StudentRouter {
+        +list_enrolled_sections()
+        +section_overview()
+        +submit_assignment()
+        +view_grades()
+        +view_attendance()
+        +my_progress()
+    }
+
+    class ChatRouter {
+        +chat_stream(chatbot_id) StreamingResponse
+        -construct_prompt(context, query) str
+        -call_llm_groq(prompt) Generator
+        -stream_sse(generator) EventSource
+    }
+
+    class DatabasePostgres {
+        -pool ConnectionPool
+        +get_connection()
+        +get_user_by_username()
+        +enroll_student()
+        +bulk_enroll_students()
+        +is_teacher_of_section() bool
+        +get_attendance_report()
+        +get_course_analytics()
+    }
+
+    class VectorstorePostgres {
+        -model SentenceTransformer
+        +add_documents(chunks)
+        +hybrid_search(query, top_k) List
+        -bm25_search(query) List
+        -semantic_search(query) List
+        -combine_scores(bm25, sem, alpha) List
+    }
+
+    class DocumentProcessor {
+        +process_pdf(file) List~Chunk~
+        -detect_pdf_type() str
+        -extract_docling(pdf) str
+        -extract_tesseract(pdf) str
+        -extract_toc() List
+        -create_chunks(text) List
+        -create_overlapping_chunks(size, overlap)
+    }
+
+    class LLMService {
+        -client GroqClient
+        +generate_response(prompt) str
+        +generate_quiz(topic, type, n) List
+        +generate_lesson_plan(chapter) dict
+        +generate_flashcards(topic) List
+    }
+
+    class UtilsAuth {
+        +create_jwt(user_id, role) str
+        +verify_jwt(token) dict
+        +get_current_user() User
+        +hash_password(plain) str
+    }
+
+    FastAPI_App --> AuthRouter
+    FastAPI_App --> AdminRouter
+    FastAPI_App --> InstructorRouter
+    FastAPI_App --> StudentRouter
+    FastAPI_App --> ChatRouter
+
+    AuthRouter --> DatabasePostgres
+    AuthRouter --> UtilsAuth
+    AdminRouter --> DatabasePostgres
+    InstructorRouter --> DatabasePostgres
+    InstructorRouter --> DocumentProcessor
+    InstructorRouter --> LLMService
+    StudentRouter --> DatabasePostgres
+    ChatRouter --> VectorstorePostgres
+    ChatRouter --> LLMService
+    VectorstorePostgres --> DatabasePostgres

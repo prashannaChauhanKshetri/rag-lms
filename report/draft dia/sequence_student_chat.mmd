@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor Student
+    participant UI as React Frontend
+    participant API as FastAPI ChatRouter
+    participant DB as PostgreSQL Database
+    participant VS as VectorstorePostgres
+    participant LLM as Groq API Llama 3.3 70B
+
+    Student->>UI: Types question in AI chat box
+    UI->>API: POST /chat/{chatbot_id} with JWT cookie
+
+    API->>DB: Verify JWT and check student enrollment
+    DB-->>API: Student authorised for this chatbot
+
+    Note over API,VS: Retrieval Phase - Hybrid Search
+    API->>VS: hybrid_search(query, top_k=5)
+    VS->>VS: Calculate BM25 scores for all chunks
+    VS->>VS: Generate 384-dim query embedding
+    VS->>VS: Calculate cosine similarity via pgvector HNSW
+    VS->>VS: Hybrid score = 0.4 x BM25 + 0.6 x semantic
+    VS-->>API: Return Top 5 chunks with chapter and page metadata
+
+    Note over API,LLM: Generation Phase - Prompt and Stream
+    API->>API: Construct prompt with system rules plus chunks plus query
+    API->>LLM: POST streaming request temperature 0.1 max_tokens 1024
+    
+    loop SSE Token Stream
+        LLM-->>API: Individual token
+        API-->>UI: Server-Sent Event with token
+        UI-->>Student: Render token in real time with typing effect
+    end
+
+    LLM-->>API: Stream complete
+    API->>DB: Log interaction for analytics
+    UI-->>Student: Display final response with source citations

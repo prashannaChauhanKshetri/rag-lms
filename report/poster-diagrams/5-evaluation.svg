@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 500" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <filter id="sh"><feDropShadow dx="1" dy="2" stdDeviation="2.5" flood-opacity="0.12"/></filter>
+    <linearGradient id="barGreen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#66BB6A"/>
+      <stop offset="100%" stop-color="#1B5E20"/>
+    </linearGradient>
+    <linearGradient id="barBlue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#42A5F5"/>
+      <stop offset="100%" stop-color="#0D47A1"/>
+    </linearGradient>
+    <linearGradient id="barOrange" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFA726"/>
+      <stop offset="100%" stop-color="#E65100"/>
+    </linearGradient>
+    <linearGradient id="barPurple" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#CE93D8"/>
+      <stop offset="100%" stop-color="#6A1B9A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="860" height="500" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="430" y="34" text-anchor="middle" font-size="21" font-weight="700" fill="#1a1a2e">System Evaluation &amp; Results</text>
+  <line x1="200" y1="44" x2="660" y2="44" stroke="#1B5E20" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- ════ TOP ROW: 4 KPI CARDS ════ -->
+  <!-- Card 1 -->
+  <rect x="30" y="58" width="188" height="90" rx="12" fill="#1B5E20" filter="url(#sh)"/>
+  <text x="124" y="88" text-anchor="middle" font-size="36" font-weight="900" fill="#fff">94%</text>
+  <text x="124" y="110" text-anchor="middle" font-size="11" fill="#A5D6A7">Retrieval Accuracy</text>
+  <text x="124" y="127" text-anchor="middle" font-size="10" fill="#C8E6C9">31 / 33 test questions</text>
+  <text x="124" y="141" text-anchor="middle" font-size="10" fill="#C8E6C9">across all book types</text>
+
+  <!-- Card 2 -->
+  <rect x="238" y="58" width="188" height="90" rx="12" fill="#0D47A1" filter="url(#sh)"/>
+  <text x="332" y="88" text-anchor="middle" font-size="36" font-weight="900" fill="#fff">&lt;10ms</text>
+  <text x="332" y="110" text-anchor="middle" font-size="11" fill="#90CAF9">Vector Search Latency</text>
+  <text x="332" y="127" text-anchor="middle" font-size="10" fill="#BBDEFB">pgvector IVFFlat</text>
+  <text x="332" y="141" text-anchor="middle" font-size="10" fill="#BBDEFB">K=10 &bull; 384-dim</text>
+
+  <!-- Card 3 -->
+  <rect x="446" y="58" width="188" height="90" rx="12" fill="#E65100" filter="url(#sh)"/>
+  <text x="540" y="88" text-anchor="middle" font-size="36" font-weight="900" fill="#fff">96–99%</text>
+  <text x="540" y="110" text-anchor="middle" font-size="11" fill="#FFCC80">OCR Accuracy</text>
+  <text x="540" y="127" text-anchor="middle" font-size="10" fill="#FFE0B2">Clean printed text</text>
+  <text x="540" y="141" text-anchor="middle" font-size="10" fill="#FFE0B2">Tesseract &bull; PSM 6</text>
+
+  <!-- Card 4 -->
+  <rect x="654" y="58" width="188" height="90" rx="12" fill="#4A148C" filter="url(#sh)"/>
+  <text x="748" y="88" text-anchor="middle" font-size="36" font-weight="900" fill="#fff">2–3s</text>
+  <text x="748" y="110" text-anchor="middle" font-size="11" fill="#E1BEE7">LLM Response Time</text>
+  <text x="748" y="127" text-anchor="middle" font-size="10" fill="#F3E5F5">Llama 3.3 70B</text>
+  <text x="748" y="141" text-anchor="middle" font-size="10" fill="#F3E5F5">SSE Streaming</text>
+
+  <!-- ════ LEFT: TOC Extraction Results Bar Chart ════ -->
+  <rect x="30" y="165" width="395" height="310" rx="12" fill="#fff" stroke="#E0E0E0" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="227" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#263238">TOC Extraction Coverage (by Book)</text>
+  <text x="227" y="207" text-anchor="middle" font-size="10" fill="#888">TOC entries detected per textbook</text>
+
+  <!-- Y axis -->
+  <line x1="100" y1="220" x2="100" y2="440" stroke="#CFD8DC" stroke-width="1.5"/>
+  <line x1="100" y1="440" x2="395" y2="440" stroke="#CFD8DC" stroke-width="1.5"/>
+
+  <!-- Y gridlines + labels -->
+  <line x1="100" y1="365" x2="395" y2="365" stroke="#ECEFF1" stroke-width="1"/>
+  <text x="92" y="369" text-anchor="end" font-size="9" fill="#90A4AE">25</text>
+  <line x1="100" y1="310" x2="395" y2="310" stroke="#ECEFF1" stroke-width="1"/>
+  <text x="92" y="314" text-anchor="end" font-size="9" fill="#90A4AE">50</text>
+  <line x1="100" y1="255" x2="395" y2="255" stroke="#ECEFF1" stroke-width="1"/>
+  <text x="92" y="259" text-anchor="end" font-size="9" fill="#90A4AE">75</text>
+  <line x1="100" y1="220" x2="395" y2="220" stroke="#ECEFF1" stroke-width="1"/>
+  <text x="92" y="224" text-anchor="end" font-size="9" fill="#90A4AE">100</text>
+  <text x="38" y="340" text-anchor="middle" font-size="9" fill="#607D8B" transform="rotate(-90,38,340)">Entries Detected</text>
+
+  <!-- Bars: scale 0-100 → 220px height (220 top, 440 bottom)
+       bar_height = value/100 * 220
+       bar_top = 440 - bar_height -->
+  <!-- English Gr9: 18 units → 18% of max(66)=66 → 18/66*220=60 -->
+  <rect x="118" y="392" width="36" height="48" rx="4" fill="url(#barBlue)" filter="url(#sh)"/>
+  <text x="136" y="387" text-anchor="middle" font-size="9" font-weight="700" fill="#0D47A1">18</text>
+  <text x="136" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">Eng Gr9</text>
+
+  <!-- Math Gr9: 14 units → 14/66*220=47 -->
+  <rect x="165" y="393" width="36" height="47" rx="4" fill="url(#barBlue)" filter="url(#sh)"/>
+  <text x="183" y="388" text-anchor="middle" font-size="9" font-weight="700" fill="#0D47A1">14</text>
+  <text x="183" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">Math Gr9</text>
+
+  <!-- Science Gr10: 12 units → 40 -->
+  <rect x="212" y="400" width="36" height="40" rx="4" fill="url(#barOrange)" filter="url(#sh)"/>
+  <text x="230" y="395" text-anchor="middle" font-size="9" font-weight="700" fill="#E65100">12</text>
+  <text x="230" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">Sci Gr10</text>
+
+  <!-- SS Gr7 (Preeti): 53 entries → 53/66*220=177 -->
+  <rect x="259" y="263" width="36" height="177" rx="4" fill="url(#barGreen)" filter="url(#sh)"/>
+  <text x="277" y="258" text-anchor="middle" font-size="9" font-weight="700" fill="#1B5E20">53</text>
+  <text x="277" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">SS Gr7</text>
+  <!-- OCR badge -->
+  <rect x="252" y="275" width="50" height="14" rx="4" fill="#FFA726"/>
+  <text x="277" y="286" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="600">OCR</text>
+
+  <!-- SS Gr9 (Preeti): 66 entries → 220 -->
+  <rect x="306" y="220" width="36" height="220" rx="4" fill="url(#barGreen)" filter="url(#sh)"/>
+  <text x="324" y="215" text-anchor="middle" font-size="9" font-weight="700" fill="#1B5E20">66</text>
+  <text x="324" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">SS Gr9</text>
+  <rect x="299" y="232" width="50" height="14" rx="4" fill="#FFA726"/>
+  <text x="324" y="243" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="600">OCR</text>
+
+  <!-- Legend -->
+  <rect x="105" y="462" width="12" height="12" rx="2" fill="#0D47A1"/>
+  <text x="122" y="473" font-size="9" fill="#555">Text extraction</text>
+  <rect x="205" y="462" width="12" height="12" rx="2" fill="#FFA726"/>
+  <text x="222" y="473" font-size="9" fill="#555">OCR (Preeti)</text>
+  <rect x="295" y="462" width="12" height="12" rx="2" fill="#1B5E20"/>
+  <text x="312" y="473" font-size="9" fill="#555">Best result</text>
+
+  <!-- ════ RIGHT: Retrieval Method Comparison ════ -->
+  <rect x="445" y="165" width="395" height="310" rx="12" fill="#fff" stroke="#E0E0E0" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="642" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#263238">Retrieval Method Comparison</text>
+  <text x="642" y="207" text-anchor="middle" font-size="10" fill="#888">Accuracy on 33 test questions</text>
+
+  <!-- Y axis -->
+  <line x1="520" y1="220" x2="520" y2="410" stroke="#CFD8DC" stroke-width="1.5"/>
+  <line x1="520" y1="410" x2="810" y2="410" stroke="#CFD8DC" stroke-width="1.5"/>
+
+  <!-- gridlines -->
+  <line x1="520" y1="362" x2="810" y2="362" stroke="#ECEFF1" stroke-width="1"/>
+  <text x="512" y="366" text-anchor="end" font-size="9" fill="#90A4AE">25%</text>
+  <line x1="520" y1="315" x2="810" y2="315" stroke="#ECEFF1" stroke-width="1"/>
+  <text x="512" y="319" text-anchor="end" font-size="9" fill="#90A4AE">50%</text>
+  <line x1="520" y1="267" x2="810" y2="267" stroke="#ECEFF1" stroke-width="1"/>
+  <text x="512" y="271" text-anchor="end" font-size="9" fill="#90A4AE">75%</text>
+  <line x1="520" y1="220" x2="810" y2="220" stroke="#ECEFF1" stroke-width="1"/>
+  <text x="512" y="224" text-anchor="end" font-size="9" fill="#90A4AE">100%</text>
+
+  <!-- Bar 1: BM25 only: ~70% → 0.7*190=133 → top=410-133=277 -->
+  <rect x="545" y="277" width="55" height="133" rx="4" fill="#90A4AE" filter="url(#sh)"/>
+  <text x="572" y="272" text-anchor="middle" font-size="10" font-weight="700" fill="#546E7A">70%</text>
+  <text x="572" y="426" text-anchor="middle" font-size="9" fill="#607D8B">BM25 Only</text>
+
+  <!-- Bar 2: Semantic only: ~78% → 148 → top=262 -->
+  <rect x="625" y="262" width="55" height="148" rx="4" fill="url(#barBlue)" filter="url(#sh)"/>
+  <text x="652" y="257" text-anchor="middle" font-size="10" font-weight="700" fill="#0D47A1">78%</text>
+  <text x="652" y="426" text-anchor="middle" font-size="9" fill="#607D8B">Semantic</text>
+
+  <!-- Bar 3: Hybrid: ~88% → 167 → top=243 -->
+  <rect x="705" y="243" width="55" height="167" rx="4" fill="url(#barOrange)" filter="url(#sh)"/>
+  <text x="732" y="238" text-anchor="middle" font-size="10" font-weight="700" fill="#E65100">88%</text>
+  <text x="732" y="426" text-anchor="middle" font-size="9" fill="#607D8B">Hybrid</text>
+
+  <!-- Bar 4: Hybrid + Rerank: 94% → 179 → top=231 -->
+  <rect x="785" y="231" width="0" height="0" rx="4" fill="url(#barGreen)" filter="url(#sh)"/>
+  <!-- shift bar left to fit -->
+  <rect x="762" y="231" width="36" height="179" rx="4" fill="url(#barGreen)" filter="url(#sh)"/>
+  <text x="780" y="226" text-anchor="middle" font-size="10" font-weight="700" fill="#1B5E20">94%</text>
+  <text x="780" y="426" text-anchor="middle" font-size="8.5" fill="#607D8B">Hybrid +</text>
+  <text x="780" y="437" text-anchor="middle" font-size="8.5" fill="#607D8B">Rerank ★</text>
+
+  <!-- annotation star -->
+  <text x="780" y="215" text-anchor="middle" font-size="10" fill="#1B5E20" font-weight="700">★ Best</text>
+
+  <!-- bottom note -->
+  <text x="642" y="462" text-anchor="middle" font-size="9.5" fill="#607D8B">All methods tested on same 33-question benchmark dataset</text>
+  <text x="642" y="475" text-anchor="middle" font-size="9.5" fill="#607D8B">across English, Math, Science, Social Studies, Nepali books</text>
+</svg>

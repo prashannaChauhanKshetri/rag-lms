@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 340" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <filter id="sh"><feDropShadow dx="1" dy="2" stdDeviation="2.5" flood-opacity="0.13"/></filter>
+  </defs>
+
+  <rect width="860" height="340" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="430" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#1a1a2e">Technology Stack</text>
+  <line x1="260" y1="44" x2="600" y2="44" stroke="#546E7A" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- ════ ROW 1 ════ -->
+  <!-- Frontend -->
+  <rect x="30" y="58" width="155" height="116" rx="12" fill="#E3F2FD" stroke="#0288D1" stroke-width="2" filter="url(#sh)"/>
+  <rect x="30" y="58" width="155" height="30" rx="12" fill="#0288D1"/>
+  <rect x="30" y="74" width="155" height="14" fill="#0288D1"/>
+  <text x="107" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">FRONTEND</text>
+  <text x="107" y="104" text-anchor="middle" font-size="10.5" fill="#01579B" font-weight="600">React 19</text>
+  <text x="107" y="120" text-anchor="middle" font-size="10" fill="#555">TypeScript</text>
+  <text x="107" y="136" text-anchor="middle" font-size="10" fill="#555">Vite + Tailwind CSS</text>
+  <text x="107" y="152" text-anchor="middle" font-size="10" fill="#555">Radix UI + Lucide</text>
+  <text x="107" y="168" text-anchor="middle" font-size="10" fill="#555">SSE Streaming</text>
+
+  <!-- Backend -->
+  <rect x="205" y="58" width="155" height="116" rx="12" fill="#E8F5E9" stroke="#388E3C" stroke-width="2" filter="url(#sh)"/>
+  <rect x="205" y="58" width="155" height="30" rx="12" fill="#388E3C"/>
+  <rect x="205" y="74" width="155" height="14" fill="#388E3C"/>
+  <text x="282" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">BACKEND</text>
+  <text x="282" y="104" text-anchor="middle" font-size="10.5" fill="#1B5E20" font-weight="600">FastAPI (Python 3.11)</text>
+  <text x="282" y="120" text-anchor="middle" font-size="10" fill="#555">Uvicorn + Pydantic</text>
+  <text x="282" y="136" text-anchor="middle" font-size="10" fill="#555">PyJWT + bcrypt</text>
+  <text x="282" y="152" text-anchor="middle" font-size="10" fill="#555">40+ REST endpoints</text>
+  <text x="282" y="168" text-anchor="middle" font-size="10" fill="#555">Role-based access</text>
+
+  <!-- Database -->
+  <rect x="380" y="58" width="155" height="116" rx="12" fill="#FFF3E0" stroke="#F57C00" stroke-width="2" filter="url(#sh)"/>
+  <rect x="380" y="58" width="155" height="30" rx="12" fill="#F57C00"/>
+  <rect x="380" y="74" width="155" height="14" fill="#F57C00"/>
+  <text x="457" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">DATABASE</text>
+  <text x="457" y="104" text-anchor="middle" font-size="10.5" fill="#E65100" font-weight="600">PostgreSQL 17</text>
+  <text x="457" y="120" text-anchor="middle" font-size="10" fill="#555">pgvector extension</text>
+  <text x="457" y="136" text-anchor="middle" font-size="10" fill="#555">IVFFlat (cosine)</text>
+  <text x="457" y="152" text-anchor="middle" font-size="10" fill="#555">GIN full-text index</text>
+  <text x="457" y="168" text-anchor="middle" font-size="10" fill="#555">20+ tables &bull; JSONB</text>
+
+  <!-- AI / ML -->
+  <rect x="555" y="58" width="155" height="116" rx="12" fill="#F3E5F5" stroke="#7B1FA2" stroke-width="2" filter="url(#sh)"/>
+  <rect x="555" y="58" width="155" height="30" rx="12" fill="#7B1FA2"/>
+  <rect x="555" y="74" width="155" height="14" fill="#7B1FA2"/>
+  <text x="632" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">AI / ML</text>
+  <text x="632" y="104" text-anchor="middle" font-size="10.5" fill="#4A148C" font-weight="600">Llama 3.3 70B (Groq)</text>
+  <text x="632" y="120" text-anchor="middle" font-size="10" fill="#555">Sentence-Transformers</text>
+  <text x="632" y="136" text-anchor="middle" font-size="10" fill="#555">Cross-Encoder reranker</text>
+  <text x="632" y="152" text-anchor="middle" font-size="10" fill="#555">384-dim MiniLM</text>
+  <text x="632" y="168" text-anchor="middle" font-size="10" fill="#555">rank-bm25 &bull; tiktoken</text>
+
+  <!-- OCR -->
+  <rect x="730" y="58" width="100" height="116" rx="12" fill="#FCE4EC" stroke="#C62828" stroke-width="2" filter="url(#sh)"/>
+  <rect x="730" y="58" width="100" height="30" rx="12" fill="#C62828"/>
+  <rect x="730" y="74" width="100" height="14" fill="#C62828"/>
+  <text x="780" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">OCR</text>
+  <text x="780" y="104" text-anchor="middle" font-size="10" fill="#B71C1C" font-weight="600">Tesseract 5</text>
+  <text x="780" y="120" text-anchor="middle" font-size="10" fill="#555">Docling</text>
+  <text x="780" y="136" text-anchor="middle" font-size="10" fill="#555">PyMuPDF</text>
+  <text x="780" y="152" text-anchor="middle" font-size="10" fill="#555">pdf2image</text>
+  <text x="780" y="168" text-anchor="middle" font-size="10" fill="#555">Pillow</text>
+
+  <!-- ════ ROW 2: STATS BANNER ════ -->
+  <rect x="30" y="192" width="800" height="130" rx="12" fill="#263238" filter="url(#sh)"/>
+  <text x="430" y="216" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">System Scale &amp; Specifications</text>
+  <line x1="80" y1="224" x2="780" y2="224" stroke="#455A64" stroke-width="1"/>
+
+  <!-- Stats grid: 6 columns -->
+  <!-- Col 1 -->
+  <text x="103" y="248" text-anchor="middle" font-size="24" font-weight="900" fill="#80DEEA">32+</text>
+  <text x="103" y="266" text-anchor="middle" font-size="9.5" fill="#B0BEC5">Textbooks</text>
+  <text x="103" y="279" text-anchor="middle" font-size="9" fill="#78909C">Gr 5–10, Eng+Nep</text>
+
+  <!-- Col 2 -->
+  <text x="237" y="248" text-anchor="middle" font-size="24" font-weight="900" fill="#A5D6A7">40+</text>
+  <text x="237" y="266" text-anchor="middle" font-size="9.5" fill="#B0BEC5">API Endpoints</text>
+  <text x="237" y="279" text-anchor="middle" font-size="9" fill="#78909C">JWT-secured REST</text>
+
+  <!-- Col 3 -->
+  <text x="371" y="248" text-anchor="middle" font-size="24" font-weight="900" fill="#FFE082">384</text>
+  <text x="371" y="266" text-anchor="middle" font-size="9.5" fill="#B0BEC5">Vector Dims</text>
+  <text x="371" y="279" text-anchor="middle" font-size="9" fill="#78909C">Multilingual MiniLM</text>
+
+  <!-- Col 4 -->
+  <text x="505" y="248" text-anchor="middle" font-size="24" font-weight="900" fill="#CF94DA">20+</text>
+  <text x="505" y="266" text-anchor="middle" font-size="9.5" fill="#B0BEC5">DB Tables</text>
+  <text x="505" y="279" text-anchor="middle" font-size="9" fill="#78909C">+ pgvector store</text>
+
+  <!-- Col 5 -->
+  <text x="639" y="248" text-anchor="middle" font-size="24" font-weight="900" fill="#FFAB91">30+</text>
+  <text x="639" y="266" text-anchor="middle" font-size="9.5" fill="#B0BEC5">React Components</text>
+  <text x="639" y="279" text-anchor="middle" font-size="9" fill="#78909C">Role-based UIs</text>
+
+  <!-- Col 6 -->
+  <text x="757" y="248" text-anchor="middle" font-size="24" font-weight="900" fill="#80CBC4">3</text>
+  <text x="757" y="266" text-anchor="middle" font-size="9.5" fill="#B0BEC5">User Roles</text>
+  <text x="757" y="279" text-anchor="middle" font-size="9" fill="#78909C">Admin / Instructor / Student</text>
+
+  <!-- Dividers -->
+  <line x1="170" y1="236" x2="170" y2="295" stroke="#37474F" stroke-width="1"/>
+  <line x1="304" y1="236" x2="304" y2="295" stroke="#37474F" stroke-width="1"/>
+  <line x1="438" y1="236" x2="438" y2="295" stroke="#37474F" stroke-width="1"/>
+  <line x1="572" y1="236" x2="572" y2="295" stroke="#37474F" stroke-width="1"/>
+  <line x1="706" y1="236" x2="706" y2="295" stroke="#37474F" stroke-width="1"/>
+
+  <!-- Sub row -->
+  <text x="430" y="316" text-anchor="middle" font-size="10.5" fill="#90A4AE">
+    Deployed via Docker &bull; Production ASGI: Gunicorn &bull; Free LLM Inference: Groq LPU &bull; Open-source stack
+  </text>
+</svg>

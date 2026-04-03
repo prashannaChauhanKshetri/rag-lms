@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor Instructor
+    participant UI as React Frontend
+    participant Auth as AuthRouter
+    participant API as InstructorRouter
+    participant DB as PostgreSQL Database
+
+    Note over Instructor,Auth: Authentication Flow
+    Instructor->>UI: Enter username and password
+    UI->>Auth: POST /login with credentials
+    Auth->>DB: Fetch user by username
+    DB-->>Auth: Return user with hashed password
+    Auth->>Auth: Verify bcrypt hash
+    Auth-->>UI: Set JWT in HTTP-only cookie
+    UI-->>Instructor: Redirect to Instructor Dashboard
+
+    Note over Instructor,DB: View Assignments and Submissions
+    Instructor->>UI: Navigate to Assignments page
+    UI->>API: GET /instructor/assignments with JWT
+    API->>DB: Fetch assignments for instructor sections
+    DB-->>API: List of assignments with submission counts
+    API-->>UI: Assignment list JSON
+    UI-->>Instructor: Display assignments and submission buttons
+
+    Note over Instructor,DB: Grading a Student Submission
+    Instructor->>UI: Click Grade on a submission
+    Instructor->>UI: Enter score and written feedback
+    UI->>API: POST /instructor/grade with submission_id score feedback
+    API->>DB: is_teacher_of_section check
+    DB-->>API: Authorised
+    API->>DB: UPDATE assignment_submissions SET score feedback graded_at
+    DB-->>API: Update confirmed
+    API-->>UI: 200 OK response
+    UI-->>Instructor: Show success toast notification
+    Note right of DB: Student can now view grade in their portal
