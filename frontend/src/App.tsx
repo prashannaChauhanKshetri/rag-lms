@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import EnhancedLogin from './components/auth/EnhancedLogin';
 import Signup from './components/auth/Signup';
+import ResetPassword from './components/auth/ResetPassword';
 import SuperAdminDashboard from './components/admin/SuperAdminDashboard';
 import { Sidebar } from './components/shared/Sidebar';
 import { MobileNav } from './components/shared/MobileNav';
@@ -108,6 +109,10 @@ function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [isSignupMode, setIsSignupMode] = useState(false);
 
+  // Detect password-reset token in URL (from email link: ?token=xxx)
+  const resetToken = new URLSearchParams(window.location.search).get('token');
+  const isResetFlow = !!resetToken && !user;
+
   const handleLoginSuccess = (userData: AuthUser) => {
     setUser({
       id: userData.id,
@@ -136,6 +141,16 @@ function App() {
   };
 
   const renderContent = () => {
+    // Password reset flow — token present in URL from email link
+    if (isResetFlow) {
+      return (
+        <ResetPassword
+          token={resetToken!}
+          onBackToLogin={() => window.history.replaceState({}, '', '/')}
+        />
+      );
+    }
+
     // Show signup or login based on mode
     if (!user) {
       if (isSignupMode) {

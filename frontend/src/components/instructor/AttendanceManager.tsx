@@ -141,7 +141,6 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
       status: status,
       notes: existing.notes || ''
     };
-    console.log(`Updating attendance for ${studentId}:`, updated);
     setAttendance(new Map(attendance.set(studentId, updated)));
     setSaved(false);
   };
@@ -172,10 +171,6 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
         chatbot_id: chatbotId,
         students: Array.from(attendance.values())
       };
-
-      console.log('💾 Saving attendance with payload:', payload);
-      console.log('📅 Date:', date);
-      console.log('👥 Students data:', payload.students);
 
       const res = await fetch(`/instructor/sections/${sectionId}/attendance`, {
         method: 'POST',
@@ -224,6 +219,8 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
         <Input
           type="date"
           value={date}
+          max={new Date().toISOString().split('T')[0]}
+          min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d.toISOString().split('T')[0]; })()}
           onChange={(e) => {
             setDate(e.target.value);
             setSaved(false);

@@ -121,12 +121,22 @@ export function NotificationBell({ userRole = 'student', onNavigate }: Notificat
         }
     }, []);
 
-    // Poll for count every 60s
+    // Poll for count every 60s. Use a ref to hold the interval ID so cleanup
+    // is always tied to the exact ID created by this mount — avoids duplicate
+    // intervals from React Strict Mode double-invoke in development.
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     useEffect(() => {
         void fetchCount();
-        const id = setInterval(() => { void fetchCount(); }, 60000);
-        return () => clearInterval(id);
-    }, [fetchCount]);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = setInterval(() => { void fetchCount(); }, 60000);
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // run once on mount — fetchCount is stable (empty useCallback deps)
 
     // Open dropdown → fetch full list
     useEffect(() => {

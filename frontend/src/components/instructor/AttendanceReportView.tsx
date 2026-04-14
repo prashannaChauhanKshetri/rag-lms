@@ -194,6 +194,7 @@ export function AttendanceReportView({
             <input
               type="date"
               value={startDate}
+              max={endDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent"
             />
@@ -205,6 +206,8 @@ export function AttendanceReportView({
             <input
               type="date"
               value={endDate}
+              min={startDate}
+              max={new Date().toISOString().split('T')[0]}
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent"
             />
