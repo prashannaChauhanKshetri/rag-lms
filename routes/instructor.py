@@ -737,9 +737,15 @@ async def create_assignment_endpoint(
 ):
     """Create a new assignment. If section_id is not provided, assigns to ALL sections of this subject taught by the instructor. Supports file attachment."""
     try:
-        from datetime import datetime
+        from datetime import datetime, timezone
         dt = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
-        
+        # Due date must be in the future
+        now = datetime.now(timezone.utc)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        if dt <= now:
+            raise HTTPException(status_code=400, detail="Due date must be in the future")
+
         target_sections = []
         teacher_id = user.get("sub") or user.get("id") or ""
         
@@ -794,14 +800,21 @@ async def create_assignment_endpoint(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/assignments/{chatbot_id}")
-async def list_assignments_endpoint(chatbot_id: str):
+async def list_assignments_endpoint(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """List assignments"""
-    assigns = db.list_assignments_by_chatbot(chatbot_id)  # FIX: Updated function name
+    _ensure_instructor_can_access_chatbot(user, chatbot_id)
+    assigns = db.list_assignments_by_chatbot(chatbot_id)
     return {"assignments": assigns}
 
 @router.post("/assignments/{assignment_id}/publish")
-async def publish_assignment_endpoint(assignment_id: str):
+async def publish_assignment_endpoint(assignment_id: str, user=Depends(utils_auth.get_current_user)):
     """Publish assignment"""
+    assignment = db.get_assignment(assignment_id)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    teacher_id = user.get("sub") or user.get("id")
+    if user.get("role") != "admin" and not db.is_teacher_of_section(teacher_id, assignment.get("section_id", "")):
+        raise HTTPException(status_code=403, detail="Not authorized")
     db.publish_assignment(assignment_id)
 
     try:
@@ -820,16 +833,23 @@ async def publish_assignment_endpoint(assignment_id: str):
     return {"message": "Assignment published"}
 
 @router.delete("/assignments/{assignment_id}")
-async def delete_assignment_endpoint(assignment_id: str):
+async def delete_assignment_endpoint(assignment_id: str, user=Depends(utils_auth.get_current_user)):
     """Delete assignment"""
+    assignment = db.get_assignment(assignment_id)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    teacher_id = user.get("sub") or user.get("id")
+    if user.get("role") != "admin" and not db.is_teacher_of_section(teacher_id, assignment.get("section_id", "")):
+        raise HTTPException(status_code=403, detail="Not authorized")
     db.delete_assignment(assignment_id)
     return {"message": "Assignment deleted"}
 
 # --- Analytics Endpoints ---
 
 @router.get("/analytics/course/{chatbot_id}")
-async def get_course_analytics(chatbot_id: str):
+async def get_course_analytics(chatbot_id: str, user=Depends(utils_auth.get_current_user)):
     """Get analytics for a course"""
+    _ensure_instructor_can_access_chatbot(user, chatbot_id)
     # 1. Get Quizzes
     quizzes = db.list_quizzes(chatbot_id)
     total_quizzes = len(quizzes)
@@ -871,11 +891,21 @@ async def get_assignment_submissions(assignment_id: str):
     return {"submissions": submissions}
 
 @router.post("/assignments/grade")
-async def grade_submission_endpoint(request: GradeSubmissionRequest):
+async def grade_submission_endpoint(request: GradeSubmissionRequest, user=Depends(utils_auth.get_current_user)):
     """Grade a student submission"""
     try:
+        submission = db.get_assignment_submission(request.submission_id)
+        if not submission:
+            raise HTTPException(status_code=404, detail="Submission not found")
+        assignment = db.get_assignment(submission.get("assignment_id", ""))
+        if assignment:
+            teacher_id = user.get("sub") or user.get("id")
+            if user.get("role") != "admin" and not db.is_teacher_of_section(teacher_id, assignment.get("section_id", "")):
+                raise HTTPException(status_code=403, detail="Not authorized")
         db.grade_assignment_submission(request.submission_id, request.grade, request.feedback)
         return {"message": "Submission graded successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1242,12 +1272,8 @@ async def list_assignments_for_section(section_id: str, user=Depends(utils_auth.
         # Check institution-level access
         if section.get("institution_id"):
             utils_auth.require_institution(user, section["institution_id"])
-        
-        # Check institution-level access
-        if section.get("institution_id"):
-            utils_auth.require_institution(user, section["institution_id"])
-        
-        assignments = db.list_assignments_by_section(section_id)  # FIX: Updated function name
+
+        assignments = db.list_assignments_by_section(section_id)
         return {"assignments": assignments}
     except HTTPException:
         raise
@@ -1357,11 +1383,23 @@ async def mark_attendance(section_id: str, request: MarkAttendanceRequest, user=
         
         if not db.is_teacher_of_section(user.get("sub") or user.get("id"), section_id):
             raise HTTPException(status_code=403, detail="Only assigned teachers can mark attendance")
-        
+
+        # Validate date range — must not be in the future or more than 1 year in the past
+        try:
+            from datetime import date as _date, timedelta
+            att_date = _date.fromisoformat(request.date)
+            today = _date.today()
+            if att_date > today:
+                raise HTTPException(status_code=400, detail="Attendance date cannot be in the future")
+            if att_date < today - timedelta(days=365):
+                raise HTTPException(status_code=400, detail="Attendance date cannot be more than 1 year in the past")
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid date format: {request.date}. Use YYYY-MM-DD")
+
         # Check institution-level access
         if section.get("institution_id"):
             utils_auth.require_institution(user, section["institution_id"])
-        
+
         for idx, student_rec in enumerate(request.students):
             try:
                 logger.debug(f"Processing student {idx + 1}: {student_rec.get('student_id') if isinstance(student_rec, dict) else 'unknown'}")

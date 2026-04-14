@@ -136,16 +136,14 @@ async def list_student_assignments_by_chatbot(chatbot_id: str, user=Depends(util
 @router.post("/assignments/submit")
 async def submit_assignment_endpoint(
     assignment_id: str = Form(...),
-    student_id: str = Form(...),
-    student_name: str = Form(...),
     file: UploadFile = File(...),
     user=Depends(utils_auth.get_current_user)
 ):
     """Submit an assignment with file upload"""
-    # Validate user is authenticated (FIX CRITICAL VULNERABILITY)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
+    # Always use student_id from JWT — never trust client-provided IDs
+    student_id = utils_auth.get_user_id(user)
+    student_name = user.get("full_name") or user.get("username") or "Student"
+
     # File size validation (50MB max)
     MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
     file.file.seek(0, 2)  # Seek to end

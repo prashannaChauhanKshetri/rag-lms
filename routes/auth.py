@@ -3,12 +3,31 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, validator
 import database_postgres as db
 import utils_auth
+import utils_email
 import secrets
 import re
+import time
+from collections import defaultdict
 from datetime import datetime
 from typing import Optional, Dict, Any
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+# Simple in-memory login rate limiter: max 10 attempts per IP per 15 minutes
+_login_attempts: Dict[str, list] = defaultdict(list)
+_LOGIN_MAX_ATTEMPTS = 10
+_LOGIN_WINDOW_SECONDS = 900  # 15 minutes
+
+def _check_rate_limit(ip: str):
+    now = time.time()
+    attempts = [t for t in _login_attempts[ip] if now - t < _LOGIN_WINDOW_SECONDS]
+    _login_attempts[ip] = attempts
+    if len(attempts) >= _LOGIN_MAX_ATTEMPTS:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many login attempts. Try again in {_LOGIN_WINDOW_SECONDS // 60} minutes."
+        )
+    _login_attempts[ip].append(now)
 
 class LoginRequest(BaseModel):
     username: str
@@ -128,15 +147,13 @@ async def signup(signup_data: SignupRequest):
             expires_in_minutes=24 * 60  # 24 hours
         )
         
-        # TODO: Send email with verification link
-        # email_service.send_verification_email(signup_data.email, verification_token)
-        
+        # Send verification email (no-op if SMTP not configured)
+        utils_email.send_verification_email(signup_data.email, verification_token)
+
         return {
             "message": "Signup successful. Please check your email to verify your account.",
             "user_id": user_id,
             "email": signup_data.email
-            # FIX CRITICAL VULNERABILITY: Removed verification_token from response
-            # Token is now only sent via email, never exposed in API response
         }
     
     except Exception as e:
@@ -198,9 +215,10 @@ async def forgot_password(forgot_data: ForgotPasswordRequest):
         # TODO: Send email with reset link
         # email_service.send_password_reset_email(user['email'], reset_token)
         
+        # Send reset email (no-op if SMTP not configured, token still created)
+        utils_email.send_password_reset_email(user['email'], reset_token)
         return {
-            "message": "If an account with this email exists, a password reset link has been sent.",
-            "reset_token": reset_token  # TODO: Remove in production, send via email only
+            "message": "If an account with this email exists, a password reset link has been sent."
         }
     
     except Exception as e:
@@ -246,14 +264,20 @@ async def get_public_institutions():
 
 
 @router.post("/login")
-async def login(response: Response, login_data: LoginRequest):
+async def login(response: Response, request: Request, login_data: LoginRequest):
     """Login endpoint with JWT"""
+    # Rate limit by IP
+    client_ip = request.client.host if request.client else "unknown"
+    _check_rate_limit(client_ip)
+
     # 1. Fetch user from DB
     user = db.get_user_by_username(login_data.username)
     
-    # 2. Verify credentials
+    # 2. Verify credentials and account status
     if not user or not utils_auth.verify_password(login_data.password, user['password_hash']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not user.get('is_active', True):
+        raise HTTPException(status_code=401, detail="Account is deactivated")
     
     # 3. Create JWT Token
     token_data = {
@@ -780,62 +804,6 @@ async def change_password(request: Request, data: ChangePasswordRequest):
         return {"message": "Password changed successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to change password: {str(e)}")
-
-
-@router.get("/settings")
-async def get_settings(request: Request):
-    """Return the current user's saved settings."""
-    user_data = _get_current_user(request)
-    user_id = user_data.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    settings = db.get_user_settings(user_id)
-    return {"settings": settings}
-
-
-@router.put("/settings")
-async def update_settings(request: Request, body: dict = Body(...)):
-    """Merge-update the current user's settings."""
-    user_data = _get_current_user(request)
-    user_id = user_data.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    patch = body.get("settings", body)
-    updated = db.update_user_settings(user_id, patch)
-    return {"settings": updated}
-
-
-@router.get("/export-data")
-async def export_data(request: Request):
-    """Return all academic data for the current student (Privacy & Data preview)."""
-    user_data = _get_current_user(request)
-    user_id = user_data.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        data = db.get_student_export_data(user_id)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to export data: {e}")
-
-
-@router.get("/activity-log")
-async def activity_log(request: Request, limit: int = 20):
-    """Return recent notification activity as an activity log."""
-    user_data = _get_current_user(request)
-    user_id = user_data.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    notifications = db.get_notifications(user_id, limit=limit)
-    activities = []
-    for n in notifications:
-        created = n.get("created_at")
-        activities.append({
-            "timestamp": created.isoformat() if hasattr(created, "isoformat") else str(created),
-            "event_type": n.get("type", ""),
-            "description": n.get("title", ""),
-        })
-    return {"activities": activities}
 
 
 @router.delete("/account")

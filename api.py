@@ -3,10 +3,11 @@ import os
 import logging
 import sys
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from dotenv import load_dotenv
 
 # Load environment variables FIRST
@@ -46,6 +47,30 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-api")
 
 app = FastAPI(title="RAG-LMS API", lifespan=lifespan)
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add security headers to every response."""
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        # Content-Security-Policy — tighten in production
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: blob:; "
+            "font-src 'self' data:; "
+            "connect-src 'self';"
+        )
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 
 # CORS configuration - restrict to trusted origins only (FIX CRITICAL VULNERABILITY)
 allowed_origins = os.getenv(
