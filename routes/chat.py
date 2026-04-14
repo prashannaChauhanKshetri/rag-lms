@@ -1,5 +1,6 @@
 import os
 import uuid
+import numpy as np
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Form, Body
 from pydantic import BaseModel
@@ -16,6 +17,25 @@ router = APIRouter(tags=["Chat"])
 class ChatRequest(BaseModel):
     message: str
     top_k: int = 10
+
+
+# =============================================================================
+# NUMPY SANITIZER
+# =============================================================================
+
+def _sanitize(obj: Any) -> Any:
+    """Recursively convert numpy types to native Python types for JSON serialization."""
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize(i) for i in obj]
+    return obj
 
 
 # =============================================================================
@@ -287,7 +307,7 @@ async def chat_endpoint(
     return {
         "conversation_id": conv_id,
         "response": answer,
-        "sources": hits
+        "sources": _sanitize(hits)  # sanitize numpy types before JSON serialization
     }
 
 @router.get("/chatbots/{chatbot_id}/history")

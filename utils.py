@@ -16,9 +16,58 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-utils")
 
 # Constants
-CHUNK_SIZE = 600       # Moderate chunks — balanced for retrieval precision
-CHUNK_OVERLAP = 120    # Overlap preserves cross-boundary context
-MAX_ATOMIC_TOKENS = 1200  # Max size for "keep intact" sections (code, glossary)
+# Legacy globals — retained as safe fallbacks for any call-sites that still
+# reference them. Per-section sizes are driven by CHUNK_CONFIG below.
+CHUNK_SIZE = 900       # Default fallback (content-heavy sections)
+CHUNK_OVERLAP = 180    # 20% overlap — preserves cross-boundary context
+MAX_ATOMIC_TOKENS = 2000  # Max size for "keep intact" sections (raised from 1200)
+
+# ── Per-section-type chunk sizes (RAGAS improvement: chunking overhaul) ──
+# Textbook topics often exceed 600 tokens; a single worked example or a full
+# experiment description commonly runs 800–1500 tokens. Per-type sizes let
+# content-heavy sections stay coherent while keeping exercise items tight.
+CHUNK_CONFIG: Dict[str, Dict[str, int]] = {
+    # Content-heavy sections: bigger windows preserve topic coherence
+    "content":      {"size": 1000, "overlap": 200},  # 20% overlap
+    "reading":      {"size": 900,  "overlap": 150},
+
+    # Worked examples / proofs: must stay together — big atomic limit
+    "example":      {"size": 1200, "overlap": 200},
+
+    # Exercises: medium — one Q+A typically fits in ~400–500 tokens
+    "exercise":              {"size": 500, "overlap": 100},
+    "exercise_qa":           {"size": 500, "overlap": 100},
+    "exercise_mcq":          {"size": 400, "overlap": 80},
+    "exercise_fitb":         {"size": 400, "overlap": 80},
+    "exercise_fullform":     {"size": 400, "overlap": 0},
+    "exercise_technical_terms": {"size": 400, "overlap": 0},
+
+    # Atomic / specialized sections: large size so they stay intact
+    "code_program":     {"size": 1500, "overlap": 0},
+    "glossary":         {"size": 1500, "overlap": 0},
+    "activity":         {"size": 800,  "overlap": 100},
+    "project":          {"size": 800,  "overlap": 100},
+    "comprehension":    {"size": 600,  "overlap": 100},
+    "vocabulary":       {"size": 600,  "overlap": 100},
+    "critical_thinking":{"size": 600,  "overlap": 100},
+    "grammar":          {"size": 700,  "overlap": 100},
+    "writing":          {"size": 700,  "overlap": 100},
+    "speaking":         {"size": 500,  "overlap": 80},
+    "listening":        {"size": 500,  "overlap": 80},
+
+    # Formula+example merged sections (see Step 4a)
+    "formula_with_example": {"size": 1500, "overlap": 200},
+}
+
+
+def _chunk_params(section_type: str) -> Tuple[int, int]:
+    """Return (size, overlap) tokens for a given section_type.
+    Falls back to (CHUNK_SIZE, CHUNK_OVERLAP) for unknown types.
+    """
+    cfg = CHUNK_CONFIG.get(section_type)
+    if cfg is None:
+        return CHUNK_SIZE, CHUNK_OVERLAP
+    return cfg["size"], cfg["overlap"]
 
 
 def count_tokens(text: str) -> int:
@@ -173,8 +222,17 @@ def _is_fraction_pair(top: str, bottom: str) -> bool:
 # Regex patterns for detecting section boundaries across all book formats
 _SECTION_PATTERNS = {
     # ── Exercises (must be checked FIRST — they contain sub-patterns) ──
+    # Matches: `Exercise`, `Exercises`, `Exercise 1`, `Exercise 1.2`,
+    # `Exercise 13.4`, `Miscellaneous Exercise`, `अभ्यास`, `अभ्यास १`.
+    # Rejects: inline references like "See Exercise 1.2 above" (must be
+    # a standalone line due to ^...\s*$ anchors).
     'exercise': re.compile(
-        r'^\s*(?:Exercises?|Exercise\s+\d|अभ्यास)\s*$',
+        r'^\s*(?:'
+        r'Exercises?|'
+        r'Exercise\s+\d+(?:\.\d+)?|'
+        r'Miscellaneous\s+Exercise(?:\s+\d+(?:\.\d+)?)?|'
+        r'अभ्यास(?:\s*[\d०-९]+(?:\.[\d०-९]+)?)?'
+        r')\s*$',
         re.IGNORECASE | re.MULTILINE
     ),
     'exercise_qa': re.compile(
@@ -647,8 +705,446 @@ def _parse_nepali_toc_from_texts(ocr_pages: Dict[int, str], max_pages: int = 999
 
             i += 1
 
+    # Fallback: literature-anthology TOC (e.g. Nepali grade-9 reader).
+    # Only runs when the एकाइ/पाठ parser above returned nothing — this
+    # preserves behavior for all existing Nepali textbooks that use the
+    # standard unit/lesson TOC format.
+    if not toc_map:
+        lit_map = _parse_nepali_literature_toc(ocr_pages, max_pages=max_pages)
+        if lit_map:
+            toc_map = lit_map
+
     if toc_map:
         logger.info(f"Nepali OCR TOC parser extracted {len(toc_map)} entries")
+    return toc_map
+
+
+# ── Nepali literature genres (used as TOC anchors, not unit markers) ──
+_NEPALI_LITERATURE_GENRES = (
+    'कविता', 'कथा', 'निबन्ध', 'जीवनी', 'संवाद', 'निवेदन',
+    'नियात्रा', 'वक्तृता', 'लोककथा', 'गीत', 'नाटक', 'चिठी', 'पाठ',
+)
+_NEPALI_GENRE_RE = re.compile(
+    r'^(.+?)\s+(' + '|'.join(_NEPALI_LITERATURE_GENRES) + r')(?:\s+(\S+))?\s*$'
+)
+
+
+def _normalize_for_match(s: str) -> str:
+    """Lowercase + strip punctuation/whitespace for fuzzy title matching."""
+    return re.sub(r'[^\w\u0900-\u097F]+', ' ', s.lower()).strip()
+
+
+def _strip_unit_prefix(title: str) -> str:
+    """Strip leading 'Unit N:' / 'Chapter N:' / 'एकाइ N:' etc. from a TOC title."""
+    return re.sub(
+        r'^(?:Unit|Chapter|Lesson|Section|अध्याय|पाठ|एकाइ|इकाइ)\s*'
+        r'[\d०-९]+(?:\.[\d०-९]+)?\s*[:\.\-]?\s*',
+        '',
+        title,
+        flags=re.IGNORECASE,
+    ).strip()
+
+
+def _detect_page_offset(
+    page_texts: Dict[int, str],
+    max_pages_to_scan: int = 30,
+) -> int:
+    """Detect a constant offset between printed book-page numbers and
+    physical PDF page indices.
+
+    Many textbooks print a page number at the top of each page (e.g.
+    `"25 Mathematics Grade 9"` at the top of physical page 31). When these
+    mismatch, every chapter in a TOC that uses book-page numbers will be
+    off by the same amount.
+
+    Strategy:
+      - Scan the first `max_pages_to_scan` physical pages.
+      - For each, extract candidate page numbers from the top 2 lines
+        (patterns like `^\\d{1,3}\\s` or `Mathematics Grade \\d \\d+`).
+      - Compute offset = physical_page - printed_page for each match.
+      - Return the mode (most common offset) if ≥3 pages agree, else 0.
+    """
+    if not page_texts:
+        return 0
+
+    offsets: List[int] = []
+    pages_scanned = 0
+
+    for phys_page in sorted(page_texts.keys()):
+        if pages_scanned >= max_pages_to_scan:
+            break
+        pages_scanned += 1
+
+        text = page_texts.get(phys_page, "")
+        if not text:
+            continue
+
+        # Look at the first 3 non-empty lines
+        lines = [ln.strip() for ln in text.split("\n") if ln.strip()][:3]
+        if not lines:
+            continue
+
+        for ln in lines:
+            # Pattern A: bare page number at line start, followed by space/end
+            m = re.match(r"^(\d{1,3})(?:\s|$)", ln)
+            if m:
+                printed = int(m.group(1))
+                if 1 <= printed <= 500:
+                    offsets.append(phys_page - printed)
+                    break
+            # Pattern B: book title + bare number at end of line
+            m = re.search(
+                r"(?:Grade|Class|Mathematics|Science|English|Nepali)\s+"
+                r"(?:\d+\s*)?(\d{1,3})\s*$",
+                ln,
+                re.IGNORECASE,
+            )
+            if m:
+                printed = int(m.group(1))
+                if 1 <= printed <= 500:
+                    offsets.append(phys_page - printed)
+                    break
+
+    if len(offsets) < 3:
+        return 0
+
+    # Return the mode if it appears in ≥50% of samples
+    from collections import Counter
+    mode, mode_count = Counter(offsets).most_common(1)[0]
+    if mode_count >= len(offsets) * 0.5 and mode != 0:
+        return mode
+    return 0
+
+
+def _validate_and_correct_toc_pages(
+    toc_map: Dict[int, str],
+    page_texts: Dict[int, str],
+    max_drift: int = 10,
+) -> Dict[int, str]:
+    """Correct TOC page numbers that drifted from their physical pages.
+
+    Many scanned textbooks print front-matter pages (cover, copyright,
+    preface) that aren't counted in the book's own page numbers. The OCR'd
+    TOC then says "Chapter 1 — page 1" but the chapter actually starts on
+    physical page 4 or 5.
+
+    Safety invariants (hard — tested against grade-9 science and grade-10
+    social, which previously collapsed chapters):
+
+      1. **Order preservation**: corrected pages must be in the same
+         relative order as the input. A chapter listed earlier in the TOC
+         cannot be mapped to a later physical page than a chapter listed
+         after it.
+      2. **No collisions**: two TOC entries cannot map to the same physical
+         page after correction. When a collision would occur, the earlier
+         entry keeps its corrected slot and later entries fall back to
+         their original pages.
+      3. **Unique title match**: the title must appear on exactly one
+         page within the drift window. Titles that match 2+ nearby pages
+         are ambiguous and skipped (keep original).
+      4. **No-change fallback**: if correction would violate any invariant
+         or damage more entries than it fixes, the original map is kept.
+
+    Returns a new dict — does not mutate the input.
+    """
+    if not toc_map or not page_texts:
+        return toc_map
+
+    def find_title_on_page(phys_page: int, title_norm: str) -> bool:
+        text = page_texts.get(phys_page, "")
+        if not text:
+            return False
+        head = text[:800]  # check top 800 chars — titles usually appear early
+        return title_norm in _normalize_for_match(head)
+
+    # Walk entries in original TOC order
+    ordered_entries = sorted(
+        toc_map.items(),
+        key=lambda kv: int(kv[0]) if str(kv[0]).lstrip("-").isdigit() else 0,
+    )
+
+    # For each entry, decide: keep original, or propose a corrected page
+    proposals: List[Tuple[int, int, str]] = []  # (orig_page, proposed_page, title)
+    for toc_page, title in ordered_entries:
+        try:
+            tp = int(toc_page)
+        except (ValueError, TypeError):
+            continue
+
+        short = _strip_unit_prefix(title)
+        if not short or len(short) < 4:
+            proposals.append((tp, tp, title))
+            continue
+
+        short_norm = _normalize_for_match(short)
+
+        # Already correct → keep
+        if find_title_on_page(tp, short_norm):
+            proposals.append((tp, tp, title))
+            continue
+
+        # Scan the full drift window and collect ALL matching pages.
+        # Ambiguity (2+ matches) is treated as a no-correction signal.
+        matches: List[int] = []
+        for delta in range(1, max_drift + 1):
+            for candidate in (tp - delta, tp + delta):
+                if candidate < 1 or candidate not in page_texts:
+                    continue
+                if find_title_on_page(candidate, short_norm):
+                    matches.append(candidate)
+            if len(matches) >= 2:
+                break
+
+        if len(matches) == 1:
+            proposals.append((tp, matches[0], title))
+        else:
+            # 0 matches or 2+ ambiguous matches → keep original
+            proposals.append((tp, tp, title))
+
+    # ── Invariant 1: enforce monotonic ordering of proposed pages ──
+    # Walk proposals in order. If a proposal would put a chapter at or
+    # before the previous chapter's proposed page, revert it to the
+    # original page (or max of original / prev+1, whichever is valid).
+    for i in range(1, len(proposals)):
+        prev_proposed = proposals[i - 1][1]
+        orig_page, prop_page, title = proposals[i]
+        if prop_page <= prev_proposed:
+            # Order violated — revert to original if original is still > prev
+            if orig_page > prev_proposed:
+                proposals[i] = (orig_page, orig_page, title)
+            else:
+                # Original also violates — keep original (accept slight
+                # chapter overlap rather than lose the chapter entirely)
+                proposals[i] = (orig_page, orig_page, title)
+
+    # ── Invariant 2: no two proposed pages collide ──
+    # If two chapters end up on the same physical page, revert the later
+    # one to its original page. Run a second pass because reverting may
+    # re-collide; keep iterating until stable.
+    for _ in range(3):  # 3 passes is enough for any realistic case
+        seen: Dict[int, int] = {}  # proposed_page -> index
+        collided = False
+        for i, (orig_page, prop_page, title) in enumerate(proposals):
+            if prop_page in seen:
+                # Revert later entry (this one) to its original page
+                proposals[i] = (orig_page, orig_page, title)
+                collided = True
+            else:
+                seen[prop_page] = i
+        if not collided:
+            break
+
+    # Build corrected map + count drift
+    corrected: Dict[int, str] = {}
+    drift_count = 0
+    for orig_page, prop_page, title in proposals:
+        corrected[prop_page] = title
+        if prop_page != orig_page:
+            drift_count += 1
+
+    # ── Invariant 4: sanity check — did correction reduce chapter count? ──
+    # If we somehow ended up with fewer entries than we started with (which
+    # should be impossible after the collision pass, but belt-and-braces),
+    # throw away the corrections and keep the original map.
+    if len(corrected) < len(toc_map):
+        logger.warning(
+            f"TOC page-drift correction would drop "
+            f"{len(toc_map) - len(corrected)} entries — keeping original map"
+        )
+        return toc_map
+
+    if drift_count:
+        logger.info(
+            f"TOC page-drift correction: adjusted {drift_count}/{len(toc_map)} "
+            f"entries to their actual physical pages"
+        )
+
+    # ── Second pass: constant-offset detection ──
+    # If the main pass only corrected a minority of entries, the remaining
+    # entries may share a constant offset that the ambiguity check blocked.
+    # Grade-9 / grade-10 math books print book-page numbers offset from
+    # physical PDF pages by a constant (e.g. 6). Detect by scanning printed
+    # page numbers in the first ~30 physical pages.
+    uncorrected_fraction = 1.0 - (drift_count / max(1, len(toc_map)))
+    if uncorrected_fraction >= 0.5:
+        offset = _detect_page_offset(page_texts)
+        if offset != 0:
+            logger.info(
+                f"Detected constant page offset of {offset:+d} "
+                f"(physical = printed + {offset}); "
+                f"applying to uncorrected TOC entries"
+            )
+            # Apply the offset to entries that weren't individually corrected.
+            # Preserve invariants: order + no collisions.
+            offset_corrected: Dict[int, str] = {}
+            used_pages = set()
+            for orig_page, prop_page, title in proposals:
+                if prop_page != orig_page:
+                    # Already corrected by pass 1 — keep it
+                    target = prop_page
+                else:
+                    # Apply offset
+                    target = orig_page + offset
+                    if target < 1:
+                        target = orig_page
+                # Collision resolution: bump by +1 until unique
+                while target in used_pages:
+                    target += 1
+                used_pages.add(target)
+                offset_corrected[target] = title
+
+            # Sanity check: don't lose entries
+            if len(offset_corrected) == len(toc_map):
+                extra_corrected = sum(
+                    1 for (orig, prop, _) in proposals
+                    if orig == prop  # pass 1 didn't touch these
+                )
+                logger.info(
+                    f"Offset correction moved {extra_corrected} additional entries"
+                )
+                return offset_corrected
+
+    return corrected
+
+
+def _parse_english_toc_line(line: str) -> Optional[Tuple[int, str, int]]:
+    """Parse a single OCR'd TOC line of the form `<num> <title> <page>`.
+
+    Used by `_parse_english_toc_from_ocr`. Returns `(unit, title, page)` on
+    success or None. Tolerant of OCR noise like `Oe 1 Scientific study 1`,
+    `4 Evolution | | 36`, `45 . Chemical Reaction 247`.
+    """
+    # Must start with optional non-digit garbage, then num, then text+num+end
+    m = re.match(r'^(?:[^\d]*?)(\d{1,3})(.+?)(\d{1,3})\s*$', line)
+    if not m:
+        return None
+
+    unit = int(m.group(1))
+    title = m.group(2)
+    page = int(m.group(3))
+
+    # Strip leading/trailing punctuation + OCR junk
+    title = re.sub(r'^[\s:\|\.\-—,]+', '', title)
+    title = re.sub(r'[\s:\|\.\-—,]+$', '', title)
+    title = re.sub(r'\s+', ' ', title).strip()
+
+    if len(title) < 4:
+        return None
+    # Require at least one alpha word of ≥3 chars (filters "Fig. 1.2")
+    alpha_words = re.findall(r'[A-Za-z]{3,}', title)
+    if len(alpha_words) < 1:
+        return None
+    # Sanity: page numbers 1..999
+    if not (1 <= page <= 999):
+        return None
+    # Sanity: unit 1..99 (filter "Fig. 1.2" where first digit is chapter num)
+    if not (1 <= unit <= 99):
+        return None
+
+    return unit, title, page
+
+
+def _parse_english_toc_from_ocr(
+    ocr_pages: Dict[int, str]
+) -> Dict[int, str]:
+    """Parse English textbook TOCs out of OCR'd pages.
+
+    Used by the Tier-4 fallback in `process_pdf` when a book is fully scanned
+    (no PyMuPDF text layer) and the Nepali OCR parser returns nothing.
+    Handles the single-line format common in science/social textbooks:
+        1 Scientific study 1
+        2 Classification of Living Beings 17
+        3 Mushroom 27
+
+    Strict gating so this can't misfire on other books:
+      1. Page must look like a TOC (contains "Contents" OR "Unit"+"Topic"+"Page"
+         header OR ≥3 "unit"/"chapter"/"lesson" mentions).
+      2. Page must yield ≥5 valid entries before results are accepted.
+    """
+    toc_map: Dict[int, str] = {}
+
+    for page_idx in sorted(ocr_pages.keys()):
+        text = ocr_pages[page_idx]
+        if not text.strip():
+            continue
+        text_lower = text.lower()
+
+        # Strong TOC signal
+        is_toc_page = (
+            'contents' in text_lower
+            or ('unit' in text_lower and 'topic' in text_lower
+                and 'page' in text_lower)
+            or text_lower.count('unit') >= 3
+            or text_lower.count('chapter') >= 3
+            or text_lower.count('lesson') >= 3
+        )
+        if not is_toc_page:
+            continue
+
+        page_entries: Dict[int, str] = {}
+        for line in text.split('\n'):
+            parsed = _parse_english_toc_line(line.strip())
+            if not parsed:
+                continue
+            unit, title, page_num = parsed
+            # Use the page number (from the TOC text) as the key — matches
+            # the existing toc_map format used by get_chapter_for_page.
+            page_entries[page_num] = f"Unit {unit}: {title}"
+
+        if len(page_entries) >= 5:
+            toc_map.update(page_entries)
+            break  # accept the first high-quality TOC page
+
+    return toc_map
+
+
+def _parse_nepali_literature_toc(
+    ocr_pages: Dict[int, str], max_pages: int = 999
+) -> Dict[int, str]:
+    """Parse Nepali literature-anthology TOCs.
+
+    Matches entries of the form `<num>. <title> <genre> <page>`, e.g.:
+        १. मेघ बिजुली विवाह कविता १
+        २. स्वाद कथा १०
+
+    Genre words act as anchors since they sit between the title and the page
+    number. Guarded so this parser can't misfire on non-literature books:
+      1. Page must contain `विषयसूची` or `शीर्षक` (explicit TOC markers).
+      2. Page must yield ≥3 valid entries before results are accepted.
+    """
+    toc_map: Dict[int, str] = {}
+
+    for page_idx in sorted(ocr_pages.keys()):
+        text = ocr_pages[page_idx]
+        if 'विषयसूची' not in text and 'शीर्षक' not in text:
+            continue
+
+        lines = [l.strip() for l in text.split('\n') if l.strip()]
+        page_entries: Dict[int, str] = {}
+
+        for line in lines:
+            m = _NEPALI_GENRE_RE.match(line)
+            if not m:
+                continue
+            title = m.group(1).strip()
+            # Strip leading numeric/punctuation artifacts from OCR:
+            #   "१." "1." "¥." "प्‌." "द." etc.
+            title = re.sub(
+                r'^[\d०-९¥प्‌द\.\,\)\(]+\s*', '', title
+            ).strip()
+            if not title or len(title) < 2:
+                continue
+
+            page_str = m.group(3) or ''
+            page_num = _devanagari_to_int(page_str) if page_str else None
+
+            if page_num and 1 <= page_num <= max_pages:
+                page_entries[page_num] = title
+
+        if len(page_entries) >= 3:
+            toc_map.update(page_entries)
+            break  # one valid TOC page is enough
+
     return toc_map
 
 
@@ -1403,11 +1899,17 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
     # ─── STEP 1: Extract TOC (multi-tier with quality check) ───
     if force_ocr:
         logger.info("OCR-ing first pages for TOC extraction (Preeti PDF)...")
-        ocr_pages = {}
-        for pi in range(min(10, len(doc))):
-            pix = doc[pi].get_pixmap(dpi=300)
+        def _ocr_toc_page_preeti(pi):
+            d = fitz.open(stream=pdf_bytes, filetype="pdf")
+            pix = d[pi].get_pixmap(dpi=300)
+            d.close()
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            ocr_pages[pi] = pytesseract.image_to_string(img, lang='nep+eng', config='--psm 6')
+            return pi, pytesseract.image_to_string(img, lang='nep+eng', config='--psm 6')
+        ocr_pages = {}
+        n_toc = min(10, len(doc))
+        with ThreadPoolExecutor(max_workers=min(n_toc, 8)) as ex:
+            for pi, text in ex.map(_ocr_toc_page_preeti, range(n_toc)):
+                ocr_pages[pi] = text
         toc_map = _parse_nepali_toc_from_texts(ocr_pages, max_pages=len(doc))
     else:
         toc_map = extract_toc(doc)  # Tier 1: PyMuPDF metadata
@@ -1422,8 +1924,19 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
         numeric_count = sum(1 for t in titles if re.match(r'^\d+$', t.strip()))
         if numeric_count > len(toc) * 0.5:
             return "low"
-        # Check for .pdf extension — internal filename-based bookmarks
+        # Check for .pdf/.PDF extension — internal filename-based bookmarks
         if any('.pdf' in t.lower() for t in titles):
+            return "low"
+        # Check for scanned-doc filenames:
+        #   "New Doc 02-29-2024 11.08", "sci7 unit1 79-5-23", "scence 7unit2 79-5-2310"
+        scan_filename_count = sum(
+            1 for t in titles
+            if re.search(r'\d{2}[-/]\d{1,2}[-/]\d{2,4}', t)              # date: 02-29-2024 / 79-5-23
+            or re.match(r'^(New Doc|Scan|IMG|DSC|image|photo|page)\b', t, re.IGNORECASE)
+            or re.search(r'\bPDF\s*\d+\b', t, re.IGNORECASE)              # "PDF10"
+            or re.search(r'\bipg\s*\d+', t, re.IGNORECASE)                # "ipg1-16"
+        )
+        if scan_filename_count > len(toc) * 0.2:
             return "low"
         # Check for code-like titles: letter-digit or digit-letter concatenation
         # e.g. "sci8", "8unit", "unit625", "cls8" — auto-generated bookmark names
@@ -1441,7 +1954,25 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
         if noisy_count > len(toc) * 0.3:
             return "low"
         return "good"
-    
+
+    def prefer_toc(current: Dict[int, str], candidate: Dict[int, str]) -> bool:
+        """Decide whether `candidate` should replace `current` as the chosen TOC.
+
+        Quality beats size: a "good" TOC always wins over a "low" one,
+        regardless of entry count. For same-quality TOCs, the one with more
+        entries wins. Fixes the prior bug where Docling's 19 clean entries
+        were rejected because PyMuPDF had returned 179 garbage entries.
+        """
+        if not candidate:
+            return False
+        curr_q = assess_toc_quality(current)
+        cand_q = assess_toc_quality(candidate)
+        if cand_q == "good" and curr_q != "good":
+            return True
+        if curr_q == "good" and cand_q != "good":
+            return False
+        return len(candidate) > len(current)
+
     toc_quality = assess_toc_quality(toc_map)
     
     # Always try text parser if PyMuPDF quality is low
@@ -1465,38 +1996,77 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
             toc_quality = assess_toc_quality(toc_map)
     
     if toc_quality == "low":
-        logger.info(f"Text parser found {len(toc_map)} entries. Trying Docling...")
-        docling_toc = extract_toc_with_docling(pdf_bytes)  # Tier 2: Docling
-        if len(docling_toc) > len(toc_map):
-            toc_map = docling_toc
-            toc_quality = assess_toc_quality(toc_map)
-    
-    if toc_quality == "low":
-        logger.info(f"TOC still has only {len(toc_map)} entries. Trying Groq LLM...")
-        groq_toc = extract_toc_with_groq(pdf_bytes)  # Tier 3: Groq LLM
-        if len(groq_toc) > len(toc_map):
-            toc_map = groq_toc
-            toc_quality = assess_toc_quality(toc_map)
+        # Tier 2 + 3: Run Docling and Groq LLM in parallel (saves ~15s on M1)
+        logger.info("Running Docling + Groq LLM TOC extraction in parallel...")
+        with ThreadPoolExecutor(max_workers=2) as ex:
+            docling_future = ex.submit(extract_toc_with_docling, pdf_bytes)
+            groq_future    = ex.submit(extract_toc_with_groq, pdf_bytes)
+            docling_toc = docling_future.result()
+            groq_toc    = groq_future.result()
 
-    # Tier 4: For scanned Nepali books, try OCR-based Nepali TOC parsing
+        # Pick the best result: quality-first so Docling's clean 19 entries
+        # can displace PyMuPDF's 179 garbage entries.
+        for candidate in sorted(
+            [docling_toc, groq_toc],
+            key=lambda t: (assess_toc_quality(t) == "good", len(t)),
+            reverse=True
+        ):
+            if prefer_toc(toc_map, candidate):
+                toc_map = candidate
+                toc_quality = assess_toc_quality(toc_map)
+                break
+
+    # Tier 4: Scanned Nepali books — parallel OCR of first 10 pages
+    # NOTE: Only runs if still low AND first page has no text layer (truly scanned)
+    # Disabled for scanned-image PDFs with garbage bookmarks (handled by discard below)
     if toc_quality == "low" and not force_ocr:
-        # Check if first pages are scanned (no text)
         first_page_text = doc[0].get_text().strip() if len(doc) > 0 else ""
         if not first_page_text:
-            logger.info("Scanned PDF with low TOC — trying OCR-based Nepali TOC parser...")
-            ocr_pages = {}
-            for pi in range(min(10, len(doc))):
-                pix = doc[pi].get_pixmap(dpi=300)
+            logger.info("Scanned PDF — trying parallel OCR Nepali TOC parser...")
+            def _ocr_toc_page(pi):
+                d = fitz.open(stream=pdf_bytes, filetype="pdf")
+                pix = d[pi].get_pixmap(dpi=300)
+                d.close()
                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                ocr_pages[pi] = pytesseract.image_to_string(img, lang='nep+eng', config='--psm 6')
+                return pi, pytesseract.image_to_string(img, lang='nep+eng', config='--psm 6')
+            ocr_pages = {}
+            n_toc_pages = min(10, len(doc))
+            with ThreadPoolExecutor(max_workers=min(n_toc_pages, 8)) as ex:
+                for pi, text in ex.map(_ocr_toc_page, range(n_toc_pages)):
+                    ocr_pages[pi] = text
             nepali_toc = _parse_nepali_toc_from_texts(ocr_pages, max_pages=len(doc))
-            if len(nepali_toc) > len(toc_map):
+            if prefer_toc(toc_map, nepali_toc):
                 toc_map = nepali_toc
+                toc_quality = assess_toc_quality(toc_map)
+
+            # If the Nepali parser didn't win, the scanned book is probably
+            # English (e.g. grade-9 science). Try the English OCR-aware
+            # single-line parser as an additional fallback.
+            if assess_toc_quality(toc_map) == "low":
+                english_ocr_toc = _parse_english_toc_from_ocr(ocr_pages)
+                if prefer_toc(toc_map, english_ocr_toc):
+                    logger.info(
+                        f"English OCR TOC parser extracted "
+                        f"{len(english_ocr_toc)} entries"
+                    )
+                    toc_map = english_ocr_toc
+                    toc_quality = assess_toc_quality(toc_map)
+
+    # ── Final quality gate: discard garbage TOC rather than pollute chunk metadata ──
+    # Scanned-image PDFs stitched from phone photos embed filenames as bookmarks
+    # (e.g. "New Doc 02-29-2024", "sci7 unit1 79-5-23"). Using these tags makes
+    # retrieval worse — better to have no chapter tag than a wrong one.
+    if assess_toc_quality(toc_map) == "low":
+        logger.warning(
+            f"Discarding low-quality TOC ({len(toc_map)} entries, "
+            f"sample: {list(toc_map.values())[:3]}). Chunks will have no chapter tags."
+        )
+        toc_map = {}
 
     if toc_map:
         logger.info(f"Final TOC with {len(toc_map)} chapters/units: {list(toc_map.values())[:8]}...")
     else:
-        logger.warning("No TOC found via any extraction method — chunks will not have chapter tags")
+        logger.warning("No TOC found — chunks will not have chapter tags")
     
     # ─── STEP 2: Extract text from all pages (parallel) ───
     num_pages = len(doc)
@@ -1532,6 +2102,17 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
                     else:
                         scan_indices.append(p_num - 1)  # 0-based for OCR
 
+        # Guard: if >30% of pages already yielded text, this is a text-layer PDF.
+        # Blank pages are diagrams/figures — OCR-ing them is slow and returns noise.
+        if scan_indices and num_pages > 0:
+            text_page_ratio = len(page_texts) / num_pages
+            if text_page_ratio > 0.3:
+                logger.info(
+                    f"Text-layer PDF ({text_page_ratio:.0%} pages have text). "
+                    f"Skipping OCR for {len(scan_indices)} blank/figure pages."
+                )
+                scan_indices = []
+
     # Parallel OCR for scanned pages (or all pages if force_ocr)
     if scan_indices:
         logger.info(f"Detected {len(scan_indices)} scanned pages. Starting Parallel Tesseract OCR...")
@@ -1562,6 +2143,14 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
         page_texts[p_num] = reconstruct_fractions(
             reconstruct_fractions(page_texts[p_num])
         )
+
+    # ─── STEP 2.6: TOC page-drift correction ───
+    # For scanned books where OCR TOC page numbers don't match the physical
+    # PDF pages (e.g. grade-9 science had front-matter offsetting every
+    # chapter), scan nearby pages for the actual chapter title and correct
+    # the toc_map. Safe no-op on already-correct TOCs.
+    if toc_map:
+        toc_map = _validate_and_correct_toc_pages(toc_map, page_texts)
 
     # ─── STEP 3: Section-aware chunking with chapter boundaries ───
     chunks = []
@@ -1620,6 +2209,9 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
                         primary_page = boundary["page"]
                         break
 
+            # Per-section chunk sizes (RAGAS: chunking overhaul)
+            sec_size, sec_overlap = _chunk_params(section_type)
+
             # Atomic sections: keep intact if under MAX_ATOMIC_TOKENS
             if _is_atomic_section(section_type) and section_tokens <= MAX_ATOMIC_TOKENS:
                 chunks.append({
@@ -1633,7 +2225,7 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
                 })
             # Large atomic sections: split but keep section_type tag
             elif _is_atomic_section(section_type):
-                sub_chunks = split_text_by_tokens(section_text, CHUNK_SIZE, CHUNK_OVERLAP)
+                sub_chunks = split_text_semantic(section_text, sec_size, sec_overlap)
                 for ci, sub_text in enumerate(sub_chunks):
                     if not sub_text.strip():
                         continue
@@ -1663,7 +2255,7 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
                 if section_type == 'reading':
                     reading_title = _extract_reading_title(section_text)
 
-                sub_chunks = split_text_by_tokens(section_text, CHUNK_SIZE, CHUNK_OVERLAP)
+                sub_chunks = split_text_semantic(section_text, sec_size, sec_overlap)
                 char_pos = 0
                 for sub_text in sub_chunks:
                     if not sub_text.strip():
@@ -1697,23 +2289,47 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
     # Sort by page number
     chunks.sort(key=lambda x: x['page'])
 
-    # Filter and merge small chunks (now section-type aware)
-    chunks = filter_and_merge_small_chunks(chunks, min_size=80)
-    
+    # Filter and merge small chunks (section-type-aware thresholds)
+    chunks = filter_and_merge_small_chunks(chunks)
+
+    # ─── STEP 3.5: Formula+Example co-location pass (math books) ───
+    # Adjacent content(with formula) + example pairs get merged into
+    # `formula_with_example` sections so the retriever never returns one
+    # without the other.
+    chunks = colocate_formula_examples(chunks)
+
+    # ─── STEP 3.6: Validate math-notation reconstruction ───
+    validate_math_chunks(chunks)
+
+    # ─── STEP 3.7: Enrich with metadata + sentence-window context ───
+    chunks = enrich_chunks_with_metadata_and_context(chunks)
+
     # ─── STEP 4: Create dedicated TOC summary chunk ───
     if toc_map:
-        toc_text = "Table of Contents — Chapters and Units in this textbook:\n\n"
+        # Header keywords improve structural-query retrieval ("list chapters",
+        # "what topics", "book contents") without bloating the chunk — the
+        # body below already contains every chapter title verbatim.
+        toc_text = (
+            "Table of Contents — Complete list of all chapters, units, "
+            "lessons, topics, subjects and syllabus covered in this textbook. "
+            "This is the full index of what the book teaches:\n\n"
+        )
         for page_num, title in sorted(toc_map.items()):
             toc_text += f"• {title} (starts on Page {page_num})\n"
-        toc_text += f"\nTotal: {len(toc_map)} chapters/units"
+        toc_text += f"\nTotal: {len(toc_map)} chapters/units in this textbook."
         
         toc_chunk = {
             "text": toc_text,
             "page": 1,
             "chapter": "Table of Contents",
             "section_type": "toc",
+            "heading": "Table of Contents",
             "token_count": count_tokens(toc_text),
-            "original_text": toc_text
+            "original_text": toc_text,
+            "subject_hint": "unknown",
+            "has_formula": False,
+            "has_definition": False,
+            "text_with_context": toc_text,
         }
         chunks.insert(0, toc_chunk)  # Put TOC first
         logger.info(f"Created dedicated TOC chunk with {len(toc_map)} entries")
@@ -1723,15 +2339,57 @@ def process_pdf(pdf_bytes: bytes) -> List[Dict]:
     return chunks
 
 
-def filter_and_merge_small_chunks(chunks: List[Dict], min_size: int = 80) -> List[Dict]:
+# Section-type-aware min-size thresholds for small-chunk merging.
+# Old behavior used a single global min_size=80, which meant orphaned
+# headings / page numbers (<150 tokens but >80) slipped through as separate
+# chunks for content sections. Exercise sub-items can legitimately be short
+# (one MCQ + 4 options fits in ~60 tokens), so they use a lower threshold.
+_MERGE_MIN_SIZE_BY_TYPE: Dict[str, int] = {
+    "content": 150,
+    "reading": 150,
+    "example": 120,
+    "exercise_mcq": 60,
+    "exercise_fitb": 60,
+    "exercise_fullform": 60,
+    "exercise_technical_terms": 60,
+    "exercise_qa": 100,
+    "exercise": 100,
+    "activity": 120,
+    "project": 120,
+    "comprehension": 100,
+    "vocabulary": 100,
+    "critical_thinking": 100,
+    "grammar": 120,
+    "writing": 120,
+    "speaking": 80,
+    "listening": 80,
+}
+_DEFAULT_MERGE_MIN_SIZE = 100
+
+
+def _min_size_for(section_type: str) -> int:
+    """Return the small-chunk merge threshold for a given section type."""
+    return _MERGE_MIN_SIZE_BY_TYPE.get(section_type, _DEFAULT_MERGE_MIN_SIZE)
+
+
+def filter_and_merge_small_chunks(
+    chunks: List[Dict], min_size: Optional[int] = None
+) -> List[Dict]:
     """
     Remove tiny chunks and merge small adjacent chunks.
-    Section-type aware: only merges chunks of the SAME section_type and chapter.
+    Section-type aware: only merges chunks of the SAME section_type and chapter,
+    and the per-type threshold comes from `_MERGE_MIN_SIZE_BY_TYPE`.
+
+    The `min_size` arg is retained for backward compatibility — if passed, it
+    overrides the per-type thresholds (legacy behavior).
+
     Greedy merge for 'example' chunks: keeps absorbing consecutive small examples
-    until the combined size reaches CHUNK_SIZE (reduces 337 → ~100 for Math books).
+    until the combined size reaches the example chunk window.
     """
     filtered = []
     i = 0
+
+    example_window = CHUNK_CONFIG.get("example", {}).get("size", 1200)
 
     while i < len(chunks):
         current = chunks[i]
@@ -1743,9 +2401,10 @@ def filter_and_merge_small_chunks(chunks: List[Dict], min_size: int = 80) -> Lis
 
         cur_type = current.get('section_type', 'content')
         cur_chapter = current['chapter']
+        cur_min = min_size if min_size is not None else _min_size_for(cur_type)
 
         # Greedy merge for small example chunks (Math books produce many tiny ones)
-        if cur_type == 'example' and current['token_count'] < CHUNK_SIZE:
+        if cur_type == 'example' and current['token_count'] < example_window:
             merged_text = current['text']
             merged_orig = current['original_text']
             merged_tokens = current['token_count']
@@ -1759,7 +2418,7 @@ def filter_and_merge_small_chunks(chunks: List[Dict], min_size: int = 80) -> Lis
                         or nxt['chapter'] != cur_chapter):
                     break
                 combined = merged_tokens + nxt['token_count']
-                if combined > CHUNK_SIZE:
+                if combined > example_window:
                     break
                 merged_text += "\n\n" + nxt['text']
                 merged_orig += "\n\n" + nxt['original_text']
@@ -1781,7 +2440,7 @@ def filter_and_merge_small_chunks(chunks: List[Dict], min_size: int = 80) -> Lis
             continue
 
         # Standard pair-merge for other small chunks (same chapter + type)
-        if current['token_count'] < min_size and i + 1 < len(chunks):
+        if current['token_count'] < cur_min and i + 1 < len(chunks):
             next_chunk = chunks[i + 1]
 
             same_chapter = next_chunk['chapter'] == cur_chapter
@@ -1789,8 +2448,10 @@ def filter_and_merge_small_chunks(chunks: List[Dict], min_size: int = 80) -> Lis
 
             if same_chapter and same_type:
                 merged_tokens = current['token_count'] + next_chunk['token_count']
+                # Cap at the section-type's own window rather than a global constant
+                type_window = CHUNK_CONFIG.get(cur_type, {}).get("size", CHUNK_SIZE)
 
-                if merged_tokens <= CHUNK_SIZE:
+                if merged_tokens <= type_window:
                     merged = {
                         'text': current['text'] + "\n\n" + next_chunk['text'],
                         'page': current['page'],
@@ -1811,16 +2472,20 @@ def filter_and_merge_small_chunks(chunks: List[Dict], min_size: int = 80) -> Lis
 
 
 def split_text_by_tokens(text: str, chunk_size: int, overlap: int) -> List[str]:
-    """Split text into chunks of max `chunk_size` tokens with overlap"""
+    """Split text into chunks of max `chunk_size` tokens with overlap.
+
+    Raw token-window split — kept as a fallback. Prefer `split_text_semantic`
+    in the main pipeline since it respects paragraph boundaries.
+    """
     if not text:
         return []
-        
+
     enc = tiktoken.get_encoding("cl100k_base")
     tokens = enc.encode(text)
-    
+
     if len(tokens) == 0:
         return []
-    
+
     chunks = []
     start = 0
     while start < len(tokens):
@@ -1828,32 +2493,952 @@ def split_text_by_tokens(text: str, chunk_size: int, overlap: int) -> List[str]:
         chunk_tokens = tokens[start:end]
         chunk_text = enc.decode(chunk_tokens)
         chunks.append(chunk_text)
-        
+
         if end == len(tokens):
             break
-            
+
         start += (chunk_size - overlap)
-        
+
     return chunks
+
+
+# =============================================================================
+# CHUNK METADATA ENRICHMENT — subject/formula/definition hints + sentence window
+# =============================================================================
+
+# Definition markers (English + Nepali)
+_DEFINITION_MARKERS = (
+    "is defined as", "are defined as",
+    "is called", "are called",
+    "refers to", "refer to",
+    "is known as", "are known as",
+    "means that", "can be defined",
+    # Nepali
+    "भनिन्छ", "भन्नाले", "परिभाषा",
+)
+
+# Formula/math indicators — ASCII operators and common math unicode
+_FORMULA_CHARS = set("=√∑∫±²³^≤≥≠≈∠∩∪⊂⊃πθαβγδϕψλ°÷×∆")
+_FORMULA_TOKEN_RE = re.compile(
+    r"(?:\d+\s*[+\-*/=]\s*\d+|\b(?:sin|cos|tan|log|ln|sqrt)\b|"
+    r"\b[a-zA-Z]\^?\d|\b[a-zA-Z]\s*=\s*\d)"
+)
+
+
+def _infer_subject_hint(chapter: str) -> str:
+    """Infer a coarse subject hint from the chapter/unit title.
+
+    Used at index time so retrieval can bias toward the right subject without
+    running `_detect_subject` on the query-only heuristic. Returns one of:
+    math, science, english, nepali, social, computer, unknown.
+    """
+    if not chapter or chapter == "Unknown":
+        return "unknown"
+
+    c = chapter.lower()
+
+    # Computer / IT cues
+    if any(k in c for k in (
+        "computer", "information technology", "ict", "database",
+        "programming", "qbasic", "c program", "networking",
+        "telecommunication", "hardware", "software", "internet",
+    )):
+        return "computer"
+
+    # Math cues
+    if any(k in c for k in (
+        "math", "algebra", "geometry", "trigonometry", "arithmetic",
+        "statistics", "probability", "calculus", "mensuration", "sets",
+        "number system", "equation", "polynomial", "quadratic",
+        "area", "volume", "surface area", "sequence", "series",
+        "compound interest", "simple interest", "tax", "commission",
+        "factorization", "factorisation", "indices", "ratio and proportion",
+        "prism", "sphere", "cylinder", "cone", "pyramid",
+        "linear equation", "matrix", "vector", "mean", "median", "mode",
+        "household arithmetic",
+    )):
+        return "math"
+
+    # Science cues
+    if any(k in c for k in (
+        "science", "physics", "chemistry", "biology", "ecology",
+        "matter", "energy", "force", "motion", "cell", "organism",
+        "environment", "plant", "animal", "atom", "molecule",
+    )):
+        return "science"
+
+    # Social / civics cues
+    if any(k in c for k in (
+        "social", "society", "culture", "history", "geography",
+        "civics", "citizenship", "democracy", "government",
+        "economy", "population", "political",
+        "समाज", "संस्कृति", "इतिहास", "भूगोल", "नागरिक", "सरकार",
+    )):
+        return "social"
+
+    # Nepali language cues
+    if any(k in c for k in (
+        "nepali", "nepāli", "नेपाली", "पाठ", "कविता", "निबन्ध",
+        "व्याकरण",
+    )):
+        return "nepali"
+
+    # English language cues
+    if any(k in c for k in (
+        "english", "grammar", "reading", "poem", "story", "essay",
+        "composition", "literature",
+    )):
+        return "english"
+
+    return "unknown"
+
+
+def _has_formula(text: str) -> bool:
+    """Return True if the chunk text contains formula-like content.
+
+    Heuristic: presence of math unicode, or common ASCII math tokens like
+    `x = 5`, `2 + 3`, `sin(θ)`, `a^2`. Intentionally noisy — a false positive
+    is cheap (a minor retrieval boost); a false negative silently hurts math
+    recall.
+    """
+    if not text:
+        return False
+    # Fast path: any formula char at all
+    if any(c in _FORMULA_CHARS for c in text):
+        return True
+    # Slow path: regex for multi-char patterns
+    return bool(_FORMULA_TOKEN_RE.search(text))
+
+
+def _has_definition(text: str) -> bool:
+    """Return True if the chunk likely contains a definition.
+    Checks English and Nepali definition markers.
+    """
+    if not text:
+        return False
+    low = text.lower()
+    return any(marker in low or marker in text for marker in _DEFINITION_MARKERS)
+
+
+# Sentence splitter: supports English `.!?` and Devanagari danda `।`.
+# Python's stdlib `re` doesn't allow variable-width lookbehinds, so we split
+# naively and then re-glue false splits caused by common abbreviations.
+_SENT_SPLIT_RE = re.compile(r"(?<=[.!?।])\s+")
+_ABBREVIATIONS = (
+    "mr.", "mrs.", "ms.", "dr.", "jr.", "sr.", "st.", "vs.", "etc.",
+    "e.g.", "i.e.", "cf.", "fig.", "no.", "vol.",
+)
+
+
+def _split_sentences(text: str) -> List[str]:
+    """Split text into sentences across English + Devanagari punctuation.
+    Returns a list of trimmed, non-empty sentences. Re-joins fragments whose
+    boundary was created by a known abbreviation (e.g. "Mr. Smith").
+    """
+    if not text or not text.strip():
+        return []
+    parts = _SENT_SPLIT_RE.split(text.strip())
+    cleaned = [p.strip() for p in parts if p.strip()]
+    if not cleaned:
+        return []
+
+    # Re-glue abbreviations: if a fragment ends with a known abbreviation,
+    # merge it with the next fragment.
+    merged: List[str] = []
+    i = 0
+    while i < len(cleaned):
+        curr = cleaned[i]
+        while (
+            i + 1 < len(cleaned)
+            and any(curr.lower().endswith(abbr) for abbr in _ABBREVIATIONS)
+        ):
+            curr = curr + " " + cleaned[i + 1]
+            i += 1
+        merged.append(curr)
+        i += 1
+    return merged
+
+
+def _build_context_window(
+    prev_text: Optional[str],
+    curr_text: str,
+    next_text: Optional[str],
+    tail_sents: int = 2,
+    head_sents: int = 2,
+) -> str:
+    """Return `curr_text` with the last 1–2 sentences of `prev_text` prepended
+    and the first 1–2 sentences of `next_text` appended.
+
+    Used to populate `text_with_context` so the LLM sees cross-boundary context
+    without doubling chunk count. Improves RAGAS context-recall directly.
+    """
+    pieces: List[str] = []
+
+    if prev_text:
+        prev_sents = _split_sentences(prev_text)
+        if prev_sents:
+            pieces.append(" ".join(prev_sents[-tail_sents:]))
+
+    pieces.append(curr_text)
+
+    if next_text:
+        next_sents = _split_sentences(next_text)
+        if next_sents:
+            pieces.append(" ".join(next_sents[:head_sents]))
+
+    return "\n\n".join(pieces)
+
+
+# =============================================================================
+# MATH-SPECIFIC POST-PROCESSING — formula/example merging + validation
+# =============================================================================
+
+# Single-letter variable regex (skips keywords like "a", "I", "e")
+_VARIABLE_RE = re.compile(r"(?<![A-Za-z])([A-Za-z])(?![A-Za-z])")
+
+# Common English articles/prepositions to exclude when extracting variables
+_NON_VARIABLE_LETTERS = set("aAiIeEoOuU")  # vowels often stand for articles
+
+
+def _extract_single_letter_vars(text: str) -> set:
+    """Extract single-letter variable names from a math chunk.
+
+    Used to detect when a content section (with a formula) and the following
+    example section share variable names — a strong signal they should stay
+    together.
+    """
+    if not text:
+        return set()
+    found = set(_VARIABLE_RE.findall(text))
+    # Drop vowels — usually articles, not variables
+    return {v for v in found if v not in _NON_VARIABLE_LETTERS}
+
+
+def colocate_formula_examples(chunks: List[Dict]) -> List[Dict]:
+    """Merge adjacent `content`(with formula) + `example` chunks that share
+    variables into a single `formula_with_example` chunk.
+
+    Runs after `filter_and_merge_small_chunks` and before metadata enrichment.
+    Prevents retrieval from returning a worked example without its defining
+    formula (or vice versa), which is a common RAGAS context-precision failure
+    for Math books.
+
+    Rules:
+      - `content` chunk must have `_has_formula == True`
+      - Next chunk must be `example` in the SAME chapter
+      - They must share at least 2 single-letter variables
+      - Merged size ≤ `CHUNK_CONFIG['formula_with_example']['size']`
+    """
+    if not chunks:
+        return chunks
+
+    merged: List[Dict] = []
+    max_merged = CHUNK_CONFIG.get(
+        "formula_with_example", {"size": 1500}
+    )["size"]
+
+    i = 0
+    while i < len(chunks):
+        cur = chunks[i]
+        cur_type = cur.get("section_type", "content")
+        cur_text = cur.get("text", "")
+
+        if (
+            cur_type == "content"
+            and _has_formula(cur_text)
+            and i + 1 < len(chunks)
+        ):
+            nxt = chunks[i + 1]
+            nxt_type = nxt.get("section_type", "")
+            same_chapter = nxt.get("chapter") == cur.get("chapter")
+
+            if nxt_type == "example" and same_chapter:
+                cur_vars = _extract_single_letter_vars(cur_text)
+                nxt_vars = _extract_single_letter_vars(nxt.get("text", ""))
+                shared = cur_vars & nxt_vars
+
+                combined_tokens = (
+                    cur.get("token_count", 0) + nxt.get("token_count", 0)
+                )
+
+                if len(shared) >= 2 and combined_tokens <= max_merged:
+                    merged_text = cur_text + "\n\n" + nxt.get("text", "")
+                    merged_orig = (
+                        cur.get("original_text", cur_text)
+                        + "\n\n"
+                        + nxt.get("original_text", nxt.get("text", ""))
+                    )
+                    merged.append({
+                        "text": merged_text,
+                        "original_text": merged_orig,
+                        "page": cur.get("page"),
+                        "chapter": cur.get("chapter"),
+                        "section_type": "formula_with_example",
+                        "heading": cur.get("heading") or nxt.get("heading", ""),
+                        "token_count": combined_tokens,
+                    })
+                    logger.debug(
+                        "colocate_formula_examples: merged formula+example "
+                        f"on page {cur.get('page')} (shared vars: {shared})"
+                    )
+                    i += 2
+                    continue
+
+        merged.append(cur)
+        i += 1
+
+    return merged
+
+
+# Pattern that catches a numerator (short math-y line) followed by an empty/
+# short denominator line that reconstruction missed.
+_UNMATCHED_FRAC_RE = re.compile(
+    r"^\s*[\w\d+\-*×÷√π]+\s*$\n^\s*[\w\d]{1,3}\s*$",
+    re.MULTILINE,
+)
+
+
+def validate_math_chunks(chunks: List[Dict]) -> None:
+    """Log a WARNING per page where fraction reconstruction may have failed.
+
+    Detects patterns like a very short line followed by another very short
+    line with no operator between them — which typically means the
+    `reconstruct_fractions` pass missed something. Used purely for visibility
+    (no chunk mutation).
+    """
+    if not chunks:
+        return
+
+    page_miss: Dict[int, int] = {}
+    for ch in chunks:
+        # Only math-ish chunks
+        if not (_has_formula(ch.get("text", ""))
+                or ch.get("section_type") == "example"
+                or ch.get("section_type") == "formula_with_example"):
+            continue
+        count = len(_UNMATCHED_FRAC_RE.findall(ch.get("text", "")))
+        if count:
+            page = ch.get("page", 0)
+            page_miss[page] = page_miss.get(page, 0) + count
+
+    for page, count in sorted(page_miss.items()):
+        logger.warning(
+            f"validate_math_chunks: page {page} has {count} possible "
+            f"unreconstructed fraction pattern(s)"
+        )
+
+
+def enrich_chunks_with_metadata_and_context(
+    chunks: List[Dict],
+) -> List[Dict]:
+    """Post-chunking pass: add `subject_hint`, `has_formula`, `has_definition`,
+    and `text_with_context` fields to each chunk.
+
+    - `text` stays as the original chunk body (for display / citations).
+    - `text_with_context` is `text` plus the tail/head of its chapter siblings
+      (for LLM prompting).
+    - Metadata flags are computed from the ORIGINAL chunk text, not the
+      context-enriched version, so boosts reflect the chunk's own content.
+
+    All fields are optional for backward compatibility. SQL to add columns:
+        -- ALTER TABLE chunks
+        --   ADD COLUMN subject_hint TEXT,
+        --   ADD COLUMN has_formula BOOLEAN DEFAULT FALSE,
+        --   ADD COLUMN has_definition BOOLEAN DEFAULT FALSE,
+        --   ADD COLUMN text_with_context TEXT;
+    """
+    if not chunks:
+        return chunks
+
+    # Group chunks by chapter so the context window never crosses chapters
+    # (prevents leaking unrelated content across unit boundaries).
+    n = len(chunks)
+    for i, chunk in enumerate(chunks):
+        text = chunk.get("text", "") or ""
+        chapter = chunk.get("chapter", "")
+
+        # Metadata flags (from original text)
+        chunk["subject_hint"] = _infer_subject_hint(chapter)
+        chunk["has_formula"] = _has_formula(text)
+        chunk["has_definition"] = _has_definition(text)
+
+        # Sentence-window context (only within same chapter)
+        prev_text = None
+        next_text = None
+        if i > 0 and chunks[i - 1].get("chapter") == chapter:
+            prev_text = chunks[i - 1].get("text", "")
+        if i + 1 < n and chunks[i + 1].get("chapter") == chapter:
+            next_text = chunks[i + 1].get("text", "")
+
+        chunk["text_with_context"] = _build_context_window(
+            prev_text, text, next_text
+        )
+
+    return chunks
+
+
+def split_text_semantic(
+    text: str,
+    chunk_size: int,
+    overlap: int,
+    tail_fraction: float = 0.15,
+) -> List[str]:
+    """Split text into chunks of ~`chunk_size` tokens, respecting paragraph
+    and sentence boundaries when possible.
+
+    Strategy:
+        1. Walk the text in token windows of `chunk_size`.
+        2. Within the last `tail_fraction` (default 15%) of each window, look
+           backwards for the nearest safe break, in priority order:
+             (a) double-newline  (paragraph boundary)
+             (b) single-newline  (line break)
+             (c) sentence terminator (. ! ? । — Devanagari danda)
+        3. If none found, fall back to the raw token cut — identical to
+           `split_text_by_tokens`.
+        4. Next window starts `overlap` tokens before the previous cut.
+
+    This prevents mid-sentence slicing which hurts RAGAS context-recall.
+    """
+    if not text:
+        return []
+
+    enc = tiktoken.get_encoding("cl100k_base")
+    tokens = enc.encode(text)
+    total = len(tokens)
+    if total == 0:
+        return []
+    if total <= chunk_size:
+        return [text]
+
+    chunks: List[str] = []
+    start = 0
+    tail_size = max(1, int(chunk_size * tail_fraction))
+
+    while start < total:
+        hard_end = min(start + chunk_size, total)
+
+        # If we're at the very end, take whatever remains
+        if hard_end >= total:
+            chunk_text = enc.decode(tokens[start:total])
+            if chunk_text.strip():
+                chunks.append(chunk_text)
+            break
+
+        # Decode the full candidate window and search its tail for a break
+        window_text = enc.decode(tokens[start:hard_end])
+        tail_start_char = len(enc.decode(tokens[start:hard_end - tail_size]))
+        # Search region: from tail_start_char → end of window
+        tail_region = window_text[tail_start_char:]
+
+        # Priority (a): double-newline
+        cut_char = tail_region.rfind("\n\n")
+        # Priority (b): single newline
+        if cut_char < 0:
+            cut_char = tail_region.rfind("\n")
+        # Priority (c): sentence terminator
+        if cut_char < 0:
+            for term in (". ", "! ", "? ", "। ", ".\n", "!\n", "?\n", "।\n"):
+                pos = tail_region.rfind(term)
+                if pos > cut_char:
+                    cut_char = pos + len(term) - 1  # include the terminator
+
+        if cut_char >= 0:
+            absolute_cut = tail_start_char + cut_char
+            chunk_text = window_text[:absolute_cut].strip()
+            if chunk_text:
+                chunks.append(chunk_text)
+            # Re-tokenize the emitted text to compute where to resume
+            emitted_tokens = len(enc.encode(chunk_text))
+            # Guard against pathological cases (e.g. cut at position 0)
+            if emitted_tokens <= 0:
+                emitted_tokens = chunk_size  # fall back to hard cut
+            advance = max(1, emitted_tokens - overlap)
+            start += advance
+        else:
+            # No natural break within the last 15% — raw token cut
+            chunk_text = enc.decode(tokens[start:hard_end])
+            if chunk_text.strip():
+                chunks.append(chunk_text)
+            start += max(1, chunk_size - overlap)
+
+    return chunks
+
+
+# =============================================================================
+# RETRIEVAL HELPERS — keyword hints, MMR, structural filtering
+# =============================================================================
+
+# Tokens to drop when extracting keywords — very common English + Nepali
+# stopwords plus question-framing words that add no retrieval signal.
+_STOPWORDS = {
+    # English
+    "the", "a", "an", "of", "to", "in", "is", "are", "was", "were",
+    "be", "been", "being", "on", "at", "by", "for", "with", "about",
+    "from", "up", "as", "into", "than", "then", "that", "this", "these",
+    "those", "i", "you", "he", "she", "it", "we", "they", "what",
+    "which", "who", "whom", "how", "why", "where", "when", "can",
+    "could", "would", "should", "does", "do", "did", "has", "have",
+    "had", "but", "or", "not", "no", "yes", "so", "if", "and", "all",
+    "any", "each", "some", "such", "only", "own", "same", "just",
+    "tell", "me", "explain", "define", "list", "give", "show",
+    # Nepali stopwords (common)
+    "को", "का", "की", "मा", "र", "छ", "हो", "हुन्", "छन्", "थिए",
+    "थियो", "छैन", "छैनन्", "भन्ने", "त", "पनि", "तर", "या",
+    "के", "कति", "कसरी", "कहाँ", "कहिले", "किन", "अनि", "मलाई",
+}
+
+# Math terms worth keeping even if short (< 3 chars)
+_SHORT_KEEP = {"pi", "x", "y", "z", "π", "θ", "%"}
+
+
+def extract_keywords(question: str, top_k: int = 5) -> List[str]:
+    """Extract 3–`top_k` domain keywords from a question.
+
+    Simple lexical heuristic: lowercase-tokenize on word boundaries,
+    drop stopwords, prefer longer words and known math/science terms, and
+    return up to `top_k` unique keywords in descending priority order.
+
+    Used as a `must_contain_hint` to boost chunks that contain multiple
+    query keywords before the cross-encoder reranks them.
+    """
+    if not question:
+        return []
+
+    # Tokenize: keep alphanumerics + Devanagari block
+    raw = re.findall(r"[\w\u0900-\u097F]+", question.lower(), re.UNICODE)
+
+    # Score each token
+    scored: List[Tuple[int, str]] = []
+    seen = set()
+    for tok in raw:
+        if tok in seen:
+            continue
+        if tok in _STOPWORDS:
+            continue
+        if len(tok) < 3 and tok not in _SHORT_KEEP:
+            continue
+        seen.add(tok)
+        # Longer words score higher; pure digits score lower
+        score = len(tok)
+        if tok.isdigit():
+            score -= 3
+        scored.append((score, tok))
+
+    scored.sort(key=lambda t: t[0], reverse=True)
+    return [tok for _, tok in scored[:max(top_k, 3)]]
+
+
+def keyword_boost_score(
+    chunk_text: str, keywords: List[str], min_matches: int = 2
+) -> float:
+    """Return a boost multiplier in [1.0, 1.25] for a chunk based on how
+    many of `keywords` it contains. 0 matches → 1.0, `min_matches`+ → 1.25.
+
+    Apply this BEFORE the cross-encoder rerank step:
+        base = cosine_sim
+        boosted = base * keyword_boost_score(chunk.text, kws)
+    """
+    if not keywords or not chunk_text:
+        return 1.0
+    low = chunk_text.lower()
+    hits = sum(1 for kw in keywords if kw in low)
+    if hits >= min_matches:
+        return 1.25
+    if hits == 1:
+        return 1.1
+    return 1.0
+
+
+def mmr_select(
+    candidates: List[Dict],
+    query_embedding: Optional[list] = None,
+    top_k: int = 5,
+    diversity_threshold: float = 0.85,
+    embedding_key: str = "embedding",
+) -> List[Dict]:
+    """Maximal Marginal Relevance selection to reduce redundancy.
+
+    Given `candidates` (already ordered by relevance — e.g. reranked by the
+    cross-encoder), iteratively selects the next candidate only if its cosine
+    similarity to every already-selected chunk is below `diversity_threshold`.
+
+    Args:
+        candidates: list of chunk dicts, each with an `embedding_key` field
+            holding a list[float] embedding. Must be pre-sorted by relevance.
+        query_embedding: unused — kept for API symmetry with other MMR impls.
+        top_k: number of chunks to return.
+        diversity_threshold: cosine sim above which a candidate is considered
+            too similar to an already-selected chunk.
+        embedding_key: dict key holding the embedding vector.
+
+    Returns:
+        Up to `top_k` chunks, preserving the original relevance order but
+        skipping near-duplicates.
+    """
+    if not candidates:
+        return []
+
+    try:
+        import numpy as np  # local import — numpy is already a hard dep
+    except ImportError:
+        logger.warning("numpy unavailable — mmr_select falling back to top_k slice")
+        return candidates[:top_k]
+
+    def _vec(c: Dict):
+        emb = c.get(embedding_key)
+        if emb is None:
+            return None
+        arr = np.asarray(emb, dtype=np.float32)
+        norm = np.linalg.norm(arr)
+        if norm == 0:
+            return None
+        return arr / norm
+
+    selected: List[Dict] = []
+    selected_vecs: List = []
+
+    for cand in candidates:
+        if len(selected) >= top_k:
+            break
+        v = _vec(cand)
+        # If the candidate has no embedding, accept it (no dedup possible)
+        if v is None:
+            selected.append(cand)
+            continue
+        # Check cosine sim against already-selected
+        too_similar = False
+        for sv in selected_vecs:
+            sim = float(np.dot(v, sv))
+            if sim >= diversity_threshold:
+                too_similar = True
+                break
+        if not too_similar:
+            selected.append(cand)
+            selected_vecs.append(v)
+
+    # If we didn't reach top_k (everything was too similar), fall back to
+    # topping up with the next best candidates ignoring diversity.
+    if len(selected) < top_k:
+        seen_ids = {id(s) for s in selected}
+        for cand in candidates:
+            if len(selected) >= top_k:
+                break
+            if id(cand) not in seen_ids:
+                selected.append(cand)
+
+    return selected
+
+
+def filter_structural_chunks(chunks: List[Dict]) -> List[Dict]:
+    """Return chunks suitable for a structural/TOC-type query.
+
+    1. Always include the dedicated `section_type == "toc"` chunk if present.
+    2. Include one chunk per distinct chapter (first by page) for any chapter
+       that is not "Unknown".
+    3. Semantic reranking is skipped for these queries by the caller.
+    """
+    if not chunks:
+        return []
+
+    toc_chunks = [c for c in chunks if c.get("section_type") == "toc"]
+
+    seen_chapters: set = set()
+    per_chapter: List[Dict] = []
+    # Sort by page so the "first chunk per chapter" is well-defined
+    for c in sorted(chunks, key=lambda x: x.get("page", 0)):
+        chap = c.get("chapter") or "Unknown"
+        if chap in ("Unknown", "Table of Contents"):
+            continue
+        if chap in seen_chapters:
+            continue
+        seen_chapters.add(chap)
+        per_chapter.append(c)
+
+    return toc_chunks + per_chapter
+
+
+_EXERCISE_REF_RE = re.compile(
+    r'\b(?:exercise|ex\.?)\s*(\d+(?:\.\d+)?)',
+    re.IGNORECASE,
+)
+_NEPALI_EXERCISE_REF_RE = re.compile(
+    r'अभ्यास\s*([\d०-९]+(?:\.[\d०-९]+)?)'
+)
+
+
+def extract_exercise_ref(question: str) -> Optional[str]:
+    """Return a canonicalized `Exercise N` / `Exercise N.M` label found in
+    the query, or None if none is referenced.
+
+    Used by the retrieval layer to short-circuit questions like "show me
+    exercise 5.2 on quadratic equations" — semantic search alone can find
+    the right chapter but not the exact exercise number, since the number
+    is structural metadata, not meaning.
+    """
+    if not question:
+        return None
+    m = _EXERCISE_REF_RE.search(question)
+    if m:
+        return f"Exercise {m.group(1)}"
+    m = _NEPALI_EXERCISE_REF_RE.search(question)
+    if m:
+        # Convert Devanagari digits to ASCII for matching
+        num = m.group(1).translate(_DEVANAGARI_DIGIT_MAP)
+        return f"अभ्यास {num}"
+    return None
+
+
+def filter_by_exercise_ref(chunks: List[Dict], ref: str) -> List[Dict]:
+    """Return chunks whose heading or text-head matches the exercise `ref`.
+
+    Matching is strict-ish: the ref must appear as a word-bounded token to
+    avoid `Exercise 5.2` spuriously matching `Exercise 5.20`. Prefers chunks
+    where the heading is exactly the ref, falling back to any chunk whose
+    first 200 chars contain the ref (covers headings that were absorbed
+    into a larger chunk by small-chunk merging).
+    """
+    if not ref or not chunks:
+        return []
+    ref_lower = ref.lower()
+    # Word-bounded regex so "Exercise 5.2" doesn't match "Exercise 5.20"
+    token_re = re.compile(
+        r'(?<![\d.])' + re.escape(ref_lower) + r'(?!\d)',
+        re.IGNORECASE,
+    )
+
+    # Tier 1: exact heading match
+    exact: List[Dict] = []
+    for c in chunks:
+        heading = (c.get("heading") or "").strip().lower()
+        if heading == ref_lower or heading.startswith(ref_lower + " ") \
+                or heading.startswith(ref_lower + "\n"):
+            exact.append(c)
+    if exact:
+        return exact
+
+    # Tier 2: reference appears early in the chunk text (within first 200 chars)
+    partial: List[Dict] = []
+    for c in chunks:
+        head = (c.get("text", "") or "")[:200]
+        if token_re.search(head):
+            partial.append(c)
+    return partial
+
+
+def is_structural_query(question: str) -> bool:
+    """Return True if the question asks about the book's structure/TOC.
+
+    Centralized so both the prompt builder and the retrieval layer agree on
+    what counts as a structural query (they must, or chapter-filtering and
+    reranking behavior will diverge).
+    """
+    if not question:
+        return False
+    q = question.lower()
+    return any(k in q for k in (
+        "chapter", "unit", "table of contents", "toc", "topics",
+        "syllabus", "index", "what are the", "list all",
+        "how many units", "how many chapters",
+        # Devanagari
+        "अध्याय", "पाठ", "एकाइ", "विषय सूची",
+    ))
 
 
 # =============================================================================
 # PROMPT BUILDING — Teacher persona with chapter context
 # =============================================================================
 
+# =============================================================================
+# SUBJECT-SPECIFIC PROMPTS — Specialized templates for different subjects
+# =============================================================================
+
+def _detect_subject(question: str, context_docs: List[Dict]) -> str:
+    """Detect subject area from question and context.
+    
+    IMPORTANT: Only return 'math' if we're confident it's a math question.
+    False positives hurt non-math subjects significantly.
+    """
+    # Strong math indicators (high confidence)
+    strong_math_keywords = {
+        'equation', 'formula', 'solve', 'calculate', 'theorem', 'proof',
+        'derivative', 'integral', 'quadratic', 'polynomial', 'factorize',
+        'simplify', 'algebraic', 'arithmetic', 'geometric sequence',
+        'trigonometry', 'sine', 'cosine', 'tangent', 'hypotenuse',
+        'pythagorean', 'logarithm', 'exponent', 'coefficient',
+        'circumference', 'radius', 'diameter', 'perimeter'
+    }
+    
+    # Weak math indicators (need multiple matches)
+    weak_math_keywords = {
+        'angle', 'triangle', 'square', 'circle', 'area', 'volume',
+        'graph', 'probability', 'statistics', 'mean', 'median', 'mode',
+        'sets', 'union', 'intersection', 'subset', 'matrix', 'vector'
+    }
+    
+    # Non-math indicators (if present, NOT math)
+    non_math_keywords = {
+        'poem', 'story', 'grammar', 'tense', 'noun', 'verb', 'adjective',
+        'character', 'plot', 'author', 'literature', 'reading', 'writing',
+        'society', 'culture', 'history', 'government', 'democracy', 'religion',
+        'festival', 'tradition', 'population', 'geography', 'climate',
+        'chapter', 'unit', 'lesson', 'exercise', 'answer'  # structural queries
+    }
+    
+    # Nepali non-math keywords (social studies, culture)
+    nepali_non_math = {
+        'समाज', 'संस्कृति', 'इतिहास', 'सरकार', 'लोकतन्त्र', 'धर्म',
+        'चाडपर्व', 'परम्परा', 'जनसङ्ख्या', 'भूगोल', 'हावापानी',
+        'मूल्य', 'संस्कार', 'अधिकार', 'विकास', 'प्रदेश'
+    }
+    
+    question_lower = question.lower()
+    
+    # Check for Nepali non-math first (social studies topics)
+    if any(kw in question for kw in nepali_non_math):
+        return 'general'
+    
+    # Check for English non-math keywords
+    if any(kw in question_lower for kw in non_math_keywords):
+        return 'general'
+    
+    # Check context chapters for math-related chapters
+    chapter_names = ' '.join([d.get('chapter', '').lower() for d in context_docs])
+    math_chapter_indicators = {'math', 'algebra', 'geometry', 'trigonometry', 
+                               'calculus', 'statistics', 'arithmetic', 'sets'}
+    is_math_chapter = any(ind in chapter_names for ind in math_chapter_indicators)
+    
+    # Count keyword matches
+    combined = question_lower + ' ' + chapter_names
+    strong_score = sum(1 for kw in strong_math_keywords if kw in combined)
+    weak_score = sum(1 for kw in weak_math_keywords if kw in combined)
+    
+    # Decision logic:
+    # - 1+ strong keyword = math
+    # - 3+ weak keywords = math  
+    # - Math chapter + 2+ weak keywords = math
+    # - Otherwise = general
+    if strong_score >= 1:
+        return 'math'
+    if weak_score >= 3:
+        return 'math'
+    if is_math_chapter and weak_score >= 2:
+        return 'math'
+    
+    return 'general'
+
+
+def _get_math_system_prompt(question: str) -> str:
+    """Specialized system prompt for mathematics questions"""
+    
+    # Detect question type
+    if any(word in question.lower() for word in ['prove', 'show', 'derive']):
+        question_type = "PROOF"
+        format_guide = """
+PROOF FORMAT:
+1. **Claim:** State what you're proving
+2. **Given:** What are we assuming?
+3. **Steps:** Number each logical step
+4. **Conclusion:** What follows from the proof
+5. **Applications:** Where is this used?
+"""
+    elif any(word in question.lower() for word in ['solve', 'find', 'calculate', 'compute']):
+        question_type = "CALCULATION"
+        format_guide = """
+CALCULATION FORMAT:
+1. **Given:** What values/conditions are known?
+2. **Find:** What are we looking for?
+3. **Formula:** Which formula/method applies?
+4. **Substitution:** Show the values plugged in
+5. **Steps:** Number each calculation step clearly
+6. **Answer:** Final result with units/notation
+7. **Check:** Verify the answer makes sense
+"""
+    else:
+        question_type = "DEFINITION/CONCEPT"
+        format_guide = """
+DEFINITION FORMAT:
+1. **Name:** The exact term being defined
+2. **Formula (if applicable):** Mathematical form with proper notation
+3. **Variables:** Define each symbol (e.g., "Let a = length in cm")
+4. **Explanation:** 2-3 sentences about the concept
+5. **Example:** One or two concrete numerical examples
+6. **Key Insight:** Why this concept matters or how to remember it
+"""
+    
+    return f"""You are an expert mathematics teacher with PhD-level knowledge.
+
+YOUR TASK: Answer a {question_type} question using ONLY the provided textbook excerpts.
+
+{format_guide}
+
+CRITICAL RULES:
+1. **Show all formulas clearly** with proper mathematical notation (use ^, √, ≤, ≥, etc.)
+2. **Define every variable** you use (e.g., "Let x = unknown value")
+3. **Break into numbered steps** — never jump steps
+4. **Provide concrete examples** with actual numbers, not just variables
+5. **Show all arithmetic** — write "2 + 3 = 5", not "= 5"
+6. **Verify your answer** by substituting back into the formula or checking the logic
+7. **Use proper mathematical notation** (subscripts for a₁, superscripts for a²)
+8. **Cite the textbook** — mention which chapter/section the information comes from
+
+NEVER:
+- Ramble or give vague explanations
+- Skip steps in calculations or proofs
+- Use unexplained symbols or notation
+- Say "obviously" without explaining
+- Provide answers not supported by the context
+
+Be PRECISE, STRUCTURED, and COMPLETE."""
+
+
+def _format_math_user_prompt(question: str, context_docs: List[Dict]) -> str:
+    """Format context and question for math evaluation.
+
+    Uses `text_with_context` when available (cross-boundary sentences) so the
+    LLM sees stitched context that improves RAGAS context-recall. Falls back
+    to `text` for legacy chunks without the enriched field.
+    """
+    context_str = ""
+    for i, doc in enumerate(context_docs):
+        page = doc.get("page", "?")
+        text = (doc.get("text_with_context") or doc.get("text", "")).strip()
+        chapter = doc.get("chapter", "")
+
+        if chapter and chapter not in ["Unknown", ""]:
+            header = f"[{i+1}. Chapter: {chapter} | Page {page}]"
+        else:
+            header = f"[{i+1}. Page {page}]"
+
+        context_str += f"\n{header}:\n{text}\n"
+
+    return f"""Textbook Context (from relevant sections):
+{context_str}
+
+Student Question: {question}
+
+Provide your structured answer below:"""
+
+
 def build_system_user_prompt(context_docs: List[Dict], question: str) -> Tuple[str, str]:
     """
     Build prompt with Teacher Persona.
-    Improved: Includes chapter metadata and handles structural queries.
+    Improved: Subject-aware with specialized math templates.
     """
     
-    # Detect structural query type
-    is_structural = any(k in question.lower() for k in [
-        "chapter", "unit", "table of contents", "toc", "topics",
-        "syllabus", "index", "what are the", "list all", "how many units",
-        "how many chapters"
-    ])
+    # Detect subject
+    subject = _detect_subject(question, context_docs)
+
+    # Detect structural query type (centralized in is_structural_query so the
+    # retrieval layer and prompt layer stay in sync).
+    is_structural = is_structural_query(question)
     
+    # Use specialized math template if detected
+    if subject == 'math' and not is_structural:
+        system_prompt = _get_math_system_prompt(question)
+        user_prompt = _format_math_user_prompt(question, context_docs)
+        return system_prompt, user_prompt
+    
+    # Default generic template for non-math subjects
     system_prompt = """You are an expert and friendly teacher. 
 Your goal is to help the student understand the concept using the provided educational material.
 
@@ -1876,22 +3461,132 @@ Do NOT say "chapters are not explicitly listed" if there is a Table of Contents 
     context_str = ""
     for doc in context_docs:
         page = doc.get("page", "?")
-        text = doc.get("text", "").strip()
+        # Prefer context-enriched text for LLM prompting (RAGAS context-recall)
+        text = (doc.get("text_with_context") or doc.get("text", "")).strip()
         chapter = doc.get("chapter", "")
-        
+
         # Build header with chapter info
         if chapter and chapter not in ["Unknown", ""]:
             header = f"[Chapter: {chapter} | Page {page}]"
         else:
             header = f"[Page {page}]"
-        
+
         context_str += f"\n{header}:\n{text}\n"
 
     user_prompt = f"""Context from Textbook:
 {context_str}
 
 Student Question: {question}
-
+s
 Answer:"""
 
     return system_prompt, user_prompt
+
+
+# # =============================================================================
+# # RAGAS EVALUATION — measure before/after impact of chunking changes
+# # =============================================================================
+
+# def run_ragas_eval(
+#     samples: List[Dict],
+#     metrics: Optional[List[str]] = None,
+# ) -> Dict:
+#     """Run RAGAS evaluation on a list of question/answer/context samples.
+
+#     Args:
+#         samples: list of dicts with keys:
+#             - "question":    str, the user question
+#             - "answer":      str, the model's generated answer
+#             - "contexts":    List[str], the retrieved chunk texts
+#             - "ground_truth": str, the reference answer (for context_recall)
+#         metrics: optional list of metric names to compute. Defaults to
+#             ["faithfulness", "answer_relevancy", "context_recall",
+#              "context_precision"].
+
+#     Returns:
+#         Dict with the metric scores plus a `timestamp` ISO-8601 string.
+#         Empty dict on failure (missing ragas, empty samples, etc.).
+
+#     Logs the results via `logger.info` so they appear in the normal log
+#     stream for before/after comparisons.
+#     """
+#     import datetime
+
+#     if not samples:
+#         logger.warning("run_ragas_eval: empty samples list — nothing to evaluate")
+#         return {}
+
+#     try:
+#         from ragas import evaluate
+#         from ragas.metrics import (
+#             faithfulness,
+#             answer_relevancy,
+#             context_recall,
+#             context_precision,
+#         )
+#         from datasets import Dataset
+#     except ImportError as e:
+#         logger.error(
+#             f"run_ragas_eval: ragas or datasets not installed ({e}). "
+#             "Install with: pip install ragas datasets"
+#         )
+#         return {}
+
+#     metric_map = {
+#         "faithfulness": faithfulness,
+#         "answer_relevancy": answer_relevancy,
+#         "context_recall": context_recall,
+#         "context_precision": context_precision,
+#     }
+
+#     requested = metrics or list(metric_map.keys())
+#     metric_objs = [metric_map[m] for m in requested if m in metric_map]
+
+#     if not metric_objs:
+#         logger.warning(f"run_ragas_eval: no valid metrics in {requested}")
+#         return {}
+
+#     # Normalize sample keys to what RAGAS expects
+#     normalized = {
+#         "question": [s.get("question", "") for s in samples],
+#         "answer": [s.get("answer", "") for s in samples],
+#         "contexts": [
+#             s.get("contexts", []) if isinstance(s.get("contexts"), list)
+#             else [s.get("contexts", "")]
+#             for s in samples
+#         ],
+#         "ground_truth": [s.get("ground_truth", "") for s in samples],
+#     }
+
+#     try:
+#         ds = Dataset.from_dict(normalized)
+#         result = evaluate(ds, metrics=metric_objs)
+#     except Exception as e:
+#         logger.error(f"run_ragas_eval: evaluation failed — {e}")
+#         return {}
+
+#     # RAGAS returns a Result object; convert to plain dict
+#     try:
+#         scores = {k: float(v) for k, v in result.items()}
+#     except Exception:
+#         # Newer versions expose `.to_pandas()` — fall back to mean per column
+#         try:
+#             df = result.to_pandas()
+#             scores = {
+#                 col: float(df[col].mean())
+#                 for col in df.columns
+#                 if col in metric_map
+#             }
+#         except Exception as e:
+#             logger.error(f"run_ragas_eval: could not parse result — {e}")
+#             return {}
+
+#     scores["timestamp"] = datetime.datetime.utcnow().isoformat() + "Z"
+#     scores["n_samples"] = len(samples)
+
+#     logger.info(
+#         "RAGAS eval results: "
+#         + ", ".join(f"{k}={v:.3f}" if isinstance(v, float) else f"{k}={v}"
+#                     for k, v in scores.items())
+#     )
+#     return scores
