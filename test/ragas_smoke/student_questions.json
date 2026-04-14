@@ -1,0 +1,484 @@
+{
+  "metadata": {
+    "description": "Student-style questions grounded in real textbook content for RAGAS evaluation (expanded)",
+    "books": [
+      "grade-9-mathematics (1).pdf",
+      "grade-10-mathematics.pdf",
+      "grade-9-science-and-technology.pdf",
+      "grade-6-english.pdf",
+      "grade-7-mathematics (1).pdf",
+      "grade-8-mathematics.pdf",
+      "grade-5-mathematics.pdf",
+      "grade-5-english.pdf",
+      "grade-7-social-studies.pdf",
+      "grade-8-english.pdf"
+    ],
+    "question_types": ["definition", "formula", "exercise", "concept", "structural", "example", "application"]
+  },
+  "test_cases": [
+    {
+      "id": "math9-sets-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Sets",
+      "question": "What is the union of two sets?",
+      "ground_truth": "The union of sets A and B, denoted by A ∪ B, consists of all elements of set A or set B. In set-builder notation: A ∪ B = {x : x ∈ A or x ∈ B}.",
+      "type": "definition"
+    },
+    {
+      "id": "math9-sets-002",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Sets",
+      "question": "How do you find the number of elements in the union of two sets?",
+      "ground_truth": "The number of elements in A union B is given by n(A ∪ B) = n(A) + n(B) - n(A ∩ B). If A and B are disjoint, then n(A ∪ B) = n(A) + n(B).",
+      "type": "formula"
+    },
+    {
+      "id": "math9-sets-003",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Sets",
+      "question": "What is a Venn diagram?",
+      "ground_truth": "A Venn diagram is a pictorial representation of sets using circles within a rectangle representing the universal set. It shows the relationship between sets including intersection, union, and complement.",
+      "type": "concept"
+    },
+    {
+      "id": "math9-trig-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Trigonometry",
+      "question": "What is the Pythagorean theorem?",
+      "ground_truth": "In a right-angled triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides: a² + b² = c², where c is the hypotenuse.",
+      "type": "formula"
+    },
+    {
+      "id": "math9-trig-002",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Trigonometry",
+      "question": "What is sin θ in a right-angled triangle?",
+      "ground_truth": "In a right-angled triangle, sin θ = perpendicular / hypotenuse, where θ is the angle and perpendicular is the side opposite to the angle.",
+      "type": "formula"
+    },
+    {
+      "id": "math9-area-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Area",
+      "question": "How do you calculate the area of a triangle?",
+      "ground_truth": "Area of a triangle = (1/2) × base × height. For a triangle with sides a, b, c, Heron's formula gives Area = √(s(s-a)(s-b)(s-c)) where s is the semi-perimeter.",
+      "type": "formula"
+    },
+    {
+      "id": "math9-prism-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Prism",
+      "question": "What is the formula for volume of a prism?",
+      "ground_truth": "Volume of a prism = Area of base × height (length). The base can be any polygon.",
+      "type": "formula"
+    },
+    {
+      "id": "math9-tax-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Tax",
+      "question": "What is VAT?",
+      "ground_truth": "VAT stands for Value Added Tax, a tax added to the marked price of goods and services. The total price is the marked price plus the VAT amount calculated as a percentage.",
+      "type": "definition"
+    },
+    {
+      "id": "math9-exercise-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Sets",
+      "question": "Give me exercise 1.2 from the Sets chapter",
+      "ground_truth": "Exercise 1.2 in the Sets chapter contains problems about set operations including union, intersection, and cardinality of sets represented using Venn diagrams.",
+      "type": "exercise"
+    },
+    {
+      "id": "math9-structural-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "*",
+      "question": "List all the chapters in this textbook",
+      "ground_truth": "The chapters include Sets, Tax, Commission and Dividend, Household Arithmetic, Area, Prism, Cylinder and Sphere, Sequence and Series, Factorization, Highest Common Factor and Lowest Common Multiple, Linear Equation, Indices, Triangle, Quadrilateral, Construction, Circle, Trigonometry, Measures of Central Tendency, Classification and Presentation of Data, Probability.",
+      "type": "structural"
+    },
+    {
+      "id": "math9-indices-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Indices",
+      "question": "What are the laws of indices?",
+      "ground_truth": "The laws of indices include: a^m × a^n = a^(m+n), a^m ÷ a^n = a^(m-n), (a^m)^n = a^(mn), a^0 = 1, a^(-n) = 1/a^n, and (ab)^n = a^n × b^n.",
+      "type": "formula"
+    },
+    {
+      "id": "math9-sequence-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Sequence and Series",
+      "question": "What is an arithmetic sequence?",
+      "ground_truth": "An arithmetic sequence is a sequence of numbers in which the difference between consecutive terms is constant. This constant difference is called the common difference (d). The nth term is a_n = a + (n-1)d where a is the first term.",
+      "type": "definition"
+    },
+    {
+      "id": "math9-probability-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Probability",
+      "question": "What is the formula for probability?",
+      "ground_truth": "Probability of an event = Number of favorable outcomes / Total number of outcomes. P(E) ranges from 0 to 1. P(E) + P(not E) = 1.",
+      "type": "formula"
+    },
+    {
+      "id": "math10-sets-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Sets",
+      "question": "For three sets A, B, C how do you find n(A ∪ B ∪ C)?",
+      "ground_truth": "For three sets, n(A ∪ B ∪ C) = n(A) + n(B) + n(C) - n(A ∩ B) - n(B ∩ C) - n(A ∩ C) + n(A ∩ B ∩ C). This is the inclusion-exclusion principle.",
+      "type": "formula"
+    },
+    {
+      "id": "math10-compound-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Compound Interest",
+      "question": "What is the formula for compound interest?",
+      "ground_truth": "Compound interest formula: A = P(1 + R/100)^T, where A is the final amount, P is the principal, R is the rate per period, and T is the number of periods. Compound interest = A - P.",
+      "type": "formula"
+    },
+    {
+      "id": "math10-quadratic-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Quadratic Equation",
+      "question": "What is the quadratic formula?",
+      "ground_truth": "For a quadratic equation ax² + bx + c = 0, the quadratic formula is x = (-b ± √(b² - 4ac)) / 2a. The discriminant b² - 4ac determines the nature of the roots.",
+      "type": "formula"
+    },
+    {
+      "id": "math10-probability-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Probability",
+      "question": "How do you calculate probability of an event?",
+      "ground_truth": "Probability of an event P(E) = Number of favourable outcomes / Total number of possible outcomes. The value of P(E) lies between 0 and 1, where 0 means impossible and 1 means certain.",
+      "type": "formula"
+    },
+    {
+      "id": "math10-statistics-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Statistics",
+      "question": "What is the mean, median, and mode?",
+      "ground_truth": "Mean is the average (sum of values divided by count). Median is the middle value when data is arranged in order. Mode is the value that occurs most frequently.",
+      "type": "definition"
+    },
+    {
+      "id": "math10-area-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Area and Volume",
+      "question": "What is the surface area of a cylinder?",
+      "ground_truth": "Total surface area of a cylinder = 2πr(r + h), where r is the radius of the base and h is the height. The curved surface area alone is 2πrh.",
+      "type": "formula"
+    },
+    {
+      "id": "math10-exercise-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Quadratic Equation",
+      "question": "Show me exercise 5.2 on quadratic equations",
+      "ground_truth": "Exercise 5.2 contains problems on solving quadratic equations using various methods including factorization, completing the square, and the quadratic formula.",
+      "type": "exercise"
+    },
+    {
+      "id": "math10-ratio-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Ratio and Proportion",
+      "question": "What is a continued ratio?",
+      "ground_truth": "When three quantities a, b, c are in continued proportion, a:b = b:c. Then b² = ac. This means b is the mean proportional between a and c.",
+      "type": "definition"
+    },
+    {
+      "id": "math10-matrix-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Matrices",
+      "question": "What is a matrix?",
+      "ground_truth": "A matrix is a rectangular array of numbers arranged in rows and columns. The order of a matrix is m × n where m is the number of rows and n is the number of columns.",
+      "type": "definition"
+    },
+    {
+      "id": "math10-coordinate-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Coordinate Geometry",
+      "question": "What is the distance formula between two points?",
+      "ground_truth": "The distance between two points (x1, y1) and (x2, y2) is d = √((x2-x1)² + (y2-y1)²). This is derived from the Pythagorean theorem.",
+      "type": "formula"
+    },
+    {
+      "id": "sci9-sci-001",
+      "book": "grade-9-science-and-technology.pdf",
+      "chapter": "Scientific study",
+      "question": "What are the steps of scientific learning?",
+      "ground_truth": "The steps of scientific learning are: Observation/Curiosity/Question for research, Hypothesis building, Testing from experiment/Hypothesis testing, Result and conclusion (Proved or Unproven hypothesis), and finally Report.",
+      "type": "concept"
+    },
+    {
+      "id": "sci9-sci-002",
+      "book": "grade-9-science-and-technology.pdf",
+      "chapter": "Scientific study",
+      "question": "What are scientific process skills?",
+      "ground_truth": "Scientific process skills include observation, questioning, classification, prediction, interpretation, measurement, concluding, and communication. These skills form the basis of scientific learning.",
+      "type": "concept"
+    },
+    {
+      "id": "sci9-class-001",
+      "book": "grade-9-science-and-technology.pdf",
+      "chapter": "Classification of Living Beings",
+      "question": "How are living beings classified?",
+      "ground_truth": "Living beings are classified into kingdoms based on characteristics like cell structure, nutrition, and body organization. The five-kingdom classification includes Monera, Protista, Fungi, Plantae, and Animalia.",
+      "type": "concept"
+    },
+    {
+      "id": "sci9-force-001",
+      "book": "grade-9-science-and-technology.pdf",
+      "chapter": "Force and Motion",
+      "question": "What is Newton's second law of motion?",
+      "ground_truth": "Newton's second law states that the acceleration of an object is directly proportional to the net force acting on it and inversely proportional to its mass. F = ma, where F is force, m is mass, and a is acceleration.",
+      "type": "formula"
+    },
+    {
+      "id": "sci9-energy-001",
+      "book": "grade-9-science-and-technology.pdf",
+      "chapter": "Energy",
+      "question": "What is the law of conservation of energy?",
+      "ground_truth": "The law of conservation of energy states that energy can neither be created nor destroyed; it can only be transformed from one form to another. The total energy of an isolated system remains constant.",
+      "type": "concept"
+    },
+    {
+      "id": "sci9-structural-001",
+      "book": "grade-9-science-and-technology.pdf",
+      "chapter": "*",
+      "question": "How many units are in this science book?",
+      "ground_truth": "The grade 9 science and technology book has 19 units covering topics from Scientific Study, Classification of Living Beings, to Materials used in Agriculture.",
+      "type": "structural"
+    },
+    {
+      "id": "eng6-read-001",
+      "book": "grade-6-english.pdf",
+      "chapter": "*",
+      "question": "What are the different sections in each unit of this English book?",
+      "ground_truth": "Each unit in the grade 6 English book contains sections for Reading, Writing, Listening, Speaking, Grammar, Vocabulary, and Project Work.",
+      "type": "structural"
+    },
+    {
+      "id": "eng6-read-002",
+      "book": "grade-6-english.pdf",
+      "chapter": "*",
+      "question": "What topics does the grade 6 English textbook cover?",
+      "ground_truth": "The grade 6 English textbook covers topics like Family, Health and Hygiene, Travel and Adventure, Sports, Environment, Cultural diversity, and other themes related to students' daily life.",
+      "type": "structural"
+    },
+    {
+      "id": "math7-fraction-001",
+      "book": "grade-7-mathematics (1).pdf",
+      "chapter": "Fraction",
+      "question": "How do you add two fractions with different denominators?",
+      "ground_truth": "To add fractions with different denominators, first find the LCM of the denominators. Convert each fraction to an equivalent fraction with the LCM as denominator, then add the numerators. For example, a/b + c/d = (ad + bc) / bd.",
+      "type": "concept"
+    },
+    {
+      "id": "math7-percentage-001",
+      "book": "grade-7-mathematics (1).pdf",
+      "chapter": "Percentage",
+      "question": "How do you find the percentage of a number?",
+      "ground_truth": "To find the percentage of a number, multiply the number by the percentage and divide by 100. For example, x% of N = (x × N) / 100. Percentage means per hundred.",
+      "type": "formula"
+    },
+    {
+      "id": "math7-ratio-001",
+      "book": "grade-7-mathematics (1).pdf",
+      "chapter": "Ratio and Proportion",
+      "question": "What is a ratio?",
+      "ground_truth": "A ratio is a comparison of two quantities of the same kind by division. The ratio of a to b is written as a:b or a/b. The quantities a and b are called terms of the ratio.",
+      "type": "definition"
+    },
+    {
+      "id": "math7-algebra-001",
+      "book": "grade-7-mathematics (1).pdf",
+      "chapter": "Algebraic Expression",
+      "question": "What is an algebraic expression?",
+      "ground_truth": "An algebraic expression is a mathematical phrase that can contain numbers, variables, and operation symbols. For example, 3x + 2y - 5 is an algebraic expression where x and y are variables.",
+      "type": "definition"
+    },
+    {
+      "id": "math7-structural-001",
+      "book": "grade-7-mathematics (1).pdf",
+      "chapter": "*",
+      "question": "What chapters does this grade 7 math book have?",
+      "ground_truth": "Grade 7 mathematics covers topics including Fraction, Decimal, Percentage, Ratio and Proportion, Profit and Loss, Simple Interest, Algebraic Expression, Equation, Geometry, Perimeter and Area, Statistics, and Sets.",
+      "type": "structural"
+    },
+    {
+      "id": "math8-hcf-001",
+      "book": "grade-8-mathematics.pdf",
+      "chapter": "HCF and LCM",
+      "question": "How do you find the HCF of two numbers?",
+      "ground_truth": "To find the HCF (Highest Common Factor), list all factors of each number and find the greatest common one. Alternatively, use prime factorization: express each number as a product of primes, then multiply the common prime factors with their lowest powers.",
+      "type": "concept"
+    },
+    {
+      "id": "math8-profit-001",
+      "book": "grade-8-mathematics.pdf",
+      "chapter": "Profit and Loss",
+      "question": "How do you calculate profit percentage?",
+      "ground_truth": "Profit percentage = (Profit / Cost Price) × 100%. Where Profit = Selling Price - Cost Price. Similarly, Loss percentage = (Loss / Cost Price) × 100%.",
+      "type": "formula"
+    },
+    {
+      "id": "math8-linear-001",
+      "book": "grade-8-mathematics.pdf",
+      "chapter": "Linear Equation",
+      "question": "How do you solve a linear equation in one variable?",
+      "ground_truth": "To solve a linear equation in one variable, isolate the variable on one side by performing the same operation on both sides. For example, to solve 2x + 3 = 7: subtract 3 from both sides to get 2x = 4, then divide by 2 to get x = 2.",
+      "type": "concept"
+    },
+    {
+      "id": "math8-area-001",
+      "book": "grade-8-mathematics.pdf",
+      "chapter": "Area",
+      "question": "What is the area of a parallelogram?",
+      "ground_truth": "Area of a parallelogram = base × height. The height is the perpendicular distance between the base and its opposite parallel side.",
+      "type": "formula"
+    },
+    {
+      "id": "math8-structural-001",
+      "book": "grade-8-mathematics.pdf",
+      "chapter": "*",
+      "question": "List the chapters in this grade 8 math book",
+      "ground_truth": "Grade 8 mathematics covers topics including Whole Numbers, Integers, Fraction, Decimal, HCF and LCM, Ratio and Proportion, Percentage, Profit and Loss, Simple Interest, Algebraic Expression, Equation, Geometry, Mensuration, Statistics, and Probability.",
+      "type": "structural"
+    },
+    {
+      "id": "math5-addition-001",
+      "book": "grade-5-mathematics.pdf",
+      "chapter": "Addition and Subtraction",
+      "question": "How do you add numbers with carrying?",
+      "ground_truth": "When adding numbers, if the sum of digits in a column is 10 or more, write the ones digit below and carry the tens digit to the next column. Start from the ones place and move left.",
+      "type": "concept"
+    },
+    {
+      "id": "math5-fraction-001",
+      "book": "grade-5-mathematics.pdf",
+      "chapter": "Fraction",
+      "question": "What is a proper fraction?",
+      "ground_truth": "A proper fraction is a fraction where the numerator is less than the denominator. For example, 3/4 is a proper fraction because 3 < 4. An improper fraction has a numerator greater than or equal to the denominator.",
+      "type": "definition"
+    },
+    {
+      "id": "math5-geometry-001",
+      "book": "grade-5-mathematics.pdf",
+      "chapter": "Geometry",
+      "question": "What are the different types of angles?",
+      "ground_truth": "The types of angles are: acute angle (less than 90°), right angle (exactly 90°), obtuse angle (between 90° and 180°), straight angle (180°), and reflex angle (between 180° and 360°).",
+      "type": "definition"
+    },
+    {
+      "id": "eng5-read-001",
+      "book": "grade-5-english.pdf",
+      "chapter": "*",
+      "question": "What kind of stories are in the grade 5 English book?",
+      "ground_truth": "The grade 5 English textbook contains stories, poems, and passages about daily life, animals, nature, family, health, festivals, and Nepali culture, designed to build reading and comprehension skills.",
+      "type": "structural"
+    },
+    {
+      "id": "eng8-grammar-001",
+      "book": "grade-8-english.pdf",
+      "chapter": "Grammar",
+      "question": "What are the different tenses in English?",
+      "ground_truth": "The main tenses in English are: Present (Simple, Continuous, Perfect, Perfect Continuous), Past (Simple, Continuous, Perfect, Perfect Continuous), and Future (Simple, Continuous, Perfect, Perfect Continuous).",
+      "type": "concept"
+    },
+    {
+      "id": "eng8-structural-001",
+      "book": "grade-8-english.pdf",
+      "chapter": "*",
+      "question": "What units does the grade 8 English book cover?",
+      "ground_truth": "The grade 8 English textbook covers units on various themes including Family, Health, Travel, Nature, Culture, Technology, and includes reading, writing, grammar, and vocabulary sections in each unit.",
+      "type": "structural"
+    },
+    {
+      "id": "social7-geography-001",
+      "book": "grade-7-social-studies.pdf",
+      "chapter": "Our Earth",
+      "question": "What are the layers of the earth?",
+      "ground_truth": "The Earth has three main layers: the crust (outermost thin layer), the mantle (middle layer made of semi-solid rock), and the core (innermost layer divided into outer liquid core and inner solid core).",
+      "type": "concept"
+    },
+    {
+      "id": "social7-nepal-001",
+      "book": "grade-7-social-studies.pdf",
+      "chapter": "Nepal",
+      "question": "What are the geographical regions of Nepal?",
+      "ground_truth": "Nepal is divided into three geographical regions: the Terai (flat plains in the south), the Hill region (middle area with hills and valleys), and the Mountain region (northern area with the Himalayas including Mount Everest).",
+      "type": "concept"
+    },
+    {
+      "id": "social7-structural-001",
+      "book": "grade-7-social-studies.pdf",
+      "chapter": "*",
+      "question": "What topics does this social studies book cover?",
+      "ground_truth": "The grade 7 social studies book covers Geography (Earth, Nepal's geography), History (ancient civilizations, Nepal's history), Civics (government, citizenship, rights), Economics (basic economic concepts), and Social Life.",
+      "type": "structural"
+    },
+    {
+      "id": "math9-circle-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Circle",
+      "question": "What is the formula for area and circumference of a circle?",
+      "ground_truth": "Area of a circle = πr² where r is the radius. Circumference = 2πr or πd where d is the diameter. π ≈ 22/7 or 3.14159.",
+      "type": "formula"
+    },
+    {
+      "id": "math9-factorization-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Factorization",
+      "question": "What is the difference of two squares formula?",
+      "ground_truth": "The difference of two squares: a² - b² = (a + b)(a - b). This is a fundamental algebraic identity used in factorization.",
+      "type": "formula"
+    },
+    {
+      "id": "math10-trigonometry-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "Trigonometry",
+      "question": "What are the values of sin, cos and tan for standard angles?",
+      "ground_truth": "Standard angle values: sin 0°=0, sin 30°=1/2, sin 45°=1/√2, sin 60°=√3/2, sin 90°=1. cos values are reverse order. tan 0°=0, tan 30°=1/√3, tan 45°=1, tan 60°=√3, tan 90°=undefined.",
+      "type": "formula"
+    },
+    {
+      "id": "math10-structural-001",
+      "book": "grade-10-mathematics.pdf",
+      "chapter": "*",
+      "question": "What chapters are in the grade 10 math textbook?",
+      "ground_truth": "Grade 10 mathematics includes Sets, Arithmetic (Tax, Compound Interest), Mensuration, Algebra (Polynomials, Sequence and Series, Quadratic Equation, Ratio and Proportion), Geometry (Similarity, Circle, Trigonometry, Coordinate Geometry), Statistics and Probability, and Matrices.",
+      "type": "structural"
+    },
+    {
+      "id": "math9-commission-001",
+      "book": "grade-9-mathematics (1).pdf",
+      "chapter": "Commission and Dividend",
+      "question": "What is commission in mathematics?",
+      "ground_truth": "Commission is the amount paid to an agent or broker for selling goods or services. It is usually a percentage of the selling price. Commission = Commission rate × Selling price / 100.",
+      "type": "definition"
+    },
+    {
+      "id": "sci9-cell-001",
+      "book": "grade-9-science-and-technology.pdf",
+      "chapter": "Cell",
+      "question": "What is a cell?",
+      "ground_truth": "A cell is the basic structural and functional unit of all living organisms. Cells can be prokaryotic (without a nucleus, like bacteria) or eukaryotic (with a nucleus, like plant and animal cells).",
+      "type": "definition"
+    },
+    {
+      "id": "math8-exercise-001",
+      "book": "grade-8-mathematics.pdf",
+      "chapter": "Profit and Loss",
+      "question": "Give me exercise questions on profit and loss",
+      "ground_truth": "The profit and loss exercises contain word problems about calculating cost price, selling price, profit, loss, and their percentages in various real-life scenarios like buying and selling goods.",
+      "type": "exercise"
+    },
+    {
+      "id": "math7-exercise-001",
+      "book": "grade-7-mathematics (1).pdf",
+      "chapter": "Percentage",
+      "question": "Show me exercises on percentage calculation",
+      "ground_truth": "Percentage exercises include converting fractions and decimals to percentages, finding a given percentage of a number, and real-life word problems involving discounts, increases, and decreases.",
+      "type": "exercise"
+    }
+  ]
+}

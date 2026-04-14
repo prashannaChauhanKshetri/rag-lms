@@ -1,0 +1,251 @@
+[
+  {
+    "book": "grade-9-mathematics (1).pdf",
+    "total_chunks": 262,
+    "distinct_chapters": 22,
+    "section_type_counts": {
+      "toc": 1,
+      "content": 26,
+      "example": 82,
+      "exercise": 125,
+      "project": 19,
+      "formula_with_example": 9
+    },
+    "subject_hint_counts": {
+      "unknown": 69,
+      "math": 193
+    },
+    "token_stats": {
+      "min": 41,
+      "p25": 462.25,
+      "p50": 497.0,
+      "p75": 904.25,
+      "p95": 1187.85,
+      "max": 1754,
+      "mean": 635.9770992366413
+    },
+    "has_formula_pct": 90.07633587786259,
+    "has_definition_pct": 16.412213740458014,
+    "text_with_context_pct": 100.0,
+    "sample_chunk": {
+      "chapter": "Unknown",
+      "section_type": "content",
+      "page": 1,
+      "token_count": 902,
+      "subject_hint": "unknown",
+      "has_formula": true,
+      "has_definition": false,
+      "text_head": "Mathematics\nGrade 9\nGovernment of Nepal\nMinistry of Education, Science and Technology\nCurriculum Development Centre\nSanothimi, Bhaktapur\n\n\nPublisher:\t\nGovernment of Nepal \n\t\nMinistry of Education, Science and Technology \n\t\nCurriculum Development Centre \n\t\nSanothimi, Bhaktapur\n © Publisher\nAll rights",
+      "context_head": "Mathematics\nGrade 9\nGovernment of Nepal\nMinistry of Education, Science and Technology\nCurriculum Development Centre\nSanothimi, Bhaktapur\n\n\nPublisher:\t\nGovernment of Nepal \n\t\nMinistry of Education, Science and Technology \n\t\nCurriculum Development Centre \n\t\nSanothimi, Bhaktapur\n © Publisher\nAll rights reserved. No part of this publication may be reproduced or \ntransmitted in any other form or by any means without the w"
+    },
+    "elapsed_seconds": 1.1
+  },
+  {
+    "book": "grade-10-mathematics.pdf",
+    "total_chunks": 230,
+    "distinct_chapters": 16,
+    "section_type_counts": {
+      "toc": 1,
+      "content": 24,
+      "formula_with_example": 5,
+      "example": 67,
+      "exercise": 96,
+      "project": 37
+    },
+    "subject_hint_counts": {
+      "unknown": 59,
+      "math": 171
+    },
+    "token_stats": {
+      "min": 54,
+      "p25": 468.75,
+      "p50": 498.0,
+      "p75": 879.75,
+      "p95": 1171.0,
+      "max": 1474,
+      "mean": 647.7869565217392
+    },
+    "has_formula_pct": 88.26086956521739,
+    "has_definition_pct": 7.391304347826087,
+    "text_with_context_pct": 100.0,
+    "sample_chunk": {
+      "chapter": "Unknown",
+      "section_type": "content",
+      "page": 1,
+      "token_count": 846,
+      "subject_hint": "unknown",
+      "has_formula": true,
+      "has_definition": false,
+      "text_head": "Mathematics\nClass 10\nGovernment of Nepal\nMinistry of Education, Science and Technology\nCurriculum Development Centre\nSanothimi, Bhaktapur\n\n\nPublisher:\t\nGovernment of Nepal \n\t\nMinistry of Education, Science and Technology\n\t\nCurriculum Development Centre\n\t\nSanothimi, Bhaktapur\t\n© Curriculum Developmen",
+      "context_head": "Mathematics\nClass 10\nGovernment of Nepal\nMinistry of Education, Science and Technology\nCurriculum Development Centre\nSanothimi, Bhaktapur\n\n\nPublisher:\t\nGovernment of Nepal \n\t\nMinistry of Education, Science and Technology\n\t\nCurriculum Development Centre\n\t\nSanothimi, Bhaktapur\t\n© Curriculum Development Centre\nAll rights reserved, no part of this publication may be reproduced, \ntransmitted in any other form or by any me"
+    },
+    "elapsed_seconds": 1.7
+  },
+  {
+    "book": "grade-6-english.pdf",
+    "total_chunks": 151,
+    "distinct_chapters": 20,
+    "section_type_counts": {
+      "toc": 1,
+      "content": 17,
+      "writing": 18,
+      "glossary": 8,
+      "reading": 37,
+      "speaking": 18,
+      "listening": 16,
+      "grammar": 18,
+      "project": 18
+    },
+    "subject_hint_counts": {
+      "unknown": 64,
+      "english": 87
+    },
+    "token_stats": {
+      "min": 8,
+      "p25": 190.0,
+      "p50": 312.0,
+      "p75": 460.5,
+      "p95": 890.5,
+      "max": 1500,
+      "mean": 381.6622516556291
+    },
+    "has_formula_pct": 13.245033112582782,
+    "has_definition_pct": 3.9735099337748347,
+    "text_with_context_pct": 100.0,
+    "sample_chunk": {
+      "chapter": "Unknown",
+      "section_type": "content",
+      "page": 1,
+      "token_count": 766,
+      "subject_hint": "unknown",
+      "has_formula": true,
+      "has_definition": false,
+      "text_head": "Government of Nepal\nMinistry of Education, Science and Technology\nCurriculum Development Centre\nSanothimi, Bhaktapur\nEnglish \nGrade 6\n\n\nPublisher:  \t Government of Nepal \n\t\nMinistry of Education, Science and Technology\n\t\nCurriculum Development Centre\n\t\nSanothimi, Bhaktapur\n© Curriculum Development C",
+      "context_head": "Government of Nepal\nMinistry of Education, Science and Technology\nCurriculum Development Centre\nSanothimi, Bhaktapur\nEnglish \nGrade 6\n\n\nPublisher:  \t Government of Nepal \n\t\nMinistry of Education, Science and Technology\n\t\nCurriculum Development Centre\n\t\nSanothimi, Bhaktapur\n© Curriculum Development Centre\nFirst Edition: 2021 AD\nSend your comments and suggestions to:\nCurriculum Development Centre\nPhone: 01-6630588\nFax:"
+    },
+    "elapsed_seconds": 0.4
+  },
+  {
+    "book": "grade-9-nepali.pdf",
+    "total_chunks": 425,
+    "distinct_chapters": 15,
+    "section_type_counts": {
+      "toc": 1,
+      "content": 424
+    },
+    "subject_hint_counts": {
+      "unknown": 401,
+      "nepali": 24
+    },
+    "token_stats": {
+      "min": 295,
+      "p25": 920.0,
+      "p50": 956.0,
+      "p75": 981.0,
+      "p95": 997.0,
+      "max": 1000,
+      "mean": 937.2376470588235
+    },
+    "has_formula_pct": 2.588235294117647,
+    "has_definition_pct": 9.411764705882353,
+    "text_with_context_pct": 100.0,
+    "sample_chunk": {
+      "chapter": "मेघ बिजुली विवाह",
+      "section_type": "content",
+      "page": 1,
+      "token_count": 926,
+      "subject_hint": "unknown",
+      "has_formula": false,
+      "has_definition": false,
+      "text_head": "नेपाली\n\nकक्षा\n\nनेपाल सरकार\nशिक्षा, विज्ञान तथा प्रबिधि मन्त्रालय\nपाठयक्रम विकास केन्द्र\nसानोठिमी, भक्तपुर\n\n\nप्रकाशक\nनेपाल सरकार\n\nशिक्षा, विज्ञान तथा प्रविधि मन्त्रालय\nपाठ्यक्रम विकास केन्द्र\nसानोठिमी, भक्तपुर\n\n© सर्वाधिकार पाठ्यक्रम विकास केन्द्र\n\nप्रथम संस्करण : वि.सं २०७९\n\nपाठयपुस्तकसस्बन्धी पाठकह",
+      "context_head": "नेपाली\n\nकक्षा\n\nनेपाल सरकार\nशिक्षा, विज्ञान तथा प्रबिधि मन्त्रालय\nपाठयक्रम विकास केन्द्र\nसानोठिमी, भक्तपुर\n\n\nप्रकाशक\nनेपाल सरकार\n\nशिक्षा, विज्ञान तथा प्रविधि मन्त्रालय\nपाठ्यक्रम विकास केन्द्र\nसानोठिमी, भक्तपुर\n\n© सर्वाधिकार पाठ्यक्रम विकास केन्द्र\n\nप्रथम संस्करण : वि.सं २०७९\n\nपाठयपुस्तकसस्बन्धी पाठकहरूका कुनै पति प्रकारका सझावहरू भएमा पाठ्यक्रम विकास\nकेन्द्र समन्वय तथा प्रकाशन शाखामा पठाइदिनुहुव अनुरोध छ | पाठकहरूबाट "
+    },
+    "elapsed_seconds": 64.2
+  },
+  {
+    "book": "grade-9-science-and-technology.pdf",
+    "total_chunks": 264,
+    "distinct_chapters": 20,
+    "section_type_counts": {
+      "toc": 1,
+      "content": 30,
+      "project": 24,
+      "exercise": 53,
+      "exercise_qa": 111,
+      "exercise_mcq": 11,
+      "activity": 21,
+      "example": 4,
+      "exercise_fitb": 9
+    },
+    "subject_hint_counts": {
+      "unknown": 16,
+      "social": 74,
+      "computer": 1,
+      "science": 173
+    },
+    "token_stats": {
+      "min": 19,
+      "p25": 388.0,
+      "p50": 479.0,
+      "p75": 496.0,
+      "p95": 970.8,
+      "max": 1598,
+      "mean": 482.79924242424244
+    },
+    "has_formula_pct": 40.53030303030303,
+    "has_definition_pct": 51.515151515151516,
+    "text_with_context_pct": 100.0,
+    "sample_chunk": {
+      "chapter": "Transportation - Access in water, land and air transportation - The smoke release causes air pollution and noise pollution",
+      "section_type": "content",
+      "page": 2,
+      "token_count": 265,
+      "subject_hint": "unknown",
+      "has_formula": false,
+      "has_definition": false,
+      "text_head": "Scientific Study\n\nSteps of scientific learning\n\nbservation/Curiosty\n‘Question for research बु\nHypothesis building ——!\n\nTesting fiom eiperie\nment\n\nResult and conclusion\n\n'\n\nHypothesis testing\n\ney\n\nProved hypothesis Unproven hypothesis\n\na\n\nReport\n\nFig. 1.2 Steps of scientific learning\n\nWhat are the qu",
+      "context_head": "Scientific Study\n\nSteps of scientific learning\n\nbservation/Curiosty\n‘Question for research बु\nHypothesis building ——!\n\nTesting fiom eiperie\nment\n\nResult and conclusion\n\n'\n\nHypothesis testing\n\ney\n\nProved hypothesis Unproven hypothesis\n\na\n\nReport\n\nFig. 1.2 Steps of scientific learning\n\nWhat are the questions, hypothesis, experimental work and data\ncollection method in scientific study of acidic, basic and neutral\nprope"
+    },
+    "elapsed_seconds": 105.5
+  },
+  {
+    "book": "grade-10-social-studies.pdf",
+    "total_chunks": 930,
+    "distinct_chapters": 41,
+    "section_type_counts": {
+      "toc": 1,
+      "content": 218,
+      "exercise": 642,
+      "project": 69
+    },
+    "subject_hint_counts": {
+      "unknown": 2,
+      "nepali": 917,
+      "social": 11
+    },
+    "token_stats": {
+      "min": 115,
+      "p25": 451.0,
+      "p50": 483.0,
+      "p75": 736.75,
+      "p95": 978.0,
+      "max": 1845,
+      "mean": 571.9225806451612
+    },
+    "has_formula_pct": 6.236559139784946,
+    "has_definition_pct": 10.75268817204301,
+    "text_with_context_pct": 100.0,
+    "sample_chunk": {
+      "chapter": "पाठ 1: सामाजिकीकरण",
+      "section_type": "content",
+      "page": 2,
+      "token_count": 980,
+      "subject_hint": "nepali",
+      "has_formula": false,
+      "has_definition": false,
+      "text_head": "प्रकाशक\nनेपाल सरकार\n\nशिक्षा, विज्ञान तथा प्रविधि मन्त्रालय\nपाठ्यक्रम विकास केन्द्र\nसानोठिमी, भक्तपुर\n\n© सर्वाधिकार पाठ्यक्रम विकास केन्द्र\n\nप्रथम संस्करण : बि.सं २०८०\n\n\n\nहाम्रो भनाइ\n\nशिक्षालाई उद्देश्यमूलक, व्यावहारिक, समसार्मायक र रोजगारमूलक बनाउन falter समयमा पाठ्यक्रम,\nपाख्र्यपुस्तक विकास तथा परि",
+      "context_head": "प्रकाशक\nनेपाल सरकार\n\nशिक्षा, विज्ञान तथा प्रविधि मन्त्रालय\nपाठ्यक्रम विकास केन्द्र\nसानोठिमी, भक्तपुर\n\n© सर्वाधिकार पाठ्यक्रम विकास केन्द्र\n\nप्रथम संस्करण : बि.सं २०८०\n\n\n\nहाम्रो भनाइ\n\nशिक्षालाई उद्देश्यमूलक, व्यावहारिक, समसार्मायक र रोजगारमूलक बनाउन falter समयमा पाठ्यक्रम,\nपाख्र्यपुस्तक विकास तथा परिमाजँन कार्यलाई निरन्तरता दिइँदै आएको छ । विद्यार्थीमा ज्ञानको खोजी गरी\nसिकाइ र वास्तावक जीवनाँवच सम्बन्ध स्थाँपत गर्ने, "
+    },
+    "elapsed_seconds": 148.0
+  }
+]

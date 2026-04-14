@@ -1,0 +1,1896 @@
+{
+  "overall": {
+    "n_cases": 58,
+    "context_recall": 0.5396270343455775,
+    "context_precision": 0.4354194121281805,
+    "answer_relevancy": 0.5283598121384094,
+    "hit_at_1": 0.46551724137931033,
+    "hit_at_3": 0.6206896551724138,
+    "avg_latency_ms": 818.8655172413792
+  },
+  "by_type": {
+    "concept": {
+      "n": 12,
+      "context_recall": 0.49885378902157146,
+      "context_precision": 0.3785582237771475,
+      "answer_relevancy": 0.5015711411833763,
+      "hit_at_3": 0.5833333333333334
+    },
+    "definition": {
+      "n": 12,
+      "context_recall": 0.5034788424770037,
+      "context_precision": 0.3827670489820163,
+      "answer_relevancy": 0.44224617381890613,
+      "hit_at_3": 0.4166666666666667
+    },
+    "exercise": {
+      "n": 4,
+      "context_recall": 0.4236252158880234,
+      "context_precision": 0.38761812785274063,
+      "answer_relevancy": 0.3855503462255001,
+      "hit_at_3": 0.5
+    },
+    "formula": {
+      "n": 20,
+      "context_recall": 0.6216167047619819,
+      "context_precision": 0.5300980618042083,
+      "answer_relevancy": 0.5945966243743896,
+      "hit_at_3": 0.8
+    },
+    "structural": {
+      "n": 10,
+      "context_recall": 0.514354145526886,
+      "context_precision": 0.39659888828293793,
+      "answer_relevancy": 0.5884927451610565,
+      "hit_at_3": 0.6
+    }
+  },
+  "by_book": {
+    "grade-10-mathematics.pdf": {
+      "n": 12,
+      "context_recall": 0.5437043036023775,
+      "context_precision": 0.46425958080580326,
+      "hit_at_3": 0.5833333333333334
+    },
+    "grade-5-english.pdf": {
+      "n": 1,
+      "context_recall": 0.40804415941238403,
+      "context_precision": 0.33877384024178564,
+      "hit_at_3": 0.0
+    },
+    "grade-5-mathematics.pdf": {
+      "n": 3,
+      "context_recall": 0.4658809502919515,
+      "context_precision": 0.33767504931851305,
+      "hit_at_3": 0.6666666666666666
+    },
+    "grade-6-english.pdf": {
+      "n": 2,
+      "context_recall": 0.5404792726039886,
+      "context_precision": 0.39345415184585586,
+      "hit_at_3": 1.0
+    },
+    "grade-7-mathematics (1).pdf": {
+      "n": 6,
+      "context_recall": 0.5250816643238068,
+      "context_precision": 0.46177516533053325,
+      "hit_at_3": 0.6666666666666666
+    },
+    "grade-7-social-studies.pdf": {
+      "n": 3,
+      "context_recall": 0.24897716442743936,
+      "context_precision": 0.17525682493623232,
+      "hit_at_3": 0.0
+    },
+    "grade-8-english.pdf": {
+      "n": 2,
+      "context_recall": 0.35150425881147385,
+      "context_precision": 0.2181460969111699,
+      "hit_at_3": 0.5
+    },
+    "grade-8-mathematics.pdf": {
+      "n": 6,
+      "context_recall": 0.5563073952992758,
+      "context_precision": 0.46353078382731616,
+      "hit_at_3": 0.6666666666666666
+    },
+    "grade-9-mathematics (1).pdf": {
+      "n": 16,
+      "context_recall": 0.6145586669445038,
+      "context_precision": 0.493272407950192,
+      "hit_at_3": 0.8125
+    },
+    "grade-9-science-and-technology.pdf": {
+      "n": 7,
+      "context_recall": 0.5880082505089896,
+      "context_precision": 0.4483209644420841,
+      "hit_at_3": 0.42857142857142855
+    }
+  },
+  "details": [
+    {
+      "id": "math9-sets-001",
+      "type": "definition",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is the union of two sets?",
+      "ground_truth": "The union of sets A and B, denoted by A ∪ B, consists of all elements of set A or set B. In set-builder notation: A ∪ B = {x : x ∈ A or x ∈ B}.",
+      "metrics": {
+        "context_recall": 0.6562585234642029,
+        "context_precision": 0.5466304939325525,
+        "answer_relevancy": 0.469482421875,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 1807.8,
+      "top_chunk": "[example | Sets | p17] Example 12 If, U = {1, 2, 3, ..., 18, 19, 20}, A = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19} and B = {2, 4,  6, 8, 10, 12, 14, 16, 18, 20}, then l",
+      "top_k_sections": [
+        "example",
+        "exercise",
+        "exercise",
+        "content",
+        "formula_with_example"
+      ],
+      "top_k_chapters": [
+        "Sets",
+        "Factorization",
+        "Sets",
+        "Factorization",
+        "Area"
+      ]
+    },
+    {
+      "id": "math9-sets-002",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "How do you find the number of elements in the union of two sets?",
+      "ground_truth": "The number of elements in A union B is given by n(A ∪ B) = n(A) + n(B) - n(A ∩ B). If A and B are disjoint, then n(A ∪ B) = n(A) + n(B).",
+      "metrics": {
+        "context_recall": 0.7036399841308594,
+        "context_precision": 0.575272136896245,
+        "answer_relevancy": 0.6066648960113525,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 625.8,
+      "top_chunk": "[example | Sets | p17] Example 12 If, U = {1, 2, 3, ..., 18, 19, 20}, A = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19} and B = {2, 4,  6, 8, 10, 12, 14, 16, 18, 20}, then l",
+      "top_k_sections": [
+        "example",
+        "exercise",
+        "exercise",
+        "exercise",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Sets",
+        "Sets",
+        "Sets",
+        "Highest Common Factor and Lowest Common Multiple",
+        "Highest Common Factor and Lowest Common Multiple"
+      ]
+    },
+    {
+      "id": "math9-sets-003",
+      "type": "concept",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is a Venn diagram?",
+      "ground_truth": "A Venn diagram is a pictorial representation of sets using circles within a rectangle representing the universal set. It shows the relationship between sets including intersection, union, and complement.",
+      "metrics": {
+        "context_recall": 0.6465950608253479,
+        "context_precision": 0.5720557856919287,
+        "answer_relevancy": 0.5776818990707397,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 557.9,
+      "top_chunk": "[example | Sets | p11] Example 5 If P = {multiples of 3 less than 20} and Q = {multiples of 2 less than 20}, find  P  Q and present in Venn diagram. Solution,  Her",
+      "top_k_sections": [
+        "example",
+        "example",
+        "exercise",
+        "example",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Sets",
+        "Sets",
+        "Sets",
+        "Sets",
+        "Sets"
+      ]
+    },
+    {
+      "id": "math9-trig-001",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is the Pythagorean theorem?",
+      "ground_truth": "In a right-angled triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides: a² + b² = c², where c is the hypotenuse.",
+      "metrics": {
+        "context_recall": 0.49770575761795044,
+        "context_precision": 0.43755948910471976,
+        "answer_relevancy": 0.5776189565658569,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 618.3,
+      "top_chunk": "[exercise | Trigonometry | p374] Q = ∠AOB = 45° x'G5 . Thus, side OQ = PQ = x\t Now, from Pythagoras theorem, OP2 = PQ2 + OQ2 = x2 + x2 = 2x2/OP = 2x2 In ∆OQP/Sin α = sin45° ",
+      "top_k_sections": [
+        "exercise",
+        "exercise",
+        "exercise",
+        "exercise",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Trigonometry",
+        "Indices",
+        "Factorization",
+        "Indices",
+        "Factorization"
+      ]
+    },
+    {
+      "id": "math9-trig-002",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is sin θ in a right-angled triangle?",
+      "ground_truth": "In a right-angled triangle, sin θ = perpendicular / hypotenuse, where θ is the angle and perpendicular is the side opposite to the angle.",
+      "metrics": {
+        "context_recall": 0.5444446802139282,
+        "context_precision": 0.46388487023231756,
+        "answer_relevancy": 0.6202130317687988,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 840.0,
+      "top_chunk": "[example | Trigonometry | p378] Example 1 Find the values of the following trigonometric ratios:  (a) sin45° + cos45°/(b) cos30° sin30°   Solution: (a) oxfF sin45° + cos45°",
+      "top_k_sections": [
+        "example",
+        "example",
+        "exercise",
+        "exercise",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Trigonometry",
+        "Trigonometry",
+        "Trigonometry",
+        "Trigonometry",
+        "Trigonometry"
+      ]
+    },
+    {
+      "id": "math9-area-001",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "How do you calculate the area of a triangle?",
+      "ground_truth": "Area of a triangle = (1/2) × base × height. For a triangle with sides a, b, c, Heron's formula gives Area = √(s(s-a)(s-b)(s-c)) where s is the semi-perimeter.",
+      "metrics": {
+        "context_recall": 0.690244197845459,
+        "context_precision": 0.6318251043931115,
+        "answer_relevancy": 0.7690439820289612,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 688.1,
+      "top_chunk": "[exercise | Area | p101]  m and AD = 8 m. Find the area occupied by the  garden./11. Area of triangle and parallelogram having same base are equal. Length of  sides ",
+      "top_k_sections": [
+        "exercise",
+        "exercise",
+        "content",
+        "example",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Area",
+        "Area",
+        "Area",
+        "Triangle",
+        "Trigonometry"
+      ]
+    },
+    {
+      "id": "math9-prism-001",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is the formula for volume of a prism?",
+      "ground_truth": "Volume of a prism = Area of base × height (length). The base can be any polygon.",
+      "metrics": {
+        "context_recall": 0.7064158320426941,
+        "context_precision": 0.630894856358619,
+        "answer_relevancy": 0.6965790390968323,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 844.1,
+      "top_chunk": "[exercise | Prism | p149] surface area of the triangular prism is 660 cm2 and the base of the  prism is a right triangle. The length of the base and hypotenuse of the",
+      "top_k_sections": [
+        "exercise",
+        "example",
+        "exercise",
+        "exercise",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Prism",
+        "Prism",
+        "Prism",
+        "Cylinder and Sphere",
+        "Prism"
+      ]
+    },
+    {
+      "id": "math9-tax-001",
+      "type": "definition",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is VAT?",
+      "ground_truth": "VAT stands for Value Added Tax, a tax added to the marked price of goods and services. The total price is the marked price plus the VAT amount calculated as a percentage.",
+      "metrics": {
+        "context_recall": 0.5896071195602417,
+        "context_precision": 0.36356190351451934,
+        "answer_relevancy": 0.2835298180580139,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 1034.6,
+      "top_chunk": "[example | Tax | p44] Example 1 Find the value added tax (VAT) in the given cases: (a)\t Price without value added tax = Rs.700, rate of value added tax = 13% (b) ",
+      "top_k_sections": [
+        "example",
+        "exercise",
+        "content",
+        "content",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Tax",
+        "Household Arithmetic",
+        "Tax",
+        "Commission and Dividend",
+        "Sequence and Series"
+      ]
+    },
+    {
+      "id": "math9-exercise-001",
+      "type": "exercise",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "Give me exercise 1.2 from the Sets chapter",
+      "ground_truth": "Exercise 1.2 in the Sets chapter contains problems about set operations including union, intersection, and cardinality of sets represented using Venn diagrams.",
+      "metrics": {
+        "context_recall": 0.5433200597763062,
+        "context_precision": 0.5433200597763062,
+        "answer_relevancy": 0.28929781913757324,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 1
+      },
+      "latency_ms": 1.9,
+      "top_chunk": "[exercise | Sets | p27] Exercise 1.2 S/T U/R 5  6/7 8/9 2/1 4/3 10/11 12/A B/U d/k l/m a/h i/j b/c e/f g   22 Mathematics Grade 9 \t (g) n(A  B)/(h) n(C) 4.\t From th",
+      "top_k_sections": [
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Sets"
+      ]
+    },
+    {
+      "id": "math9-structural-001",
+      "type": "structural",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "List all the chapters in this textbook",
+      "ground_truth": "The chapters include Sets, Tax, Commission and Dividend, Household Arithmetic, Area, Prism, Cylinder and Sphere, Sequence and Series, Factorization, Highest Common Factor and Lowest Common Multiple, Linear Equation, Indices, Triangle, Quadrilateral, Construction, Circle, Trigonometry, Measures of Central Tendency, Classification and Presentation of Data, Probability.",
+      "metrics": {
+        "context_recall": 0.5780947208404541,
+        "context_precision": 0.40351493720376613,
+        "answer_relevancy": 0.7674916386604309,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.2,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Sets",
+        "Tax",
+        "Commission and Dividend",
+        "Household Arithmetic"
+      ]
+    },
+    {
+      "id": "math9-indices-001",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What are the laws of indices?",
+      "ground_truth": "The laws of indices include: a^m × a^n = a^(m+n), a^m ÷ a^n = a^(m-n), (a^m)^n = a^(mn), a^0 = 1, a^(-n) = 1/a^n, and (ab)^n = a^n × b^n.",
+      "metrics": {
+        "context_recall": 0.27852940559387207,
+        "context_precision": 0.23913360810628045,
+        "answer_relevancy": 0.34037184715270996,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.1,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Sets",
+        "Tax",
+        "Commission and Dividend",
+        "Household Arithmetic"
+      ]
+    },
+    {
+      "id": "math9-sequence-001",
+      "type": "definition",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is an arithmetic sequence?",
+      "ground_truth": "An arithmetic sequence is a sequence of numbers in which the difference between consecutive terms is constant. This constant difference is called the common difference (d). The nth term is a_n = a + (n-1)d where a is the first term.",
+      "metrics": {
+        "context_recall": 0.7250561714172363,
+        "context_precision": 0.5577720160868641,
+        "answer_relevancy": 0.65523362159729,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 1085.9,
+      "top_chunk": "[exercise | Sequence and Series | p183] 35, 30.  So, if each term of any sequence is increased or decreased by a fixed number, then  its previous terms of the sequence is called an",
+      "top_k_sections": [
+        "exercise",
+        "exercise",
+        "example",
+        "exercise",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Sequence and Series",
+        "Sets",
+        "Sequence and Series",
+        "Indices",
+        "Sequence and Series"
+      ]
+    },
+    {
+      "id": "math9-probability-001",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is the formula for probability?",
+      "ground_truth": "Probability of an event = Number of favorable outcomes / Total number of outcomes. P(E) ranges from 0 to 1. P(E) + P(not E) = 1.",
+      "metrics": {
+        "context_recall": 0.758043646812439,
+        "context_precision": 0.5272737955480981,
+        "answer_relevancy": 0.7084850668907166,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 983.5,
+      "top_chunk": "[exercise | Probability | p358] (S) = 1  where S = {H, T} The least value of probability is 0, it means that the probability of occurring  the event is completely impossibl",
+      "top_k_sections": [
+        "exercise",
+        "exercise",
+        "exercise",
+        "exercise",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Probability",
+        "Indices",
+        "Indices",
+        "Probability",
+        "Indices"
+      ]
+    },
+    {
+      "id": "math10-sets-001",
+      "type": "formula",
+      "book": "grade-10-mathematics.pdf",
+      "question": "For three sets A, B, C how do you find n(A ∪ B ∪ C)?",
+      "ground_truth": "For three sets, n(A ∪ B ∪ C) = n(A) + n(B) + n(C) - n(A ∩ B) - n(B ∩ C) - n(A ∩ C) + n(A ∩ B ∩ C). This is the inclusion-exclusion principle.",
+      "metrics": {
+        "context_recall": 0.7519499063491821,
+        "context_precision": 0.6461082928590088,
+        "answer_relevancy": 0.6583835482597351,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 21149.6,
+      "top_chunk": "[example | Sets | p20] Example 1 If n(U) = 120, n(A) = 48, n(B) = 51, n(C) = 40, n(A∩B) = 11, n(B∩C) = 10,  n(A∩C) = 9, and n(A∩B∩C) = 4 then find n(A∪B∪C) and n(A",
+      "top_k_sections": [
+        "example",
+        "formula_with_example",
+        "exercise",
+        "project",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Sets",
+        "Sets",
+        "Sets",
+        "Sets",
+        "Sequence and Series"
+      ]
+    },
+    {
+      "id": "math10-compound-001",
+      "type": "formula",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What is the formula for compound interest?",
+      "ground_truth": "Compound interest formula: A = P(1 + R/100)^T, where A is the final amount, P is the principal, R is the rate per period, and T is the number of periods. Compound interest = A - P.",
+      "metrics": {
+        "context_recall": 0.7782407999038696,
+        "context_precision": 0.7180250881167599,
+        "answer_relevancy": 0.7480055093765259,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 1310.3,
+      "top_chunk": "[exercise | Compound Interest | p46] Exercise 2.1 1.\t Define:  \t (a)\tYearly compound interest\t \t (b) Half yearly compound interest \t (c)\tQuarterly compound interest 2.\t (a) \tAcc",
+      "top_k_sections": [
+        "exercise",
+        "example",
+        "project",
+        "content",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Compound Interest",
+        "Compound Interest",
+        "Currency and Exchange Rate",
+        "Compound Interest",
+        "Compound Interest"
+      ]
+    },
+    {
+      "id": "math10-quadratic-001",
+      "type": "formula",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What is the quadratic formula?",
+      "ground_truth": "For a quadratic equation ax² + bx + c = 0, the quadratic formula is x = (-b ± √(b² - 4ac)) / 2a. The discriminant b² - 4ac determines the nature of the roots.",
+      "metrics": {
+        "context_recall": 0.606622576713562,
+        "context_precision": 0.5506924012698532,
+        "answer_relevancy": 0.5152543783187866,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 614.1,
+      "top_chunk": "[exercise | Quadratic Equation | p164] Exercise 7.1 1. \t Which of the following are the quadratic equation? Write with reason. (a)\t (x – 2)2 + 1 = 2x – 3 \t (b) \t x(x + 1) + 8 = (x",
+      "top_k_sections": [
+        "exercise",
+        "exercise",
+        "example",
+        "exercise",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Quadratic Equation",
+        "Quadratic Equation",
+        "Quadratic Equation",
+        "Indices",
+        "Indices"
+      ]
+    },
+    {
+      "id": "math10-probability-001",
+      "type": "formula",
+      "book": "grade-10-mathematics.pdf",
+      "question": "How do you calculate probability of an event?",
+      "ground_truth": "Probability of an event P(E) = Number of favourable outcomes / Total number of possible outcomes. The value of P(E) lies between 0 and 1, where 0 means impossible and 1 means certain.",
+      "metrics": {
+        "context_recall": 0.5736657381057739,
+        "context_precision": 0.49408805319153454,
+        "answer_relevancy": 0.6200459003448486,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 621.9,
+      "top_chunk": "[exercise | Probability | p280] ) \t When a card is drawn, from a well-shuffled pack of cards, 10 card or ace  card (A). (e) \t When a card is drawn from a well-shuffled pack",
+      "top_k_sections": [
+        "exercise",
+        "project",
+        "example",
+        "example",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Probability",
+        "Probability",
+        "Probability",
+        "Probability",
+        "Probability"
+      ]
+    },
+    {
+      "id": "math10-statistics-001",
+      "type": "definition",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What is the mean, median, and mode?",
+      "ground_truth": "Mean is the average (sum of values divided by count). Median is the middle value when data is arranged in order. Mode is the value that occurs most frequently.",
+      "metrics": {
+        "context_recall": 0.392097532749176,
+        "context_precision": 0.37312334641252154,
+        "answer_relevancy": 0.31473737955093384,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 507.5,
+      "top_chunk": "[exercise | Statistics | p266]  3 parts in one side and  one part on another side.  This can be shown in the figure as follows. 0/16 32/48 64 As seen in the picture above,",
+      "top_k_sections": [
+        "exercise",
+        "project",
+        "exercise",
+        "formula_with_example",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Statistics",
+        "Statistics",
+        "Statistics",
+        "Statistics",
+        "Sequence and Series"
+      ]
+    },
+    {
+      "id": "math10-area-001",
+      "type": "formula",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What is the surface area of a cylinder?",
+      "ground_truth": "Total surface area of a cylinder = 2πr(r + h), where r is the radius of the base and h is the height. The curved surface area alone is 2πrh.",
+      "metrics": {
+        "context_recall": 0.7382056713104248,
+        "context_precision": 0.6447662823843087,
+        "answer_relevancy": 0.6458312273025513,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 738.2,
+      "top_chunk": "[example | Area and Volume | p111] Example 1 A figure of a pencil is given aside. Find the total surface area and volume of the  pencil. Solution Here, radius of the base (r) ",
+      "top_k_sections": [
+        "example",
+        "content",
+        "project",
+        "project",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Area and Volume",
+        "Area and Volume",
+        "Area and Volume",
+        "Area and Volume",
+        "Area and Volume"
+      ]
+    },
+    {
+      "id": "math10-exercise-001",
+      "type": "exercise",
+      "book": "grade-10-mathematics.pdf",
+      "question": "Show me exercise 5.2 on quadratic equations",
+      "ground_truth": "Exercise 5.2 contains problems on solving quadratic equations using various methods including factorization, completing the square, and the quadratic formula.",
+      "metrics": {
+        "context_recall": 0.21217310428619385,
+        "context_precision": 0.20037724451786568,
+        "answer_relevancy": 0.22913320362567902,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 2
+      },
+      "latency_ms": 2.5,
+      "top_chunk": "[exercise | Area and Volume | p105] Exercise 5.2 1.\t What is the shape of the  surface of base in given figure? Answer the  following questions on the basis of information give",
+      "top_k_sections": [
+        "exercise",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Area and Volume",
+        "Area and Volume"
+      ]
+    },
+    {
+      "id": "math10-ratio-001",
+      "type": "definition",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What is a continued ratio?",
+      "ground_truth": "When three quantities a, b, c are in continued proportion, a:b = b:c. Then b² = ac. This means b is the mean proportional between a and c.",
+      "metrics": {
+        "context_recall": 0.5387782454490662,
+        "context_precision": 0.4101587688254608,
+        "answer_relevancy": 0.47604501247406006,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 1749.2,
+      "top_chunk": "[content | Compound Interest | p34]  interest is to be calculated half yearly, the rate of interest R% per annum being  calculated as R 2 % per semi-annual and Time (T) being c",
+      "top_k_sections": [
+        "content",
+        "content",
+        "project",
+        "exercise",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Compound Interest",
+        "Compound Interest",
+        "Sets",
+        "Statistics",
+        "Growth and Depreciation"
+      ]
+    },
+    {
+      "id": "math10-matrix-001",
+      "type": "definition",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What is a matrix?",
+      "ground_truth": "A matrix is a rectangular array of numbers arranged in rows and columns. The order of a matrix is m × n where m is the number of rows and n is the number of columns.",
+      "metrics": {
+        "context_recall": 0.35318833589553833,
+        "context_precision": 0.29999481873846234,
+        "answer_relevancy": 0.30403751134872437,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 579.6,
+      "top_chunk": "[exercise | Probability | p280] ) \t When a card is drawn, from a well-shuffled pack of cards, 10 card or ace  card (A). (e) \t When a card is drawn from a well-shuffled pack",
+      "top_k_sections": [
+        "exercise",
+        "formula_with_example",
+        "project",
+        "exercise",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Probability",
+        "Sets",
+        "Construction",
+        "Quadratic Equation",
+        "Circle"
+      ]
+    },
+    {
+      "id": "math10-coordinate-001",
+      "type": "formula",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What is the distance formula between two points?",
+      "ground_truth": "The distance between two points (x1, y1) and (x2, y2) is d = √((x2-x1)² + (y2-y1)²). This is derived from the Pythagorean theorem.",
+      "metrics": {
+        "context_recall": 0.6220718622207642,
+        "context_precision": 0.5820630597757785,
+        "answer_relevancy": 0.5216143131256104,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 434.3,
+      "top_chunk": "[example | Quadratic Equation | p158] , x2 – (3 – 2) x – 6 = 0 or, x2 – 3x + 2x – 6 = 0 or, x(x – 3) +2(x – 3) = 0 or, (x – 3) (x + 2) = 0 either, (x – 3) = 0\t ⸫ x = 3 or, x + 2 ",
+      "top_k_sections": [
+        "example",
+        "exercise",
+        "example",
+        "example",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Quadratic Equation",
+        "Quadratic Equation",
+        "Quadratic Equation",
+        "Quadratic Equation",
+        "Circle"
+      ]
+    },
+    {
+      "id": "sci9-sci-001",
+      "type": "concept",
+      "book": "grade-9-science-and-technology.pdf",
+      "question": "What are the steps of scientific learning?",
+      "ground_truth": "The steps of scientific learning are: Observation/Curiosity/Question for research, Hypothesis building, Testing from experiment/Hypothesis testing, Result and conclusion (Proved or Unproven hypothesis), and finally Report.",
+      "metrics": {
+        "context_recall": 0.7473148107528687,
+        "context_precision": 0.38433062967268367,
+        "answer_relevancy": 0.6380296945571899,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 8.0,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Scientific study",
+        "Transportation - Access in water, land and air transportation - The smoke release causes air pollution and noise pollution",
+        "Agriculture - Insecticides, fertilizer, scientific agriculture system, improved seed, increase in productivity, reduction in hunger - The smoke release causes air pollution and noise pollution",
+        "Education - ICT, distance education, research, increase access in communication - Increase of different types of health hazard, aloneness, enjoy in virtual word due to excessive use of ICT, disruption in socialization"
+      ]
+    },
+    {
+      "id": "sci9-sci-002",
+      "type": "concept",
+      "book": "grade-9-science-and-technology.pdf",
+      "question": "What are scientific process skills?",
+      "ground_truth": "Scientific process skills include observation, questioning, classification, prediction, interpretation, measurement, concluding, and communication. These skills form the basis of scientific learning.",
+      "metrics": {
+        "context_recall": 0.829358696937561,
+        "context_precision": 0.518026364859659,
+        "answer_relevancy": 0.7808480262756348,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 398.9,
+      "top_chunk": "[content | Agriculture - Insecticides, fe | p3] 1.1 Scientific process skills  Scientific skill provides the basis of scientific learning. We require scientific process skill and scientifi",
+      "top_k_sections": [
+        "content",
+        "content",
+        "project",
+        "activity",
+        "exercise_qa"
+      ],
+      "top_k_chapters": [
+        "Agriculture - Insecticides, fertilizer, scientific agriculture system, improved seed, increase in productivity, reduction in hunger - The smoke release causes air pollution and noise pollution",
+        "Energy",
+        "A.I. (Artificial Intelligence) - Development of automatic technology, comfortable in human life - Violation of Personal Privacy, increase of unemployment",
+        "Force and Motion",
+        "Materials used in Agriculture"
+      ]
+    },
+    {
+      "id": "sci9-class-001",
+      "type": "concept",
+      "book": "grade-9-science-and-technology.pdf",
+      "question": "How are living beings classified?",
+      "ground_truth": "Living beings are classified into kingdoms based on characteristics like cell structure, nutrition, and body organization. The five-kingdom classification includes Monera, Protista, Fungi, Plantae, and Animalia.",
+      "metrics": {
+        "context_recall": 0.5001115798950195,
+        "context_precision": 0.45868185696911185,
+        "answer_relevancy": 0.6242120862007141,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 334.3,
+      "top_chunk": "[content | Materials used in Agriculture | p19] (c) It makes it easy to give scientific name of living beings. (d) It describes the natural interrelationship of living beings. (d) It makes",
+      "top_k_sections": [
+        "content",
+        "content",
+        "content",
+        "exercise",
+        "exercise_qa"
+      ],
+      "top_k_chapters": [
+        "Materials used in Agriculture",
+        "Carbon and its Compounds",
+        "Scientific study",
+        "Materials used in Agriculture",
+        "Materials used in Agriculture"
+      ]
+    },
+    {
+      "id": "sci9-force-001",
+      "type": "formula",
+      "book": "grade-9-science-and-technology.pdf",
+      "question": "What is Newton's second law of motion?",
+      "ground_truth": "Newton's second law states that the acceleration of an object is directly proportional to the net force acting on it and inversely proportional to its mass. F = ma, where F is force, m is mass, and a is acceleration.",
+      "metrics": {
+        "context_recall": 0.6995752453804016,
+        "context_precision": 0.5670127905253918,
+        "answer_relevancy": 0.7043536305427551,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 380.9,
+      "top_chunk": "[content | Force and Motion | p117] , 64-40 चतुर १२८ 16  8a= 24/or, a= 3 m/s? According to newton's second law of motion, F=ma/F =1500 x 3 = 4500 N  Hence, the resultant force ",
+      "top_k_sections": [
+        "content",
+        "content",
+        "exercise_mcq",
+        "content",
+        "project"
+      ],
+      "top_k_chapters": [
+        "Force and Motion",
+        "Force and Motion",
+        "Force and Motion",
+        "A.I. (Artificial Intelligence) - Development of automatic technology, comfortable in human life - Violation of Personal Privacy, increase of unemployment",
+        "Force and Motion"
+      ]
+    },
+    {
+      "id": "sci9-energy-001",
+      "type": "concept",
+      "book": "grade-9-science-and-technology.pdf",
+      "question": "What is the law of conservation of energy?",
+      "ground_truth": "The law of conservation of energy states that energy can neither be created nor destroyed; it can only be transformed from one form to another. The total energy of an isolated system remains constant.",
+      "metrics": {
+        "context_recall": 0.4171143174171448,
+        "context_precision": 0.3526316283188735,
+        "answer_relevancy": 0.5099908113479614,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 396.5,
+      "top_chunk": "[project | Force and Motion | p203] Project work  Find out about the works of national and international organizations involved in the study of astronomy, and prepare a report.",
+      "top_k_sections": [
+        "project",
+        "exercise_qa",
+        "exercise",
+        "exercise_qa",
+        "exercise_qa"
+      ],
+      "top_k_chapters": [
+        "Force and Motion",
+        "Force and Motion",
+        "Materials used in Agriculture",
+        "Force and Motion",
+        "Force and Motion"
+      ]
+    },
+    {
+      "id": "sci9-structural-001",
+      "type": "structural",
+      "book": "grade-9-science-and-technology.pdf",
+      "question": "How many units are in this science book?",
+      "ground_truth": "The grade 9 science and technology book has 19 units covering topics from Scientific Study, Classification of Living Beings, to Materials used in Agriculture.",
+      "metrics": {
+        "context_recall": 0.4522348940372467,
+        "context_precision": 0.41095810375875297,
+        "answer_relevancy": 0.37442341446876526,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.2,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Scientific study",
+        "Transportation - Access in water, land and air transportation - The smoke release causes air pollution and noise pollution",
+        "Agriculture - Insecticides, fertilizer, scientific agriculture system, improved seed, increase in productivity, reduction in hunger - The smoke release causes air pollution and noise pollution",
+        "Education - ICT, distance education, research, increase access in communication - Increase of different types of health hazard, aloneness, enjoy in virtual word due to excessive use of ICT, disruption in socialization"
+      ]
+    },
+    {
+      "id": "eng6-read-001",
+      "type": "structural",
+      "book": "grade-6-english.pdf",
+      "question": "What are the different sections in each unit of this English book?",
+      "ground_truth": "Each unit in the grade 6 English book contains sections for Reading, Writing, Listening, Speaking, Grammar, Vocabulary, and Project Work.",
+      "metrics": {
+        "context_recall": 0.5592045187950134,
+        "context_precision": 0.4159089166456992,
+        "answer_relevancy": 0.7009779214859009,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 6.4,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "writing",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Unit 1: Biography (T.S.",
+        "Unit 2: Story (Three",
+        "Unit 3: Story (Beauty",
+        "Unit 4: Factual text"
+      ]
+    },
+    {
+      "id": "eng6-read-002",
+      "type": "structural",
+      "book": "grade-6-english.pdf",
+      "question": "What topics does the grade 6 English textbook cover?",
+      "ground_truth": "The grade 6 English textbook covers topics like Family, Health and Hygiene, Travel and Adventure, Sports, Environment, Cultural diversity, and other themes related to students' daily life.",
+      "metrics": {
+        "context_recall": 0.5217540264129639,
+        "context_precision": 0.3709993870460126,
+        "answer_relevancy": 0.572903573513031,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.0,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "writing",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Unit 1: Biography (T.S.",
+        "Unit 2: Story (Three",
+        "Unit 3: Story (Beauty",
+        "Unit 4: Factual text"
+      ]
+    },
+    {
+      "id": "math7-fraction-001",
+      "type": "concept",
+      "book": "grade-7-mathematics (1).pdf",
+      "question": "How do you add two fractions with different denominators?",
+      "ground_truth": "To add fractions with different denominators, first find the LCM of the denominators. Convert each fraction to an equivalent fraction with the LCM as denominator, then add the numerators. For example, a/b + c/d = (ad + bc) / bd.",
+      "metrics": {
+        "context_recall": 0.5297673940658569,
+        "context_precision": 0.4945406155979674,
+        "answer_relevancy": 0.570682168006897,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 540.8,
+      "top_chunk": "[exercise | Algebraic Expression | p157] when  x = 20./7. Find the multiple of (7x – 5y) and (x + y – 2). Find the value of it  when x = 10 and y = 5. 1. \t (a)\t 7x2 – x\t (b)\t –5a3 –",
+      "top_k_sections": [
+        "exercise",
+        "example",
+        "example",
+        "exercise",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Algebraic Expression",
+        "Integer",
+        "Algebraic Expression",
+        "Equation, Inequality and Graph",
+        "Algebraic Expression"
+      ]
+    },
+    {
+      "id": "math7-percentage-001",
+      "type": "formula",
+      "book": "grade-7-mathematics (1).pdf",
+      "question": "How do you find the percentage of a number?",
+      "ground_truth": "To find the percentage of a number, multiply the number by the percentage and divide by 100. For example, x% of N = (x × N) / 100. Percentage means per hundred.",
+      "metrics": {
+        "context_recall": 0.6012351512908936,
+        "context_precision": 0.5311205213011015,
+        "answer_relevancy": 0.5397791862487793,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 539.0,
+      "top_chunk": "[exercise | Algebraic Expression | p157] when  x = 20./7. Find the multiple of (7x – 5y) and (x + y – 2). Find the value of it  when x = 10 and y = 5. 1. \t (a)\t 7x2 – x\t (b)\t –5a3 –",
+      "top_k_sections": [
+        "exercise",
+        "example",
+        "example",
+        "exercise",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Algebraic Expression",
+        "Integer",
+        "Algebraic Expression",
+        "Equation, Inequality and Graph",
+        "Fraction and Decimal"
+      ]
+    },
+    {
+      "id": "math7-ratio-001",
+      "type": "definition",
+      "book": "grade-7-mathematics (1).pdf",
+      "question": "What is a ratio?",
+      "ground_truth": "A ratio is a comparison of two quantities of the same kind by division. The ratio of a to b is written as a:b or a/b. The quantities a and b are called terms of the ratio.",
+      "metrics": {
+        "context_recall": 0.411376416683197,
+        "context_precision": 0.364548570594094,
+        "answer_relevancy": 0.4305664300918579,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 467.6,
+      "top_chunk": "[exercise | Algebraic Expression | p149] 1 (d)/1 4\t \t (e)\t 12/(f) 1/2 (g)\t 6 Answer    144 Mathematics, Grade 7 1.\t If the base and power of the terms are same it is called  like te",
+      "top_k_sections": [
+        "exercise",
+        "project",
+        "example",
+        "exercise",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Algebraic Expression",
+        "Fraction and Decimal",
+        "Integer",
+        "Algebraic Expression",
+        "Algebraic Expression"
+      ]
+    },
+    {
+      "id": "math7-algebra-001",
+      "type": "definition",
+      "book": "grade-7-mathematics (1).pdf",
+      "question": "What is an algebraic expression?",
+      "ground_truth": "An algebraic expression is a mathematical phrase that can contain numbers, variables, and operation symbols. For example, 3x + 2y - 5 is an algebraic expression where x and y are variables.",
+      "metrics": {
+        "context_recall": 0.552570104598999,
+        "context_precision": 0.436267822508335,
+        "answer_relevancy": 0.5247533321380615,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 483.6,
+      "top_chunk": "[exercise | Rational Number | p69] ) +1\t (e) +46 2-4. Show the answers to your teacher. 5. (a) +6\t (b) –9\t (c) –9\t (d) +95  6. (a) +112\t (b) +48/(c) +4 (d) –480  7. +9\t 8. –18",
+      "top_k_sections": [
+        "exercise",
+        "exercise",
+        "example",
+        "example",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Rational Number",
+        "Algebraic Expression",
+        "Integer",
+        "Algebraic Expression",
+        "Algebraic Expression"
+      ]
+    },
+    {
+      "id": "math7-structural-001",
+      "type": "structural",
+      "book": "grade-7-mathematics (1).pdf",
+      "question": "What chapters does this grade 7 math book have?",
+      "ground_truth": "Grade 7 mathematics covers topics including Fraction, Decimal, Percentage, Ratio and Proportion, Profit and Loss, Simple Interest, Algebraic Expression, Equation, Geometry, Perimeter and Area, Statistics, and Sets.",
+      "metrics": {
+        "context_recall": 0.5059014558792114,
+        "context_precision": 0.46163548498751983,
+        "answer_relevancy": 0.6719290018081665,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.1,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Set",
+        "Whole Number",
+        "Integer",
+        "Rational Number"
+      ]
+    },
+    {
+      "id": "math8-hcf-001",
+      "type": "concept",
+      "book": "grade-8-mathematics.pdf",
+      "question": "How do you find the HCF of two numbers?",
+      "ground_truth": "To find the HCF (Highest Common Factor), list all factors of each number and find the greatest common one. Alternatively, use prime factorization: express each number as a product of primes, then multiply the common prime factors with their lowest powers.",
+      "metrics": {
+        "context_recall": 0.672882080078125,
+        "context_precision": 0.4015461785869221,
+        "answer_relevancy": 0.5506739616394043,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 551.9,
+      "top_chunk": "[example | Bearing and Scale Drawing | p164] Example 2   Find the HCF of  x 2 +  2x y  +  y 2 and x 2 – y 2   Solution  Here, first expression = x 2 +  2x y  +  y 2        = x 2 +  x y ",
+      "top_k_sections": [
+        "example",
+        "example",
+        "exercise",
+        "example",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing"
+      ]
+    },
+    {
+      "id": "math8-profit-001",
+      "type": "formula",
+      "book": "grade-8-mathematics.pdf",
+      "question": "How do you calculate profit percentage?",
+      "ground_truth": "Profit percentage = (Profit / Cost Price) × 100%. Where Profit = Selling Price - Cost Price. Similarly, Loss percentage = (Loss / Cost Price) × 100%.",
+      "metrics": {
+        "context_recall": 0.4353722929954529,
+        "context_precision": 0.3791550460504578,
+        "answer_relevancy": 0.47267866134643555,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 463.2,
+      "top_chunk": "[example | Bearing and Scale Drawing | p174] Example 1   Simplify: -a_/x a +  b  –  y/a +  b -b_/3a a +  3  +/9 a +  3/solution -a_ Here,/x a +  b  –  y/a +  b   =  x  – y a +  b   -b_/",
+      "top_k_sections": [
+        "example",
+        "example",
+        "example",
+        "example",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing"
+      ]
+    },
+    {
+      "id": "math8-linear-001",
+      "type": "concept",
+      "book": "grade-8-mathematics.pdf",
+      "question": "How do you solve a linear equation in one variable?",
+      "ground_truth": "To solve a linear equation in one variable, isolate the variable on one side by performing the same operation on both sides. For example, to solve 2x + 3 = 7: subtract 3 from both sides to get 2x = 4, then divide by 2 to get x = 2.",
+      "metrics": {
+        "context_recall": 0.6240063905715942,
+        "context_precision": 0.5940879750563368,
+        "answer_relevancy": 0.6278250813484192,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 615.7,
+      "top_chunk": "[exercise | Bearing and Scale Drawing | p196]  eTuation is one  variable linear equation and the second and third equations are quadratic  equations.  -a_ x  ± \u0017   0    or, x  = 4   -b_ ",
+      "top_k_sections": [
+        "exercise",
+        "example",
+        "example",
+        "example",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing"
+      ]
+    },
+    {
+      "id": "math8-area-001",
+      "type": "formula",
+      "book": "grade-8-mathematics.pdf",
+      "question": "What is the area of a parallelogram?",
+      "ground_truth": "Area of a parallelogram = base × height. The height is the perpendicular distance between the base and its opposite parallel side.",
+      "metrics": {
+        "context_recall": 0.6852174997329712,
+        "context_precision": 0.5788163813254754,
+        "answer_relevancy": 0.6780649423599243,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 569.5,
+      "top_chunk": "[example | Bearing and Scale Drawing | p114] Example 3   )ind the area of shaded region from the adjoining figure. Solution   Here, ABCD is a parallelogram Base of parallelogram (b) =9 ",
+      "top_k_sections": [
+        "example",
+        "project",
+        "project",
+        "example",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing"
+      ]
+    },
+    {
+      "id": "math8-structural-001",
+      "type": "structural",
+      "book": "grade-8-mathematics.pdf",
+      "question": "List the chapters in this grade 8 math book",
+      "ground_truth": "Grade 8 mathematics covers topics including Whole Numbers, Integers, Fraction, Decimal, HCF and LCM, Ratio and Proportion, Percentage, Profit and Loss, Simple Interest, Algebraic Expression, Equation, Geometry, Mensuration, Statistics, and Probability.",
+      "metrics": {
+        "context_recall": 0.5309978723526001,
+        "context_precision": 0.5033418918220957,
+        "answer_relevancy": 0.7055978178977966,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.2,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Simple Interest",
+        "Area and Volume",
+        "Indices",
+        "Algebraic Expression"
+      ]
+    },
+    {
+      "id": "math5-addition-001",
+      "type": "concept",
+      "book": "grade-5-mathematics.pdf",
+      "question": "How do you add numbers with carrying?",
+      "ground_truth": "When adding numbers, if the sum of digits in a column is 10 or more, write the ones digit below and carry the tens digit to the next column. Start from the ones place and move left.",
+      "metrics": {
+        "context_recall": 0.5325030088424683,
+        "context_precision": 0.44551693014005445,
+        "answer_relevancy": 0.47284233570098877,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 440.5,
+      "top_chunk": "[exercise | Unit 3: Number Sense | p47] Exercise 3.1 1.\t Present each number given below in the place value table. (a)\t 1,30,21,623/(b) 2,45,03,214\t (c)\t 4,35,26,041/(d) 6,03,49,81",
+      "top_k_sections": [
+        "exercise",
+        "example",
+        "exercise",
+        "exercise",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Unit 3: Number Sense",
+        "Unit 3: Number Sense",
+        "Unit 5: Fraction",
+        "Unit 3: Number Sense",
+        "Unit 6: Decimal"
+      ]
+    },
+    {
+      "id": "math5-fraction-001",
+      "type": "definition",
+      "book": "grade-5-mathematics.pdf",
+      "question": "What is a proper fraction?",
+      "ground_truth": "A proper fraction is a fraction where the numerator is less than the denominator. For example, 3/4 is a proper fraction because 3 < 4. An improper fraction has a numerator greater than or equal to the denominator.",
+      "metrics": {
+        "context_recall": 0.6485623121261597,
+        "context_precision": 0.5174159968552422,
+        "answer_relevancy": 0.6440597176551819,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 563.8,
+      "top_chunk": "[exercise | Unit 5: Fraction | p76] /1 6/5 6/(b) 5/6   3/4   1 1/6 1/3   7/6   (c)/1 2/3 8/5 8/1 7/6 8/(d) 2 1/4   3/4 1/2 1/5 9/4 (e)/3 4 6   16/6 4/5 2 4/6   4/6 (f)/3 4   1 ",
+      "top_k_sections": [
+        "exercise",
+        "exercise_qa",
+        "project",
+        "example",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Unit 5: Fraction",
+        "Unit 5: Fraction",
+        "Unit 5: Fraction",
+        "Unit 6: Decimal",
+        "Unit 6: Decimal"
+      ]
+    },
+    {
+      "id": "math5-geometry-001",
+      "type": "definition",
+      "book": "grade-5-mathematics.pdf",
+      "question": "What are the different types of angles?",
+      "ground_truth": "The types of angles are: acute angle (less than 90°), right angle (exactly 90°), obtuse angle (between 90° and 180°), straight angle (180°), and reflex angle (between 180° and 360°).",
+      "metrics": {
+        "context_recall": 0.21657752990722656,
+        "context_precision": 0.050092220960242545,
+        "answer_relevancy": 0.22614991664886475,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.1,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "example",
+        "content",
+        "formula_with_example"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Unit 1: Lines and Angles",
+        "Unit 2: Solid Objects",
+        "Unit 3: Number Sense",
+        "Unit 4: Simplification"
+      ]
+    },
+    {
+      "id": "eng5-read-001",
+      "type": "structural",
+      "book": "grade-5-english.pdf",
+      "question": "What kind of stories are in the grade 5 English book?",
+      "ground_truth": "The grade 5 English textbook contains stories, poems, and passages about daily life, animals, nature, family, health, festivals, and Nepali culture, designed to build reading and comprehension skills.",
+      "metrics": {
+        "context_recall": 0.40804415941238403,
+        "context_precision": 0.33877384024178564,
+        "answer_relevancy": 0.43200093507766724,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 438.3,
+      "top_chunk": "[listening | Unit 12: Giving Reasons | p147] Listening    English Grade 5\t 143 Rahul: \t Yes, I have read the story “Hansel and Gretel”. Kajol: \t What is the story about? Rahul: \t It’s a",
+      "top_k_sections": [
+        "listening",
+        "grammar",
+        "grammar",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Unit 12: Giving Reasons",
+        "Unit 11: Narrating Past",
+        "Unit 6: Talking about",
+        "Unit 5: Thanking and Congratulating",
+        "Unit 13: People and Places"
+      ]
+    },
+    {
+      "id": "eng8-grammar-001",
+      "type": "concept",
+      "book": "grade-8-english.pdf",
+      "question": "What are the different tenses in English?",
+      "ground_truth": "The main tenses in English are: Present (Simple, Continuous, Perfect, Perfect Continuous), Past (Simple, Continuous, Perfect, Perfect Continuous), and Future (Simple, Continuous, Perfect, Perfect Continuous).",
+      "metrics": {
+        "context_recall": 0.13875173032283783,
+        "context_precision": 0.11829308479491624,
+        "answer_relevancy": 0.18509697914123535,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 1.9,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Unit 1: A Tour to Central",
+        "Unit 2: A Father’s Letter to",
+        "Unit 3: Public Announcements",
+        "Unit 4: A Memoir: A Visit"
+      ]
+    },
+    {
+      "id": "eng8-structural-001",
+      "type": "structural",
+      "book": "grade-8-english.pdf",
+      "question": "What units does the grade 8 English book cover?",
+      "ground_truth": "The grade 8 English textbook covers units on various themes including Family, Health, Travel, Nature, Culture, Technology, and includes reading, writing, grammar, and vocabulary sections in each unit.",
+      "metrics": {
+        "context_recall": 0.5642567873001099,
+        "context_precision": 0.31799910902742357,
+        "answer_relevancy": 0.48129233717918396,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.0,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Unit 1: A Tour to Central",
+        "Unit 2: A Father’s Letter to",
+        "Unit 3: Public Announcements",
+        "Unit 4: A Memoir: A Visit"
+      ]
+    },
+    {
+      "id": "social7-geography-001",
+      "type": "concept",
+      "book": "grade-7-social-studies.pdf",
+      "question": "What are the layers of the earth?",
+      "ground_truth": "The Earth has three main layers: the crust (outermost thin layer), the mantle (middle layer made of semi-solid rock), and the core (innermost layer divided into outer liquid core and inner solid core).",
+      "metrics": {
+        "context_recall": 0.19939106702804565,
+        "context_precision": 0.09408064787329008,
+        "answer_relevancy": 0.25157830119132996,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 5.6,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "एकाइ 1 पाठ 1: समाजको उत्पत्ति र विकासक्रम",
+        "एकाइ 1 पाठ 4: विकासका पूर्वाधार: यातायात र सञ्चार",
+        "एकाइ 1 पाठ 5: जिल्ला समन्वय समिति",
+        "एकाइ 2 पाठ 1: मानव मूल्य"
+      ]
+    },
+    {
+      "id": "social7-nepal-001",
+      "type": "concept",
+      "book": "grade-7-social-studies.pdf",
+      "question": "What are the geographical regions of Nepal?",
+      "ground_truth": "Nepal is divided into three geographical regions: the Terai (flat plains in the south), the Hill region (middle area with hills and valleys), and the Mountain region (northern area with the Himalayas including Mount Everest).",
+      "metrics": {
+        "context_recall": 0.14844933152198792,
+        "context_precision": 0.10890698776402519,
+        "answer_relevancy": 0.22939234972000122,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.1,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "एकाइ 1 पाठ 1: समाजको उत्पत्ति र विकासक्रम",
+        "एकाइ 1 पाठ 4: विकासका पूर्वाधार: यातायात र सञ्चार",
+        "एकाइ 1 पाठ 5: जिल्ला समन्वय समिति",
+        "एकाइ 2 पाठ 1: मानव मूल्य"
+      ]
+    },
+    {
+      "id": "social7-structural-001",
+      "type": "structural",
+      "book": "grade-7-social-studies.pdf",
+      "question": "What topics does this social studies book cover?",
+      "ground_truth": "The grade 7 social studies book covers Geography (Earth, Nepal's geography), History (ancient civilizations, Nepal's history), Civics (government, citizenship, rights), Economics (basic economic concepts), and Social Life.",
+      "metrics": {
+        "context_recall": 0.39909109473228455,
+        "context_precision": 0.32278283917138173,
+        "answer_relevancy": 0.536821186542511,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.1,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "एकाइ 1 पाठ 1: समाजको उत्पत्ति र विकासक्रम",
+        "एकाइ 1 पाठ 4: विकासका पूर्वाधार: यातायात र सञ्चार",
+        "एकाइ 1 पाठ 5: जिल्ला समन्वय समिति",
+        "एकाइ 2 पाठ 1: मानव मूल्य"
+      ]
+    },
+    {
+      "id": "math9-circle-001",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is the formula for area and circumference of a circle?",
+      "ground_truth": "Area of a circle = πr² where r is the radius. Circumference = 2πr or πd where d is the diameter. π ≈ 22/7 or 3.14159.",
+      "metrics": {
+        "context_recall": 0.7570299506187439,
+        "context_precision": 0.6634854889877807,
+        "answer_relevancy": 0.6982502937316895,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 526.1,
+      "top_chunk": "[example | Cylinder and Sphere | p165] Example 1 Find the surface area of a sphere having raius 3.2 cm. Solution,  Here, radius of sphere (r) = 3.2 cm \t Surface area of sphere =? ",
+      "top_k_sections": [
+        "example",
+        "content",
+        "exercise",
+        "exercise",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Cylinder and Sphere",
+        "Circle",
+        "Circle",
+        "Area",
+        "Cylinder and Sphere"
+      ]
+    },
+    {
+      "id": "math9-factorization-001",
+      "type": "formula",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is the difference of two squares formula?",
+      "ground_truth": "The difference of two squares: a² - b² = (a + b)(a - b). This is a fundamental algebraic identity used in factorization.",
+      "metrics": {
+        "context_recall": 0.6706279516220093,
+        "context_precision": 0.5091407290041766,
+        "answer_relevancy": 0.478096067905426,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 569.8,
+      "top_chunk": "[exercise | Factorization | p202] a + b – 14) (a – b +2)\t (d) (x2 + x –y – 3) – (x2 – x + y – 3)   \t (e) -5x – 7y +8) - 5x + 7y – 2)\t \t (f) (7x2 + 4y + 8z – 1) (7x2 + 4y – 8z",
+      "top_k_sections": [
+        "exercise",
+        "exercise",
+        "example",
+        "example",
+        "example"
+      ],
+      "top_k_chapters": [
+        "Factorization",
+        "Factorization",
+        "Factorization",
+        "Factorization",
+        "Indices"
+      ]
+    },
+    {
+      "id": "math10-trigonometry-001",
+      "type": "formula",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What are the values of sin, cos and tan for standard angles?",
+      "ground_truth": "Standard angle values: sin 0°=0, sin 30°=1/2, sin 45°=1/√2, sin 60°=√3/2, sin 90°=1. cos values are reverse order. tan 0°=0, tan 30°=1/√3, tan 45°=1, tan 60°=√3, tan 90°=undefined.",
+      "metrics": {
+        "context_recall": 0.33349594473838806,
+        "context_precision": 0.23164324065314373,
+        "answer_relevancy": 0.29259800910949707,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 4.9,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Sets",
+        "Compound Interest",
+        "Growth and Depreciation",
+        "Currency and Exchange Rate"
+      ]
+    },
+    {
+      "id": "math10-structural-001",
+      "type": "structural",
+      "book": "grade-10-mathematics.pdf",
+      "question": "What chapters are in the grade 10 math textbook?",
+      "ground_truth": "Grade 10 mathematics includes Sets, Arithmetic (Tax, Compound Interest), Mensuration, Algebra (Polynomials, Sequence and Series, Quadratic Equation, Ratio and Proportion), Geometry (Similarity, Circle, Trigonometry, Coordinate Geometry), Statistics and Probability, and Matrices.",
+      "metrics": {
+        "context_recall": 0.6239619255065918,
+        "context_precision": 0.4200743729249415,
+        "answer_relevancy": 0.6414896249771118,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 0.1,
+      "top_chunk": "[toc | Table of Contents | p1] Table of Contents — Complete list of all chapters, units, lessons, topics, subjects and syllabus covered in this textbook. This is the full ",
+      "top_k_sections": [
+        "toc",
+        "content",
+        "content",
+        "content",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Table of Contents",
+        "Sets",
+        "Compound Interest",
+        "Growth and Depreciation",
+        "Currency and Exchange Rate"
+      ]
+    },
+    {
+      "id": "math9-commission-001",
+      "type": "definition",
+      "book": "grade-9-mathematics (1).pdf",
+      "question": "What is commission in mathematics?",
+      "ground_truth": "Commission is the amount paid to an agent or broker for selling goods or services. It is usually a percentage of the selling price. Commission = Commission rate × Selling price / 100.",
+      "metrics": {
+        "context_recall": 0.48732560873031616,
+        "context_precision": 0.22703325236578675,
+        "answer_relevancy": 0.5136237144470215,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 893.2,
+      "top_chunk": "[content | Commission and Dividend | p56] 50 Mathematics Grade 9 3.1\t Commission Activity 1 Form three groups from your classmates. Act as a land owner (name: Dhaniram), the  leader ",
+      "top_k_sections": [
+        "content",
+        "example",
+        "example",
+        "content",
+        "project"
+      ],
+      "top_k_chapters": [
+        "Commission and Dividend",
+        "Indices",
+        "Sets",
+        "Unknown",
+        "Commission and Dividend"
+      ]
+    },
+    {
+      "id": "sci9-cell-001",
+      "type": "definition",
+      "book": "grade-9-science-and-technology.pdf",
+      "question": "What is a cell?",
+      "ground_truth": "A cell is the basic structural and functional unit of all living organisms. Cells can be prokaryotic (without a nucleus, like bacteria) or eukaryotic (with a nucleus, like plant and animal cells).",
+      "metrics": {
+        "context_recall": 0.47034820914268494,
+        "context_precision": 0.44660537699011554,
+        "answer_relevancy": 0.464735209941864,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 427.5,
+      "top_chunk": "[exercise_qa | Materials used in Agriculture | p65] . Neuron is the basic cell of nervous system. The followings are the two parts of central nervous system.  (a) Brain (b) Spinal cord Fiz. 5.",
+      "top_k_sections": [
+        "exercise_qa",
+        "exercise_qa",
+        "exercise_qa",
+        "exercise",
+        "exercise_qa"
+      ],
+      "top_k_chapters": [
+        "Materials used in Agriculture",
+        "Materials used in Agriculture",
+        "Materials used in Agriculture",
+        "Materials used in Agriculture",
+        "Materials used in Agriculture"
+      ]
+    },
+    {
+      "id": "math8-exercise-001",
+      "type": "exercise",
+      "book": "grade-8-mathematics.pdf",
+      "question": "Give me exercise questions on profit and loss",
+      "ground_truth": "The profit and loss exercises contain word problems about calculating cost price, selling price, profit, loss, and their percentages in various real-life scenarios like buying and selling goods.",
+      "metrics": {
+        "context_recall": 0.3893682360649109,
+        "context_precision": 0.3242372301226091,
+        "answer_relevancy": 0.40568259358406067,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "n_retrieved": 5
+      },
+      "latency_ms": 473.9,
+      "top_chunk": "[project | Bearing and Scale Drawing | p136] x  ×  x  ×  x  ×  x/x  ×  x  = x  ×  x  ×  x  = x 3 = x 5 –  2  ׵ x m ÷  x n   = x m - n/-c_ x0 = 1, ( x  0) We know that,  x m ÷  x n = x ",
+      "top_k_sections": [
+        "project",
+        "example",
+        "example",
+        "exercise",
+        "content"
+      ],
+      "top_k_chapters": [
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Bearing and Scale Drawing",
+        "Simple Interest"
+      ]
+    },
+    {
+      "id": "math7-exercise-001",
+      "type": "exercise",
+      "book": "grade-7-mathematics (1).pdf",
+      "question": "Show me exercises on percentage calculation",
+      "ground_truth": "Percentage exercises include converting fractions and decimals to percentages, finding a given percentage of a number, and real-life word problems involving discounts, increases, and decreases.",
+      "metrics": {
+        "context_recall": 0.5496394634246826,
+        "context_precision": 0.4825379769941817,
+        "answer_relevancy": 0.6180877685546875,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "n_retrieved": 5
+      },
+      "latency_ms": 596.1,
+      "top_chunk": "[exercise | Algebraic Expression | p172] Exercise 11.3   Mathematics, Grade 7 167 1. \t (a)\t x2 + 6x + 9\t (b)\t x2 – 2x + 1\t \t (c)\t a2 + 8a + 16/(d) a2 – 10a + 25 2. \t (a)\t 9x4 + 12x2",
+      "top_k_sections": [
+        "exercise",
+        "exercise",
+        "example",
+        "exercise",
+        "exercise"
+      ],
+      "top_k_chapters": [
+        "Algebraic Expression",
+        "Equation, Inequality and Graph",
+        "Algebraic Expression",
+        "Equation, Inequality and Graph",
+        "Algebraic Expression"
+      ]
+    }
+  ]
+}
