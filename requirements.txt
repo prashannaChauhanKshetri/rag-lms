@@ -29,5 +29,8 @@ bcrypt==4.0.1
 # Email validation
 email-validator>=2.0.0
 
+# Redis caching
+redis>=5.0.0
+
 # Testing
 pytest>=8.0.0
