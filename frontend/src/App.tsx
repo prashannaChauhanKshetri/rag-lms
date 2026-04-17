@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from './lib/api';
 import EnhancedLogin from './components/auth/EnhancedLogin';
 import Signup from './components/auth/Signup';
 import ResetPassword from './components/auth/ResetPassword';
@@ -104,10 +105,44 @@ const adminTabs = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
+interface SessionResponse {
+  id?: string;
+  user_id?: string;
+  username: string;
+  role: string;
+  full_name: string;
+  email: string;
+  institution_id: string;
+  institution_name?: string;
+}
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('home');
   const [isSignupMode, setIsSignupMode] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
+
+  // On mount: restore session from HTTP-only cookie if still valid
+  useEffect(() => {
+    api.get<SessionResponse>('/auth/session')
+      .then((data) => {
+        setUser({
+          id: data.id || data.user_id || '',
+          username: data.username,
+          role: data.role as User['role'],
+          full_name: data.full_name || data.username,
+          email: data.email,
+          institution: data.institution_id,
+          institution_name: data.institution_name || data.institution_id,
+        });
+      })
+      .catch(() => {
+        // Cookie absent or expired — stay on login page
+      })
+      .finally(() => {
+        setSessionChecked(true);
+      });
+  }, []);
 
   // Detect password-reset token in URL (from email link: ?token=xxx)
   const resetToken = new URLSearchParams(window.location.search).get('token');
@@ -126,6 +161,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    api.post('/auth/logout', {}).catch(() => {});
     setUser(null);
   };
 
@@ -141,6 +177,18 @@ function App() {
   };
 
   const renderContent = () => {
+    // Wait for cookie/session check before rendering anything
+    if (!sessionChecked) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+          <div className="text-center">
+            <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading session…</p>
+          </div>
+        </div>
+      );
+    }
+
     // Password reset flow — token present in URL from email link
     if (isResetFlow) {
       return (
