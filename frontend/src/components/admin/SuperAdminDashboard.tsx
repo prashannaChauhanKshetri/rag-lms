@@ -209,7 +209,7 @@ const SuperAdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-4 lg:p-8">
       <ConfirmDialog
         isOpen={!!pendingDeleteId}
         title="Delete Institution"
@@ -222,8 +222,8 @@ const SuperAdminDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Super Admin Dashboard</h1>
-          <p className="text-gray-600">Manage institutions, users, and system-wide analytics</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Super Admin Dashboard</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage institutions, users, and system-wide analytics</p>
         </div>
 
         {/* Alerts */}
@@ -242,13 +242,13 @@ const SuperAdminDashboard: React.FC = () => {
         )}
 
         {/* Tab Navigation */}
-        <div className="mb-8 border-b border-gray-200">
+        <div className="mb-8 border-b border-gray-200 dark:border-gray-700">
           <div className="flex gap-8">
             <button
               onClick={() => setActiveTab('overview')}
               className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'overview'
                 ? 'text-[#10B981] border-[#10B981]'
-                : 'text-gray-600 border-transparent hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                 }`}
             >
               <BarChart3 className="inline w-5 h-5 mr-2" />
@@ -258,7 +258,7 @@ const SuperAdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('institutions')}
               className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'institutions'
                 ? 'text-[#10B981] border-[#10B981]'
-                : 'text-gray-600 border-transparent hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                 }`}
             >
               <Building2 className="inline w-5 h-5 mr-2" />
@@ -268,7 +268,7 @@ const SuperAdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('users')}
               className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'users'
                 ? 'text-[#10B981] border-[#10B981]'
-                : 'text-gray-600 border-transparent hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                 }`}
             >
               <Users className="inline w-5 h-5 mr-2" />
@@ -278,7 +278,7 @@ const SuperAdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('analytics')}
               className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'analytics'
                 ? 'text-[#10B981] border-[#10B981]'
-                : 'text-gray-600 border-transparent hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                 }`}
             >
               <BarChart3 className="inline w-5 h-5 mr-2" />
@@ -349,8 +349,8 @@ const SuperAdminDashboard: React.FC = () => {
 
             {/* Users by Role Breakdown */}
             {analytics?.users_by_role && (
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Users Distribution by Role</h3>
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-800">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Users Distribution by Role</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {/* Super Admin */}
                   <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
@@ -381,16 +381,16 @@ const SuperAdminDashboard: React.FC = () => {
 
             {/* Top Institutions */}
             {analytics?.top_institutions && analytics.top_institutions.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Top Institutions by Student Count</h3>
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-800">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Top Institutions by Student Count</h3>
                 <div className="space-y-3">
                   {analytics.top_institutions.map((inst, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:bg-gray-700 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-[#10B981] text-white rounded-full flex items-center justify-center font-bold text-sm">
                           {idx + 1}
                         </div>
-                        <p className="font-medium text-gray-900">{inst.name}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{inst.name}</p>
                       </div>
                       <p className="font-bold text-[#10B981] text-lg">{inst.student_count || 0} students</p>
                     </div>
@@ -418,57 +418,57 @@ const SuperAdminDashboard: React.FC = () => {
             {showNewInstitution && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                 <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Create Institution</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create Institution</h3>
 
                   <form onSubmit={handleCreateInstitution} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Institution Name
                       </label>
                       <input
                         type="text"
                         value={newInstitution.name}
                         onChange={(e) => setNewInstitution({ ...newInstitution, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                         placeholder="e.g., State University"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Institution Code
                       </label>
                       <input
                         type="text"
                         value={newInstitution.code}
                         onChange={(e) => setNewInstitution({ ...newInstitution, code: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                         placeholder="e.g., SU001"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Domain (Optional)
                       </label>
                       <input
                         type="text"
                         value={newInstitution.domain}
                         onChange={(e) => setNewInstitution({ ...newInstitution, domain: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                         placeholder="e.g., su.edu.in"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Contact Email (Optional)
                       </label>
                       <input
                         type="email"
                         value={newInstitution.contact_email}
                         onChange={(e) => setNewInstitution({ ...newInstitution, contact_email: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                         placeholder="contact@su.edu.in"
                       />
                     </div>
@@ -484,7 +484,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowNewInstitution(false)}
-                        className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        className="flex-1 py-2 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 transition-colors"
                       >
                         Cancel
                       </button>
@@ -498,54 +498,54 @@ const SuperAdminDashboard: React.FC = () => {
             {showEditModal && editingInstitution && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                 <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Edit Institution</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit Institution</h3>
 
                   <form onSubmit={handleUpdateInstitution} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Institution Name
                       </label>
                       <input
                         type="text"
                         value={editingInstitution.name}
                         onChange={(e) => setEditingInstitution({ ...editingInstitution, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Institution Code
                       </label>
                       <input
                         type="text"
                         value={editingInstitution.code}
                         onChange={(e) => setEditingInstitution({ ...editingInstitution, code: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Domain (Optional)
                       </label>
                       <input
                         type="text"
                         value={editingInstitution.domain || ''}
                         onChange={(e) => setEditingInstitution({ ...editingInstitution, domain: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Contact Email (Optional)
                       </label>
                       <input
                         type="email"
                         value={editingInstitution.contact_email || ''}
                         onChange={(e) => setEditingInstitution({ ...editingInstitution, contact_email: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                       />
                     </div>
 
@@ -557,7 +557,7 @@ const SuperAdminDashboard: React.FC = () => {
                           onChange={(e) => setEditingInstitution({ ...editingInstitution, is_active: e.target.checked })}
                           className="w-4 h-4 text-[#10B981] rounded"
                         />
-                        <span className="text-sm font-medium text-gray-700">Active</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
                       </label>
                     </div>
 
@@ -575,7 +575,7 @@ const SuperAdminDashboard: React.FC = () => {
                           setShowEditModal(false);
                           setEditingInstitution(null);
                         }}
-                        className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        className="flex-1 py-2 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 transition-colors"
                       >
                         Cancel
                       </button>
@@ -586,8 +586,8 @@ const SuperAdminDashboard: React.FC = () => {
             )}
 
             {/* Institutions List */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 bg-gray-50">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50">
                 <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                   <div className="flex-1 w-full">
                     <div className="relative">
@@ -600,13 +600,13 @@ const SuperAdminDashboard: React.FC = () => {
                           loadData();
                         }}
                         placeholder="Search institutions by name, code, or domain..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                       />
                     </div>
                   </div>
                   <button
                     onClick={() => setSearchTerm('')}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium whitespace-nowrap"
+                    className="px-4 py-2 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium whitespace-nowrap"
                   >
                     Clear
                   </button>
@@ -620,30 +620,30 @@ const SuperAdminDashboard: React.FC = () => {
               ) : institutions.length === 0 ? (
                 <div className="p-12 text-center">
                   <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500 font-medium">No institutions found</p>
+                  <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">No institutions found</p>
                 </div>
               ) : (
                 <>
                   {/* Desktop Table View */}
                   <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-gray-50 border-b">
+                      <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                         <tr>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Name</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Code</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Domain</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Contact Email</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
-                          <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Code</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Domain</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Contact Email</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
+                          <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {institutions.map((inst) => (
-                          <tr key={inst.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{inst.name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600">{inst.code}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600">{inst.domain || '-'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title={inst.contact_email}>
+                          <tr key={inst.id} className="hover:bg-gray-50 dark:bg-gray-800 transition-colors">
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{inst.name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{inst.code}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{inst.domain || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 truncate max-w-xs" title={inst.contact_email}>
                               {inst.contact_email || '-'}
                             </td>
                             <td className="px-6 py-4 text-sm">
@@ -694,11 +694,11 @@ const SuperAdminDashboard: React.FC = () => {
                   {/* Mobile Card View */}
                   <div className="md:hidden divide-y">
                     {institutions.map((inst) => (
-                      <div key={inst.id} className="p-4 space-y-3 hover:bg-gray-50 transition-colors">
+                      <div key={inst.id} className="p-4 space-y-3 hover:bg-gray-50 dark:bg-gray-800 transition-colors">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{inst.name}</h4>
-                            <p className="text-sm text-gray-600">{inst.code}</p>
+                            <h4 className="font-semibold text-gray-900 dark:text-white">{inst.name}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{inst.code}</p>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-2 ${inst.is_active
                             ? 'bg-green-100 text-green-800'
@@ -708,10 +708,10 @@ const SuperAdminDashboard: React.FC = () => {
                           </span>
                         </div>
                         {inst.domain && (
-                          <p className="text-sm text-gray-600"><span className="font-medium">Domain:</span> {inst.domain}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400"><span className="font-medium">Domain:</span> {inst.domain}</p>
                         )}
                         {inst.contact_email && (
-                          <p className="text-sm text-gray-600 truncate"><span className="font-medium">Contact:</span> {inst.contact_email}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 truncate"><span className="font-medium">Contact:</span> {inst.contact_email}</p>
                         )}
                         <div className="flex gap-2 pt-2">
                           <button
@@ -745,10 +745,10 @@ const SuperAdminDashboard: React.FC = () => {
         {activeTab === 'users' && (
           <div className="space-y-6">
             {/* Search and Filter Bar */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-800">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Users</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -759,20 +759,20 @@ const SuperAdminDashboard: React.FC = () => {
                         loadData();
                       }}
                       placeholder="Name, email, or username..."
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Role</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Role</label>
                   <select
                     value={filterRole}
                     onChange={(e) => {
                       setFilterRole(e.target.value);
                       loadData();
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                   >
                     <option value="all">All Roles</option>
                     <option value="student">Students</option>
@@ -785,7 +785,7 @@ const SuperAdminDashboard: React.FC = () => {
             </div>
 
             {/* Users Table - Responsive */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden">
               {isLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
@@ -794,7 +794,7 @@ const SuperAdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
                     <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500">No users found</p>
+                    <p className="text-gray-500 dark:text-gray-400">No users found</p>
                   </div>
                 </div>
               ) : (
@@ -802,23 +802,23 @@ const SuperAdminDashboard: React.FC = () => {
                   {/* Desktop Table View */}
                   <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-gray-50 border-b">
+                      <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                         <tr>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Name</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Email</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Username</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Role</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Joined</th>
-                          <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Action</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Username</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Role</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Joined</th>
+                          <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {users.map((user) => (
-                          <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.full_name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600">{user.username}</td>
+                          <tr key={user.id} className="hover:bg-gray-50 dark:bg-gray-800 transition-colors">
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{user.full_name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{user.username}</td>
                             <td className="px-6 py-4 text-sm">
                               <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
                                 user.role === 'admin' ? 'bg-orange-100 text-orange-800' :
@@ -843,7 +843,7 @@ const SuperAdminDashboard: React.FC = () => {
                                 </span>
                               )}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                               {new Date(user.created_at).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 text-center">
@@ -863,8 +863,8 @@ const SuperAdminDashboard: React.FC = () => {
                       <div key={user.id} className="p-4 space-y-3 hover:bg-gray-50">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-semibold text-gray-900">{user.full_name}</p>
-                            <p className="text-sm text-gray-600">@{user.username}</p>
+                            <p className="font-semibold text-gray-900 dark:text-white">{user.full_name}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">@{user.username}</p>
                           </div>
                           <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
                             user.role === 'admin' ? 'bg-orange-100 text-orange-800' :
@@ -876,7 +876,7 @@ const SuperAdminDashboard: React.FC = () => {
                                 user.role}
                           </span>
                         </div>
-                        <div className="text-sm text-gray-600 space-y-1">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 space-y-1">
                           <p>{user.email}</p>
                           <p className="flex items-center gap-2">
                             {user.is_email_verified ? (
@@ -901,7 +901,7 @@ const SuperAdminDashboard: React.FC = () => {
             </div>
             {/* Pagination */}
             {users.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 px-6 py-4">
                 <Pagination
                   currentPage={currentPage}
                   totalItems={users.length}
@@ -922,19 +922,19 @@ const SuperAdminDashboard: React.FC = () => {
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white rounded-xl shadow p-6">
-                    <p className="text-gray-600 text-sm mb-2">Total Institutions</p>
-                    <p className="text-4xl font-bold text-gray-900">{analytics?.total_institutions}</p>
+                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">Total Institutions</p>
+                    <p className="text-4xl font-bold text-gray-900 dark:text-white">{analytics?.total_institutions}</p>
                   </div>
                   <div className="bg-white rounded-xl shadow p-6">
-                    <p className="text-gray-600 text-sm mb-2">Active Institutions</p>
+                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">Active Institutions</p>
                     <p className="text-4xl font-bold text-[#10B981]">{analytics?.active_institutions}</p>
                   </div>
                   <div className="bg-white rounded-xl shadow p-6">
-                    <p className="text-gray-600 text-sm mb-2">Total Users</p>
-                    <p className="text-4xl font-bold text-gray-900">{analytics?.total_users}</p>
+                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">Total Users</p>
+                    <p className="text-4xl font-bold text-gray-900 dark:text-white">{analytics?.total_users}</p>
                   </div>
                   <div className="bg-white rounded-xl shadow p-6">
-                    <p className="text-gray-600 text-sm mb-2">Inactive Institutions</p>
+                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">Inactive Institutions</p>
                     <p className="text-4xl font-bold text-red-500">
                       {(analytics?.total_institutions || 0) - (analytics?.active_institutions || 0)}
                     </p>
@@ -943,11 +943,11 @@ const SuperAdminDashboard: React.FC = () => {
 
                 {analytics?.users_by_role && (
                   <div className="bg-white rounded-xl shadow p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6">Users by Role</h3>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Users by Role</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {Object.entries(analytics.users_by_role).map(([role, count]) => (
                         <div key={role} className="p-4 bg-gradient-to-br from-[#10B981]/10 to-[#059669]/10 rounded-lg border border-[#10B981]/20">
-                          <p className="text-gray-600 text-sm capitalize font-medium">{role}</p>
+                          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm capitalize font-medium">{role}</p>
                           <p className="text-3xl font-bold text-[#10B981] mt-2">{count}</p>
                         </div>
                       ))}

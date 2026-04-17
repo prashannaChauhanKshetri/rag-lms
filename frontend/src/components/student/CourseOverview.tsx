@@ -88,38 +88,38 @@ export default function CourseOverview() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-slate-600">Loading your courses...</p>
+          <p className="text-slate-600 dark:text-gray-400">Loading your courses...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-800">My Courses</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-white">My Courses</h1>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar - Course List */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm sticky top-20">
+            <div className="bg-white rounded-lg border border-slate-200 dark:border-gray-700 overflow-hidden shadow-sm sticky top-20">
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
                 <p className="text-sm font-medium opacity-90">Enrolled Courses</p>
                 <p className="text-2xl font-bold">{sections.length}</p>
               </div>
 
-              <div className="divide-y divide-slate-200 max-h-96 overflow-y-auto">
+              <div className="divide-y divide-slate-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
                 {sections.length === 0 ? (
-                  <p className="p-4 text-slate-500 text-sm text-center">Not enrolled in any courses</p>
+                  <p className="p-4 text-slate-500 dark:text-gray-400 dark:text-gray-500 text-sm text-center">Not enrolled in any courses</p>
                 ) : (
                   sections.map((section) => (
                     <button
@@ -131,7 +131,7 @@ export default function CourseOverview() {
                           : 'hover:bg-slate-50'
                       }`}
                     >
-                      <p className="font-semibold text-slate-800 text-sm mb-1 truncate">{section.name}</p>
+                      <p className="font-semibold text-slate-800 dark:text-white text-sm mb-1 truncate">{section.name}</p>
                       <p className="text-xs text-slate-500">by {section.teacher_name}</p>
                     </button>
                   ))
@@ -145,26 +145,26 @@ export default function CourseOverview() {
             {selectedSection ? (
               <>
                 {/* Course Header */}
-                <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{selectedSection.name}</h2>
-                  <p className="text-slate-600 mb-4">Instructor: {selectedSection.teacher_name}</p>
+                <div className="bg-white rounded-lg border border-slate-200 dark:border-gray-700 p-6 shadow-sm">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mb-2">{selectedSection.name}</h2>
+                  <p className="text-slate-600 dark:text-gray-400 dark:text-gray-500 mb-4">Instructor: {selectedSection.teacher_name}</p>
 
                   {attendance && (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
                       <div>
-                        <p className="text-xs text-slate-600 font-medium">Classes</p>
-                        <p className="text-2xl font-bold text-slate-800">{attendance.total}</p>
+                        <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">Classes</p>
+                        <p className="text-2xl font-bold text-slate-800 dark:text-white">{attendance.total}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600 font-medium">Present</p>
+                        <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">Present</p>
                         <p className="text-2xl font-bold text-green-600">{attendance.present}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600 font-medium">Attendance</p>
+                        <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">Attendance</p>
                         <p className="text-2xl font-bold text-blue-600">{attendance.percentage}%</p>
                       </div>
                       <div className="hidden sm:block">
-                        <p className="text-xs text-slate-600 font-medium">Status</p>
+                        <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">Status</p>
                         <p className={`text-sm font-bold ${attendance.percentage >= 75 ? 'text-green-600' : 'text-orange-600'}`}>
                           {attendance.percentage >= 75 ? '✓ Good' : '⚠ Low'}
                         </p>
@@ -174,7 +174,7 @@ export default function CourseOverview() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex flex-wrap gap-2 border-b border-slate-200 bg-white rounded-t-lg p-4 sm:p-6">
+                <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-t-lg p-4 sm:p-6">
                   {(['overview', 'assignments', 'resources', 'attendance'] as const).map((tab) => (
                     <button
                       key={tab}
@@ -182,7 +182,7 @@ export default function CourseOverview() {
                       className={`px-4 py-2 font-medium text-sm rounded-t-lg transition-colors ${
                         activeTab === tab
                           ? 'bg-blue-600 text-white'
-                          : 'text-slate-600 hover:text-slate-800'
+                          : 'text-slate-600 dark:text-gray-400 dark:text-gray-500 hover:text-slate-800 dark:text-white'
                       }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -191,26 +191,26 @@ export default function CourseOverview() {
                 </div>
 
                 {/* Tab Content */}
-                <div className="bg-white rounded-b-lg border border-t-0 border-slate-200 p-4 sm:p-6 space-y-4">
+                <div className="bg-white rounded-b-lg border border-t-0 border-slate-200 dark:border-gray-700 p-4 sm:p-6 space-y-4">
                   {activeTab === 'overview' && (
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                           <div className="flex items-center gap-2 mb-2">
                             <Calendar className="w-5 h-5 text-blue-600" />
-                            <p className="font-semibold text-slate-800">Assignments</p>
+                            <p className="font-semibold text-slate-800 dark:text-white">Assignments</p>
                           </div>
                           <p className="text-3xl font-bold text-blue-600 mb-1">{assignments.filter(a => a.is_published).length}</p>
-                          <p className="text-sm text-slate-600">{assignments.filter(a => a.submitted).length} submitted</p>
+                          <p className="text-sm text-slate-600 dark:text-gray-400">{assignments.filter(a => a.submitted).length} submitted</p>
                         </div>
 
                         <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
                           <div className="flex items-center gap-2 mb-2">
                             <Download className="w-5 h-5 text-green-600" />
-                            <p className="font-semibold text-slate-800">Resources</p>
+                            <p className="font-semibold text-slate-800 dark:text-white">Resources</p>
                           </div>
                           <p className="text-3xl font-bold text-green-600 mb-1">{resources.length}</p>
-                          <p className="text-sm text-slate-600">Study materials</p>
+                          <p className="text-sm text-slate-600 dark:text-gray-400">Study materials</p>
                         </div>
                       </div>
                     </div>
@@ -219,14 +219,14 @@ export default function CourseOverview() {
                   {activeTab === 'assignments' && (
                     <div className="space-y-3">
                       {assignments.length === 0 ? (
-                        <p className="text-center text-slate-500 py-8">No assignments yet</p>
+                        <p className="text-center text-slate-500 dark:text-gray-400 dark:text-gray-500 py-8">No assignments yet</p>
                       ) : (
                         assignments.map((assignment) => (
-                          <div key={assignment.id} className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow">
+                          <div key={assignment.id} className="p-4 border border-slate-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
                               <div className="flex-1">
-                                <h4 className="font-semibold text-slate-800">{assignment.title}</h4>
-                                <p className="text-sm text-slate-600">Points: {assignment.points}</p>
+                                <h4 className="font-semibold text-slate-800 dark:text-white">{assignment.title}</h4>
+                                <p className="text-sm text-slate-600 dark:text-gray-400">Points: {assignment.points}</p>
                               </div>
                               {assignment.submitted && (
                                 <div className="flex items-center gap-2 text-green-600 font-medium">
@@ -253,13 +253,13 @@ export default function CourseOverview() {
                   {activeTab === 'resources' && (
                     <div className="space-y-3">
                       {resources.length === 0 ? (
-                        <p className="text-center text-slate-500 py-8">No resources shared yet</p>
+                        <p className="text-center text-slate-500 dark:text-gray-400 dark:text-gray-500 py-8">No resources shared yet</p>
                       ) : (
                         resources.map((resource) => (
-                          <div key={resource.id} className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow flex items-center justify-between">
+                          <div key={resource.id} className="p-4 border border-slate-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow flex items-center justify-between">
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-slate-800 break-words">{resource.title}</h4>
-                              <p className="text-sm text-slate-600">{resource.resource_type}</p>
+                              <h4 className="font-semibold text-slate-800 dark:text-white break-words">{resource.title}</h4>
+                              <p className="text-sm text-slate-600 dark:text-gray-400">{resource.resource_type}</p>
                             </div>
                             <button className="ml-4 flex-shrink-0 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium">
                               Open
@@ -279,9 +279,9 @@ export default function CourseOverview() {
                           { label: 'Attendance %', value: `${attendance.percentage}%`, color: 'text-blue-600' },
                           { label: 'Status', value: attendance.percentage >= 75 ? '✓ Good' : '⚠ Low', color: attendance.percentage >= 75 ? 'text-green-600' : 'text-orange-600' }
                         ].map((item, idx) => (
-                          <div key={idx} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                            <p className="text-xs text-slate-600 font-medium">{item.label}</p>
-                            <p className={`text-2xl font-bold ${item.color || 'text-slate-800'}`}>{item.value}</p>
+                          <div key={idx} className="p-4 bg-slate-50 dark:bg-gray-900 rounded-lg border border-slate-200 dark:border-gray-700">
+                            <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">{item.label}</p>
+                            <p className={`text-2xl font-bold ${item.color || 'text-slate-800 dark:text-white'}`}>{item.value}</p>
                           </div>
                         ))}
                       </div>
@@ -290,9 +290,9 @@ export default function CourseOverview() {
                 </div>
               </>
             ) : (
-              <div className="bg-white rounded-lg p-12 text-center border border-slate-200">
+              <div className="bg-white rounded-lg p-12 text-center border border-slate-200 dark:border-gray-700">
                 <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-600 text-lg">No courses to display</p>
+                <p className="text-slate-600 dark:text-gray-400 dark:text-gray-500 text-lg">No courses to display</p>
               </div>
             )}
           </div>

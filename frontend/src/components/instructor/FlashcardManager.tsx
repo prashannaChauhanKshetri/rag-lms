@@ -106,14 +106,14 @@ export function FlashcardManager() {
     return (
         <div className="flex h-full gap-6">
             {/* Left Panel: Controls */}
-            <div className="w-1/3 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full overflow-y-auto">
+            <div className="w-1/3 bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full overflow-y-auto">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-[#10B981]" />
                     Flashcard Manager
                 </h2>
 
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Course</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Course</label>
                     <select
                         value={selectedCourseId}
                         onChange={(e) => setSelectedCourseId(e.target.value)}
@@ -123,17 +123,17 @@ export function FlashcardManager() {
                     </select>
                 </div>
 
-                <div className="flex gap-2 p-1 bg-gray-100 rounded-lg mb-6">
+                <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg mb-6">
                     <button
                         onClick={() => setActiveMode('ai')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeMode === 'ai' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 hover:text-gray-700'
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeMode === 'ai' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         AI Generator
                     </button>
                     <button
                         onClick={() => setActiveMode('manual')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeMode === 'manual' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 hover:text-gray-700'
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeMode === 'manual' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         Manual Entry
@@ -143,7 +143,7 @@ export function FlashcardManager() {
                 {activeMode === 'ai' ? (
                     <form onSubmit={handleGenerateAI} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Topic</label>
                             <input
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
@@ -152,7 +152,7 @@ export function FlashcardManager() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Count</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Count</label>
                             <input
                                 type="number"
                                 value={count}
@@ -173,7 +173,7 @@ export function FlashcardManager() {
                 ) : (
                     <form onSubmit={handleAddManual} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Front (Question/Term)</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Front (Question/Term)</label>
                             <textarea
                                 value={manualFront}
                                 onChange={(e) => setManualFront(e.target.value)}
@@ -182,7 +182,7 @@ export function FlashcardManager() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Back (Answer/Definition)</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Back (Answer/Definition)</label>
                             <textarea
                                 value={manualBack}
                                 onChange={(e) => setManualBack(e.target.value)}
@@ -215,9 +215,9 @@ export function FlashcardManager() {
             </div>
 
             {/* Right Panel: Preview */}
-            <div className="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full overflow-hidden">
                 <div className="flex justify-between items-center mb-6 pb-4 border-b">
-                    <h2 className="text-xl font-bold text-gray-800">Preview Deck ({flashcards.length})</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Preview Deck ({flashcards.length})</h2>
                     {flashcards.length > 0 && (
                         <button
                             onClick={handleSaveAll}
@@ -232,19 +232,19 @@ export function FlashcardManager() {
                 <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
                     {flashcards.map((card, idx) => (
                         <div key={idx} className="relative group perspective-1000 h-48">
-                            <div className="w-full h-full relative border rounded-xl shadow-sm bg-white p-4 flex flex-col justify-between hover:shadow-md transition-all">
+                            <div className="w-full h-full relative border rounded-xl shadow-sm bg-white dark:bg-gray-900 p-4 flex flex-col justify-between hover:shadow-md transition-all">
                                 <div>
-                                    <div className="text-xs font-bold text-gray-400 uppercase mb-2">Front</div>
-                                    <p className="font-medium text-gray-900 line-clamp-3">{card.front}</p>
+                                    <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase mb-2">Front</div>
+                                    <p className="font-medium text-gray-900 dark:text-white line-clamp-3">{card.front}</p>
                                 </div>
                                 <div className="border-t pt-2 mt-2">
-                                    <div className="text-xs font-bold text-gray-400 uppercase mb-1">Back</div>
-                                    <p className="text-sm text-gray-600 line-clamp-2">{card.back}</p>
+                                    <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase mb-1">Back</div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-2">{card.back}</p>
                                 </div>
 
                                 <button
                                     onClick={() => handleDelete(idx)}
-                                    className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute top-2 right-2 p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
@@ -252,7 +252,7 @@ export function FlashcardManager() {
                         </div>
                     ))}
                     {flashcards.length === 0 && (
-                        <div className="col-span-full h-64 flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                        <div className="col-span-full h-64 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
                             <BookOpen className="w-12 h-12 mb-3 opacity-20" />
                             <p>No cards yet. Generator or add some!</p>
                         </div>

@@ -215,14 +215,14 @@ const GradeBook: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Grade Book</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Track and manage all student grades</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">Grade Book</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Track and manage all student grades</p>
             </div>
             <button
               onClick={downloadGradebook}
@@ -257,8 +257,8 @@ const GradeBook: React.FC = () => {
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Students</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{studentGrades.length}</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Students</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{studentGrades.length}</p>
               </div>
             </div>
           </div>
@@ -269,8 +269,8 @@ const GradeBook: React.FC = () => {
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Class Average</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.averageGrade}%</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Class Average</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.averageGrade}%</p>
               </div>
             </div>
           </div>
@@ -281,8 +281,8 @@ const GradeBook: React.FC = () => {
                 <Award className="w-6 h-6 text-yellow-600" />
               </div>
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Highest</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.highestGrade.toFixed(1)}%</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Highest</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.highestGrade.toFixed(1)}%</p>
               </div>
             </div>
           </div>
@@ -293,8 +293,8 @@ const GradeBook: React.FC = () => {
                 <Target className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Lowest</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.lowestGrade.toFixed(1)}%</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Lowest</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.lowestGrade.toFixed(1)}%</p>
               </div>
             </div>
           </div>
@@ -309,7 +309,7 @@ const GradeBook: React.FC = () => {
                 className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-lg font-medium text-sm transition-colors ${
                   view === 'summary'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200'
                 }`}
               >
                 Summary
@@ -319,7 +319,7 @@ const GradeBook: React.FC = () => {
                 className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-lg font-medium text-sm transition-colors ${
                   view === 'detailed'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200'
                 }`}
               >
                 Detailed
@@ -327,14 +327,14 @@ const GradeBook: React.FC = () => {
             </div>
           </div>
 
-          <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Filter className="w-5 h-5" />
             Filters
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Search</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -342,17 +342,17 @@ const GradeBook: React.FC = () => {
                   value={filter.searchTerm}
                   onChange={(e) => setFilter({ ...filter, searchTerm: e.target.value })}
                   placeholder="Search student..."
-                  className="w-full pl-9 pr-3 sm:pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-9 pr-3 sm:pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sort By</label>
               <select
                 value={filter.sortBy}
                 onChange={(e) => setFilter({ ...filter, sortBy: e.target.value as typeof filter.sortBy })}
-                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="name">Name (A-Z)</option>
                 <option value="grade">Highest Grade First</option>
@@ -371,21 +371,21 @@ const GradeBook: React.FC = () => {
           // Summary View
           <div className="space-y-3">
             {filteredStudentGrades.length === 0 ? (
-              <div className="p-12 text-center bg-white rounded-lg">
+              <div className="p-12 text-center bg-white dark:bg-gray-900 rounded-lg">
                 <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600">No students found</p>
+                <p className="text-gray-600 dark:text-gray-400">No students found</p>
               </div>
             ) : (
               filteredStudentGrades.map((student) => (
                 <div
                   key={student.student_id}
-                  className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
                 >
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm sm:text-base font-bold text-gray-900">{student.student_name}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">{student.student_email}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">{student.student_name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{student.student_email}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
                         {student.assignments_graded} of {student.total_assignments} assignments graded
                       </p>
                     </div>
@@ -393,7 +393,7 @@ const GradeBook: React.FC = () => {
                     <div className="flex items-center gap-4 w-full sm:w-auto">
                       <div>
                         <div className="text-right">
-                          <div className="text-xs sm:text-sm text-gray-600">Progress</div>
+                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Progress</div>
                           <div className="w-24 sm:w-32 bg-gray-200 rounded-full h-2 mt-1">
                             <div
                               className="bg-blue-600 h-2 rounded-full transition-all"
@@ -424,21 +424,21 @@ const GradeBook: React.FC = () => {
           <div className="bg-white rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 border-b border-gray-200">
+                <thead className="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
                   <tr>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
                       Student
                     </th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
                       Assignment
                     </th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
                       Score
                     </th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
                       Grade
                     </th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
                       Actions
                     </th>
                   </tr>
@@ -448,11 +448,11 @@ const GradeBook: React.FC = () => {
                     <tr key={grade.id} className="hover:bg-gray-50">
                       <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm">
                         <div>
-                          <p className="font-medium text-gray-900">{grade.student_name}</p>
-                          <p className="text-gray-600">{grade.student_email}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{grade.student_name}</p>
+                          <p className="text-gray-600 dark:text-gray-400">{grade.student_email}</p>
                         </div>
                       </td>
-                      <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900">
+                      <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 dark:text-white">
                         {grade.assignment_title}
                       </td>
                       <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm">
@@ -467,7 +467,7 @@ const GradeBook: React.FC = () => {
                             autoFocus
                           />
                         ) : (
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-gray-900 dark:text-white">
                             {grade.score} / {grade.max_score}
                           </span>
                         )}
@@ -490,7 +490,7 @@ const GradeBook: React.FC = () => {
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="p-1 text-gray-600 hover:text-gray-800"
+                              className="p-1 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:text-gray-100"
                             >
                               <X className="w-4 h-4" />
                             </button>

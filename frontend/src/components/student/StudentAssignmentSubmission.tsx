@@ -124,7 +124,7 @@ const StudentAssignmentSubmission: React.FC = () => {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -133,8 +133,8 @@ const StudentAssignmentSubmission: React.FC = () => {
               <Upload className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Submit Assignments</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Submit Assignments</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
                 {assignments.length} assignment{assignments.length !== 1 ? 's' : ''} awaiting submission
               </p>
             </div>
@@ -151,14 +151,14 @@ const StudentAssignmentSubmission: React.FC = () => {
         ) : assignments.length === 0 ? (
           <div className="bg-white rounded-lg sm:rounded-xl p-12 text-center">
             <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-green-600" />
-            <p className="text-gray-600 text-lg">No pending assignments!</p>
-            <p className="text-gray-500 text-sm mt-2">All your assignments are submitted.</p>
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-lg">No pending assignments!</p>
+            <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-2">All your assignments are submitted.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Assignments List */}
             <div className="space-y-3">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Pending Assignments</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Pending Assignments</h2>
               {assignments.map((assignment) => (
                 <button
                   key={assignment.id}
@@ -169,14 +169,14 @@ const StudentAssignmentSubmission: React.FC = () => {
                   className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                     selectedAssignment?.id === assignment.id
                       ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base break-words">
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base break-words">
                     {assignment.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{assignment.section_name}</p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">{assignment.section_name}</p>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
                     <Calendar className="w-3 h-3 flex-shrink-0" />
                     <span>{new Date(assignment.due_date).toLocaleDateString()}</span>
                   </div>
@@ -195,43 +195,43 @@ const StudentAssignmentSubmission: React.FC = () => {
               {selectedAssignment ? (
                 <div className="bg-white rounded-lg sm:rounded-xl shadow p-6 sm:p-8 sticky top-4">
                   {/* Assignment Details */}
-                  <div className="mb-6 pb-6 border-b border-gray-200">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+                  <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
                       {selectedAssignment.title}
                     </h2>
 
                     <div className="grid grid-cols-2 gap-4 text-sm mb-6">
                       <div className="flex items-start gap-2">
-                        <BookOpen className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+                        <BookOpen className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0" />
                         <div>
-                          <p className="text-gray-600">Course</p>
-                          <p className="font-medium text-gray-900">{selectedAssignment.section_name}</p>
+                          <p className="text-gray-600 dark:text-gray-400">Course</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{selectedAssignment.section_name}</p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-2">
-                        <User className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+                        <User className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0" />
                         <div>
-                          <p className="text-gray-600">Instructor</p>
-                          <p className="font-medium text-gray-900">{selectedAssignment.teacher_name}</p>
+                          <p className="text-gray-600 dark:text-gray-400">Instructor</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{selectedAssignment.teacher_name}</p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-2">
-                        <Clock className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+                        <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0" />
                         <div>
-                          <p className="text-gray-600">Due Date</p>
-                          <p className="font-medium text-gray-900">
+                          <p className="text-gray-600 dark:text-gray-400">Due Date</p>
+                          <p className="font-medium text-gray-900 dark:text-white">
                             {new Date(selectedAssignment.submission_deadline).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-2">
-                        <FileText className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+                        <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0" />
                         <div>
-                          <p className="text-gray-600">Max Score</p>
-                          <p className="font-medium text-gray-900">{selectedAssignment.max_score}</p>
+                          <p className="text-gray-600 dark:text-gray-400">Max Score</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{selectedAssignment.max_score}</p>
                         </div>
                       </div>
                     </div>
@@ -261,10 +261,10 @@ const StudentAssignmentSubmission: React.FC = () => {
 
                   {/* Instructions */}
                   {selectedAssignment.instructions && (
-                    <div className="mb-6 pb-6 border-b border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-2">Instructions</h3>
+                    <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Instructions</h3>
                       <div
-                        className="text-sm text-gray-700 prose max-w-none"
+                        className="text-sm text-gray-700 dark:text-gray-300 prose max-w-none"
                         dangerouslySetInnerHTML={{ __html: safeInstructionsHtml }}
                       />
                     </div>
@@ -273,7 +273,7 @@ const StudentAssignmentSubmission: React.FC = () => {
                   {/* Submission Form */}
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Your Response *
                       </label>
                       <textarea
@@ -283,15 +283,15 @@ const StudentAssignmentSubmission: React.FC = () => {
                         }
                         placeholder="Type your response or answer here..."
                         rows={6}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       />
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
                         {submissionData.content_text.length} characters
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Or Upload File (Optional)
                       </label>
                       <div className="relative">
@@ -308,32 +308,32 @@ const StudentAssignmentSubmission: React.FC = () => {
                         />
                         <label
                           htmlFor="file-upload"
-                          className="flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors"
+                          className="flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors"
                         >
                           <File className="w-5 h-5 text-gray-400" />
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
                             {submissionData.file ? (
                               <span className="font-medium text-blue-600">{submissionData.file.name}</span>
                             ) : (
                               <>
                                 <span className="font-medium text-blue-600">Choose a file</span>
-                                <span className="text-gray-500"> or drag and drop</span>
+                                <span className="text-gray-500 dark:text-gray-400"> or drag and drop</span>
                               </>
                             )}
                           </div>
                         </label>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">PDF, DOC, DOCX, TXT up to 10MB</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">PDF, DOC, DOCX, TXT up to 10MB</p>
                     </div>
 
-                    <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedAssignment(null);
                           setSubmissionData({ content_text: '', file: null });
                         }}
-                        className="flex-1 px-4 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors"
+                        className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:bg-gray-800 font-medium text-sm transition-colors"
                       >
                         Cancel
                       </button>
@@ -360,7 +360,7 @@ const StudentAssignmentSubmission: React.FC = () => {
               ) : (
                 <div className="bg-white rounded-lg sm:rounded-xl p-12 text-center">
                   <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600">Select an assignment to submit</p>
+                  <p className="text-gray-600 dark:text-gray-400">Select an assignment to submit</p>
                 </div>
               )}
             </div>

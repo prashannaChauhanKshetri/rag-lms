@@ -140,7 +140,7 @@ export function StudentAssignments() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="animate-pulse text-gray-500">Loading assignments...</div>
+                <div className="animate-pulse text-gray-500 dark:text-gray-400">Loading assignments...</div>
             </div>
         );
     }
@@ -156,7 +156,7 @@ export function StudentAssignments() {
                 <select
                     value={selectedCourseId}
                     onChange={(e) => setSelectedCourseId(e.target.value)}
-                    className="px-4 py-2 border rounded-lg bg-white shadow-sm"
+                    className="px-4 py-2 border rounded-lg bg-white dark:bg-gray-900 shadow-sm"
                 >
                     {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -164,10 +164,10 @@ export function StudentAssignments() {
 
             {/* Assignments Grid */}
             {assignments.length === 0 ? (
-                <div className="bg-white rounded-xl p-12 text-center border border-gray-200">
+                <div className="bg-white rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
                     <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 text-lg">No assignments yet for this course</p>
-                    <p className="text-gray-400 text-sm mt-2">Check back later for new assignments from your instructor</p>
+                    <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-lg">No assignments yet for this course</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Check back later for new assignments from your instructor</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -181,7 +181,7 @@ export function StudentAssignments() {
                                 key={assignment.id}
                                 className={`bg-white rounded-xl border-2 p-5 shadow-sm hover:shadow-md transition-all cursor-pointer ${isSubmitted ? 'border-green-200 bg-green-50/30' :
                                     overdue ? 'border-red-200 bg-red-50/30' :
-                                        'border-gray-200 hover:border-blue-300'
+                                        'border-gray-200 dark:border-gray-700 hover:border-blue-300'
                                     }`}
                                 onClick={() => setSelectedAssignment(assignment)}
                             >
@@ -210,10 +210,10 @@ export function StudentAssignments() {
                                 </div>
 
                                 {/* Title */}
-                                <h3 className="font-bold text-lg mb-2 text-gray-900">{assignment.title}</h3>
+                                <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">{assignment.title}</h3>
 
                                 {/* Description */}
-                                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4 line-clamp-2">
                                     {assignment.description || 'No description provided'}
                                 </p>
 
@@ -227,7 +227,7 @@ export function StudentAssignments() {
                                 </div>
 
                                 {/* Posted Date */}
-                                <div className="flex items-center gap-2 text-xs text-gray-400 mt-2 pt-3 border-t">
+                                <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mt-2 pt-3 border-t">
                                     <Calendar className="w-3 h-3" />
                                     Posted {formatDate(assignment.created_at)}
                                 </div>
@@ -255,12 +255,12 @@ export function StudentAssignments() {
                         {/* Header */}
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900">{selectedAssignment.title}</h2>
-                                <p className="text-sm text-gray-500 mt-1">Posted {formatDate(selectedAssignment.created_at)}</p>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedAssignment.title}</h2>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">Posted {formatDate(selectedAssignment.created_at)}</p>
                             </div>
                             <button
                                 onClick={() => setSelectedAssignment(null)}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="p-2 hover:bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -275,8 +275,8 @@ export function StudentAssignments() {
 
                         {/* Description */}
                         <div className="mb-6">
-                            <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-                            <p className="text-gray-700 whitespace-pre-wrap">
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Description</h3>
+                            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                                 {selectedAssignment.description || 'No description provided'}
                             </p>
                         </div>
@@ -296,8 +296,8 @@ export function StudentAssignments() {
                                     </div>
                                     {submissions[selectedAssignment.id].feedback && (
                                         <div className="mt-3 pt-3 border-t border-green-200">
-                                            <h4 className="font-semibold text-gray-900 mb-1">Instructor Feedback:</h4>
-                                            <p className="text-gray-700 italic">"{submissions[selectedAssignment.id].feedback}"</p>
+                                            <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Instructor Feedback:</h4>
+                                            <p className="text-gray-700 dark:text-gray-300 italic">"{submissions[selectedAssignment.id].feedback}"</p>
                                         </div>
                                     )}
                                 </div>
@@ -318,10 +318,10 @@ export function StudentAssignments() {
                                 </p>
                             </div>
                         ) : (
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                                <h3 className="font-semibold text-gray-900 mb-2">Upload Your Work</h3>
-                                <p className="text-sm text-gray-600 mb-4">Supported formats: PDF, DOC, DOCX, TXT</p>
+                            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                                <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Upload Your Work</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">Supported formats: PDF, DOC, DOCX, TXT</p>
 
                                 {selectedFile ? (
                                     <div className="bg-blue-50 p-3 rounded-lg mb-4">
@@ -341,7 +341,7 @@ export function StudentAssignments() {
                                         type="file"
                                         accept=".pdf,.doc,.docx,.txt"
                                         onChange={handleFileSelect}
-                                        className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                        className="block w-full text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                                     />
                                 )}
 

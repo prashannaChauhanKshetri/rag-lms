@@ -241,7 +241,7 @@ export function AssignmentManager() {
                             const unit = units.find(u => u.chatbot_id === cbId && u.section_id === secId);
                             setSelectedUnit(unit || null);
                         }}
-                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
                     >
                         {units.map(u => (
                             <option key={`${u.chatbot_id}|${u.section_id}`} value={`${u.chatbot_id}|${u.section_id}`}>
@@ -260,13 +260,13 @@ export function AssignmentManager() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="border-b border-gray-200 overflow-x-auto">
+            <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                 <div className="flex gap-6">
                     <button
                         onClick={() => setActiveTab('assignments')}
                         className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'assignments'
                             ? 'text-blue-600 border-blue-600'
-                            : 'text-gray-600 border-transparent hover:text-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                             }`}
                     >
                         <FileText className="inline w-5 h-5 mr-2" />
@@ -276,7 +276,7 @@ export function AssignmentManager() {
                         onClick={() => setActiveTab('submissions')}
                         className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'submissions'
                             ? 'text-blue-600 border-blue-600'
-                            : 'text-gray-600 border-transparent hover:text-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                             }`}
                     >
                         <Users className="inline w-5 h-5 mr-2" />
@@ -286,7 +286,7 @@ export function AssignmentManager() {
                         onClick={() => setActiveTab('grading')}
                         className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'grading'
                             ? 'text-blue-600 border-blue-600'
-                            : 'text-gray-600 border-transparent hover:text-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                             }`}
                     >
                         <Check className="inline w-5 h-5 mr-2" />
@@ -296,7 +296,7 @@ export function AssignmentManager() {
                         onClick={() => setActiveTab('stats')}
                         className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'stats'
                             ? 'text-blue-600 border-blue-600'
-                            : 'text-gray-600 border-transparent hover:text-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                             }`}
                     >
                         <BarChart3 className="inline w-5 h-5 mr-2" />
@@ -307,7 +307,7 @@ export function AssignmentManager() {
 
             {/* Create Form */}
             {showForm && (
-                <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
                     <h3 className="text-xl font-bold mb-4">Create New Assignment</h3>
                     <form onSubmit={handleCreate} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -316,7 +316,7 @@ export function AssignmentManager() {
                                 <input
                                     value={newTitle}
                                     onChange={e => setNewTitle(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                                     placeholder="e.g. Week 4 Research Paper"
                                     required
                                 />
@@ -327,7 +327,7 @@ export function AssignmentManager() {
                                     type="number"
                                     value={newPoints}
                                     onChange={e => setNewPoints(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                                     placeholder="100"
                                     required
                                 />
@@ -340,7 +340,7 @@ export function AssignmentManager() {
                                 value={newDate}
                                 min={new Date().toISOString().slice(0, 16)}
                                 onChange={e => setNewDate(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                                 required
                             />
                         </div>
@@ -349,7 +349,7 @@ export function AssignmentManager() {
                             <textarea
                                 value={newDesc}
                                 onChange={e => setNewDesc(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 h-24"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 h-24"
                                 placeholder="Instructions for students..."
                             />
                         </div>
@@ -358,14 +358,14 @@ export function AssignmentManager() {
                             <input
                                 type="file"
                                 onChange={e => setNewFile(e.target.files?.[0] || null)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                             />
                         </div>
                         <div className="flex justify-end gap-2">
                             <button
                                 type="button"
                                 onClick={() => setShowForm(false)}
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                className="px-4 py-2 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:bg-gray-700 rounded-lg"
                             >
                                 Cancel
                             </button>
@@ -389,7 +389,7 @@ export function AssignmentManager() {
                     <div className="space-y-4">
                         {draftAssignments.length > 0 && (
                             <div>
-                                <h3 className="text-lg font-bold mb-3 text-gray-700">Drafts</h3>
+                                <h3 className="text-lg font-bold mb-3 text-gray-700 dark:text-gray-300">Drafts</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {draftAssignments.map(a => (
                                         <AssignmentCard
@@ -405,7 +405,7 @@ export function AssignmentManager() {
                         )}
                         {publishedAssignments.length > 0 && (
                             <div>
-                                <h3 className="text-lg font-bold mb-3 text-gray-700">Published</h3>
+                                <h3 className="text-lg font-bold mb-3 text-gray-700 dark:text-gray-300">Published</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {publishedAssignments.map(a => (
                                         <AssignmentCard
@@ -483,15 +483,15 @@ interface AssignmentCardProps {
 
 function AssignmentCard({ assignment, onPublish, onDelete, onView }: AssignmentCardProps) {
     return (
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{assignment.title}</h3>
-                <span className={`text-xs px-2 py-1 rounded-full ${assignment.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                <span className={`text-xs px-2 py-1 rounded-full ${assignment.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-600'}`}>
                     {assignment.is_published ? 'Published' : 'Draft'}
                 </span>
             </div>
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">{assignment.description}</p>
-            <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4 line-clamp-2">{assignment.description}</p>
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">
                 <Clock className="w-4 h-4" />
                 Due: {new Date(assignment.due_date).toLocaleDateString()}
             </div>
@@ -564,10 +564,10 @@ function SubmissionsTab({ assignments, onSelectAssignment }: SubmissionsTabProps
                 <div
                     key={a.id}
                     onClick={() => onSelectAssignment(a)}
-                    className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+                    className="bg-white p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
                 >
                     <h3 className="font-bold text-lg mb-2">{a.title}</h3>
-                    <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">
                         <p className="flex items-center gap-2">
                             <Users className="w-4 h-4" />
                             {a.submitted_count || 0} submissions
@@ -619,20 +619,20 @@ function GradingTab({
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Submissions List */}
-                    <div className="md:col-span-1 bg-white rounded-xl border border-gray-200 p-4 max-h-96 overflow-y-auto">
+                    <div className="md:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 max-h-96 overflow-y-auto">
                         <h3 className="font-bold mb-4">Pending Submissions</h3>
                         <div className="space-y-2">
                             {assignments.map(a => (
-                                <div key={a.id} className="text-sm p-2 bg-gray-50 rounded border border-gray-200">
+                                <div key={a.id} className="text-sm p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
                                     <p className="font-medium">{a.title}</p>
-                                    <p className="text-gray-600 text-xs">{a.submitted_count || 0} to grade</p>
+                                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-xs">{a.submitted_count || 0} to grade</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* Grading Form */}
-                    <div className="md:col-span-2 bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="md:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                         {selectedSubmission ? (
                             <div className="space-y-4">
                                 <h3 className="font-bold text-lg">Grade Submission</h3>
@@ -642,7 +642,7 @@ function GradingTab({
                                         type="number"
                                         value={gradingScore}
                                         onChange={e => setGradingScore(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                                         placeholder="Enter score"
                                     />
                                 </div>
@@ -651,14 +651,14 @@ function GradingTab({
                                     <textarea
                                         value={gradingFeedback}
                                         onChange={e => setGradingFeedback(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 h-24"
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 h-24"
                                         placeholder="Enter feedback for student..."
                                     />
                                 </div>
                                 <div className="flex gap-2 pt-2 border-t">
                                     <button
                                         onClick={() => onSelectSubmission(null)}
-                                        className="flex-1 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                        className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:bg-gray-700 rounded-lg"
                                     >
                                         Cancel
                                     </button>

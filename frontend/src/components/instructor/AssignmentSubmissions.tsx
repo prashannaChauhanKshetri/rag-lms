@@ -91,12 +91,12 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Submissions</h2>
-                        <p className="text-gray-600 mt-1">{assignmentTitle}</p>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Submissions</h2>
+                        <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">{assignmentTitle}</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -104,23 +104,23 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
 
                 {/* Submissions List */}
                 {isLoading ? (
-                    <div className="text-center py-12 text-gray-500">Loading submissions...</div>
+                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading submissions...</div>
                 ) : submissions.length === 0 ? (
                     <div className="text-center py-12">
                         <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">No submissions yet</p>
+                        <p className="text-gray-500 dark:text-gray-400">No submissions yet</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {submissions.map(submission => (
                             <div
                                 key={submission.id}
-                                className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                                className="border rounded-lg p-4 hover:bg-gray-50 dark:bg-gray-800 transition-colors"
                             >
                                 <div className="flex justify-between items-start">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="font-semibold text-gray-900">{submission.student_name}</h3>
+                                            <h3 className="font-semibold text-gray-900 dark:text-white">{submission.student_name}</h3>
                                             {submission.grade !== null && submission.grade !== undefined ? (
                                                 <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                                                     Graded: {submission.grade}/100
@@ -132,7 +132,7 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
                                             )}
                                         </div>
 
-                                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                                        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                                             <div className="flex items-center gap-1">
                                                 <Calendar className="w-4 h-4" />
                                                 <span>Submitted {formatDate(submission.submitted_at)}</span>
@@ -177,22 +177,22 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]" onClick={() => setSelectedSubmission(null)}>
                         <div className="bg-white rounded-2xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
                             <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-xl font-bold text-gray-900">Grade Submission</h3>
-                                <button onClick={() => setSelectedSubmission(null)} className="p-1 hover:bg-gray-100 rounded">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Grade Submission</h3>
+                                <button onClick={() => setSelectedSubmission(null)} className="p-1 hover:bg-gray-100 dark:bg-gray-700 rounded">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
 
                             <div className="mb-4">
-                                <p className="text-gray-700"><strong>Student:</strong> {selectedSubmission.student_name}</p>
-                                <p className="text-gray-600 text-sm mt-1">
+                                <p className="text-gray-700 dark:text-gray-300"><strong>Student:</strong> {selectedSubmission.student_name}</p>
+                                <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mt-1">
                                     <strong>File:</strong> <span className="font-mono">{selectedSubmission.file_name}</span>
                                 </p>
                             </div>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Grade (0-100)
                                     </label>
                                     <input
@@ -207,7 +207,7 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Feedback (optional)
                                     </label>
                                     <textarea

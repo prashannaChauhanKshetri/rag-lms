@@ -142,7 +142,7 @@ const StudentCourseResources: React.FC = () => {
       case 'assignment':
         return 'bg-orange-100 text-orange-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800';
     }
   };
 
@@ -161,7 +161,7 @@ const StudentCourseResources: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -170,8 +170,8 @@ const StudentCourseResources: React.FC = () => {
               <BookOpen className="w-6 h-6 text-amber-600" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Course Resources</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Course Resources</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
                 Access materials shared by your instructors
               </p>
             </div>
@@ -195,40 +195,40 @@ const StudentCourseResources: React.FC = () => {
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-                <p className="text-xs sm:text-sm text-gray-600">Total Resources</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{stats.totalResources}</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Resources</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalResources}</p>
               </div>
 
               <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-                <p className="text-xs sm:text-sm text-gray-600">Documents</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Documents</p>
                 <p className="text-2xl sm:text-3xl font-bold text-blue-600 mt-1">{stats.byType.document}</p>
               </div>
 
               <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-                <p className="text-xs sm:text-sm text-gray-600">Videos</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Videos</p>
                 <p className="text-2xl sm:text-3xl font-bold text-purple-600 mt-1">{stats.byType.video}</p>
               </div>
 
               <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-                <p className="text-xs sm:text-sm text-gray-600">Links</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Links</p>
                 <p className="text-2xl sm:text-3xl font-bold text-green-600 mt-1">{stats.byType.link}</p>
               </div>
 
               <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-                <p className="text-xs sm:text-sm text-gray-600">Assignments</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Assignments</p>
                 <p className="text-2xl sm:text-3xl font-bold text-orange-600 mt-1">{stats.byType.assignment}</p>
               </div>
             </div>
 
             {/* Filters */}
             <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6 mb-6 sm:mb-8">
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <Filter className="w-5 h-5" />
                 Filters
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Search</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
@@ -236,17 +236,17 @@ const StudentCourseResources: React.FC = () => {
                       value={filter.searchTerm}
                       onChange={(e) => setFilter({ ...filter, searchTerm: e.target.value })}
                       placeholder="Search resources..."
-                      className="w-full pl-9 pr-3 sm:pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full pl-9 pr-3 sm:pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Type</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
                   <select
                     value={filter.type}
                     onChange={(e) => setFilter({ ...filter, type: e.target.value as typeof filter.type })}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="all">All Types</option>
                     <option value="document">Document</option>
@@ -257,11 +257,11 @@ const StudentCourseResources: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Course</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Course</label>
                   <select
                     value={filter.course}
                     onChange={(e) => setFilter({ ...filter, course: e.target.value as typeof filter.course })}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="all">All Courses</option>
                     {courses.map((course) => (
@@ -273,11 +273,11 @@ const StudentCourseResources: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sort By</label>
                   <select
                     value={filter.sortBy}
                     onChange={(e) => setFilter({ ...filter, sortBy: e.target.value as typeof filter.sortBy })}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="recent">Most Recent</option>
                     <option value="type">Type</option>
@@ -291,8 +291,8 @@ const StudentCourseResources: React.FC = () => {
             {filteredResources.length === 0 ? (
               <div className="bg-white rounded-lg sm:rounded-xl p-12 text-center">
                 <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600 text-lg">No resources found</p>
-                <p className="text-gray-500 text-sm mt-2">
+                <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-lg">No resources found</p>
+                <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-2">
                   {resources.length === 0
                     ? 'Your instructors haven\'t shared any resources yet.'
                     : 'Try adjusting your filters.'}
@@ -301,7 +301,7 @@ const StudentCourseResources: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {filteredResources.map((resource) => (
-                  <div key={resource.id} className="bg-white rounded-lg sm:rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                  <div key={resource.id} className="bg-white rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
                     <button
                       onClick={() =>
                         setExpandedResource(expandedResource === resource.id ? null : resource.id)
@@ -314,15 +314,15 @@ const StudentCourseResources: React.FC = () => {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-sm sm:text-base font-bold text-gray-900 break-words">
+                          <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white break-words">
                             {resource.title}
                           </h3>
-                          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mt-1">
+                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-2 mt-1">
                             {resource.description}
                           </p>
 
-                          <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-2">
-                            <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                          <div className="flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
+                            <span className="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
                               {getTypeLabel(resource.type)}
                             </span>
                             <span className="flex items-center gap-1">
@@ -362,31 +362,31 @@ const StudentCourseResources: React.FC = () => {
 
                     {/* Expanded Details */}
                     {expandedResource === resource.id && (
-                      <div className="border-t border-gray-200 p-4 sm:p-6 bg-gray-50">
+                      <div className="border-t border-gray-200 dark:border-gray-700 p-4 sm:p-6 bg-gray-50">
                         <div className="space-y-3">
                           {resource.description && (
                             <div>
-                              <h4 className="text-sm font-semibold text-gray-900 mb-2">Description</h4>
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{resource.description}</p>
+                              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Description</h4>
+                              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{resource.description}</p>
                             </div>
                           )}
 
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-gray-600">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-gray-600 dark:text-gray-400">
                             <div>
                               <p className="font-medium">Type</p>
-                              <p className="text-gray-900">{getTypeLabel(resource.type)}</p>
+                              <p className="text-gray-900 dark:text-white">{getTypeLabel(resource.type)}</p>
                             </div>
                             <div>
                               <p className="font-medium">Course</p>
-                              <p className="text-gray-900 break-words">{resource.course_name}</p>
+                              <p className="text-gray-900 dark:text-white break-words">{resource.course_name}</p>
                             </div>
                             <div>
                               <p className="font-medium">Uploaded By</p>
-                              <p className="text-gray-900">{resource.uploaded_by}</p>
+                              <p className="text-gray-900 dark:text-white">{resource.uploaded_by}</p>
                             </div>
                             <div>
                               <p className="font-medium">Date</p>
-                              <p className="text-gray-900">
+                              <p className="text-gray-900 dark:text-white">
                                 {new Date(resource.uploaded_date).toLocaleDateString()}
                               </p>
                             </div>

@@ -78,7 +78,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                     <div className="flex flex-wrap gap-3">
                         <button
                             onClick={() => onNavigate('courses')}
-                            className="px-5 py-2.5 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors shadow-sm text-sm"
+                            className="px-5 py-2.5 bg-white dark:bg-gray-900 text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors shadow-sm text-sm"
                         >
                             Manage Course Bots
                         </button>
@@ -106,10 +106,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform`}>
                                 <card.icon className="w-5 h-5" />
                             </div>
-                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all" />
+                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 dark:text-gray-400 dark:text-gray-500 group-hover:translate-x-0.5 transition-all" />
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                        <p className="text-sm text-gray-500 mt-0.5">{card.label}</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-0.5">{card.label}</p>
                     </div>
                 ))}
             </div>
@@ -117,8 +117,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
             {/* Quick Actions + Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Quick Actions */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-white rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <TrendingUp className="w-4 h-4 text-indigo-600" />
                         Quick Actions
                     </h3>
@@ -132,21 +132,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                             <button
                                 key={action.label}
                                 onClick={() => onNavigate(action.tab)}
-                                className="flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 hover:shadow-sm transition-all text-left group"
+                                className="flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-800 hover:shadow-sm transition-all text-left group"
                             >
                                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color} group-hover:scale-110 transition-transform`}>
                                     <action.icon className="w-4 h-4" />
                                 </div>
-                                <span className="text-sm font-medium text-gray-700">{action.label}</span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{action.label}</span>
                             </button>
                         ))}
                     </div>
                 </div>
 
                 {/* Recent Course Bots */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                <div className="bg-white rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                             <Brain className="w-4 h-4 text-indigo-600" />
                             Recent Course Bots
                         </h3>
@@ -160,20 +160,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                     {(stats?.recent_bots?.length ?? 0) === 0 ? (
                         <div className="text-center py-6">
                             <Brain className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500">No course bots yet</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">No course bots yet</p>
                         </div>
                     ) : (
                         <div className="space-y-2">
                             {stats?.recent_bots?.map(bot => (
                                 <div
                                     key={bot.id}
-                                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors"
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:bg-gray-700 transition-colors"
                                 >
                                     <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
                                         <Brain className="w-4 h-4 text-purple-500" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-800 truncate">{bot.name}</p>
+                                        <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{bot.name}</p>
                                         {bot.created_at && (
                                             <p className="text-xs text-gray-400">
                                                 {new Date(bot.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

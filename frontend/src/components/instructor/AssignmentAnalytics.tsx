@@ -144,14 +144,14 @@ const AssignmentAnalytics: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Assignment Analytics</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Monitor submission rates, grades, and student progress</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">Assignment Analytics</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Monitor submission rates, grades, and student progress</p>
             </div>
             <button
               onClick={downloadReport}
@@ -177,8 +177,8 @@ const AssignmentAnalytics: React.FC = () => {
           <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Total Assignments</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{totals.total_assignments}</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Assignments</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{totals.total_assignments}</p>
               </div>
               <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-blue-500 opacity-10" />
             </div>
@@ -187,8 +187,8 @@ const AssignmentAnalytics: React.FC = () => {
           <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Avg Submission Rate</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{totals.avg_submission_rate}%</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Avg Submission Rate</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{totals.avg_submission_rate}%</p>
               </div>
               <TrendingUp className="w-10 h-10 sm:w-12 sm:h-12 text-green-500 opacity-10" />
             </div>
@@ -197,8 +197,8 @@ const AssignmentAnalytics: React.FC = () => {
           <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Average Grade</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{totals.avg_score}%</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Average Grade</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{totals.avg_score}%</p>
               </div>
               <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 text-purple-500 opacity-10" />
             </div>
@@ -207,8 +207,8 @@ const AssignmentAnalytics: React.FC = () => {
           <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Students</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{totals.total_students}</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Students</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{totals.total_students}</p>
               </div>
               <Users className="w-10 h-10 sm:w-12 sm:h-12 text-orange-500 opacity-10" />
             </div>
@@ -217,17 +217,17 @@ const AssignmentAnalytics: React.FC = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6 mb-6 sm:mb-8">
-          <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Filter className="w-5 h-5" />
             Filters
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sort By</label>
               <select
                 value={filter.sortBy}
                 onChange={(e) => setFilter({ ...filter, sortBy: e.target.value as typeof filter.sortBy })}
-                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="title">Title (A-Z)</option>
                 <option value="submissions">Submissions</option>
@@ -237,11 +237,11 @@ const AssignmentAnalytics: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Time Frame</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Time Frame</label>
               <select
                 value={filter.timeFrame}
                 onChange={(e) => setFilter({ ...filter, timeFrame: e.target.value as typeof filter.timeFrame })}
-                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Time</option>
                 <option value="month">This Month</option>
@@ -259,35 +259,35 @@ const AssignmentAnalytics: React.FC = () => {
         ) : (
           <>
             {/* Desktop View */}
-            <div className="hidden md:block bg-white rounded-lg sm:rounded-xl shadow overflow-hidden">
+            <div className="hidden md:block bg-white dark:bg-gray-900 rounded-lg sm:rounded-xl shadow overflow-hidden">
               {sortedAssignments.length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
+                <div className="p-12 text-center text-gray-500 dark:text-gray-400">
                   <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />
                   <p>No assignments found</p>
                 </div>
               ) : (
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
+                  <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                     <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Assignment</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Submissions</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Submit Rate</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Avg Grade</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">On Time / Late</th>
-                      <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Action</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Assignment</th>
+                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Submissions</th>
+                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Submit Rate</th>
+                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Avg Grade</th>
+                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">On Time / Late</th>
+                      <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {sortedAssignments.map((assignment) => (
                       <tr key={assignment.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div className="font-medium text-gray-900 max-w-xs truncate">{assignment.title}</div>
+                          <div className="font-medium text-gray-900 dark:text-white max-w-xs truncate">{assignment.title}</div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {assignment.submissions}/{assignment.total_students}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
                             Pending: {assignment.pending}
                           </div>
                         </td>
@@ -298,7 +298,7 @@ const AssignmentAnalytics: React.FC = () => {
                               style={{ width: `${getSubmissionRate(assignment)}%` }}
                             />
                           </div>
-                          <div className="text-xs text-gray-600 mt-2">
+                          <div className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-2">
                             {getSubmissionRate(assignment).toFixed(0)}%
                           </div>
                         </td>
@@ -327,23 +327,23 @@ const AssignmentAnalytics: React.FC = () => {
             {/* Mobile View */}
             <div className="md:hidden space-y-3">
               {sortedAssignments.length === 0 ? (
-                <div className="p-8 text-center bg-white rounded-lg">
+                <div className="p-8 text-center bg-white dark:bg-gray-900 rounded-lg">
                   <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-sm text-gray-600">No assignments found</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">No assignments found</p>
                 </div>
               ) : (
                 sortedAssignments.map((assignment) => (
                   <div
                     key={assignment.id}
                     onClick={() => setSelectedAssignment(assignment)}
-                    className="bg-white rounded-lg p-4 border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
                   >
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 truncate">{assignment.title}</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 truncate">{assignment.title}</h3>
 
                     <div className="space-y-3">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-600">Submissions</span>
-                        <span className="font-semibold text-gray-900">
+                        <span className="text-gray-600 dark:text-gray-400">Submissions</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">
                           {assignment.submissions}/{assignment.total_students}
                         </span>
                       </div>
@@ -356,20 +356,20 @@ const AssignmentAnalytics: React.FC = () => {
 
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="p-2 bg-blue-50 rounded">
-                          <p className="text-gray-600">Avg Grade</p>
+                          <p className="text-gray-600 dark:text-gray-400">Avg Grade</p>
                           <p className={`font-semibold ${getScoreColor(assignment.average_score)}`}>
                             {assignment.average_score.toFixed(1)}%
                           </p>
                         </div>
                         <div className="p-2 bg-purple-50 rounded">
-                          <p className="text-gray-600">Pending</p>
+                          <p className="text-gray-600 dark:text-gray-400">Pending</p>
                           <p className="font-semibold text-purple-900">{assignment.pending}</p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 pt-2 border-t">
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
                           {assignment.on_time} on time, {assignment.late} late
                         </span>
                       </div>
@@ -390,10 +390,10 @@ const AssignmentAnalytics: React.FC = () => {
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">{selectedAssignment.title}</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedAssignment.title}</h2>
                   <button
                     onClick={() => setSelectedAssignment(null)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400"
                   >
                     ✕
                   </button>
@@ -436,19 +436,19 @@ const AssignmentAnalytics: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium text-gray-900 mb-3">Submission Status</p>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-3">Submission Status</p>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">On Time</span>
+                        <span className="text-gray-600 dark:text-gray-400">On Time</span>
                         <span className="font-semibold text-green-600">{selectedAssignment.on_time}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Late</span>
+                        <span className="text-gray-600 dark:text-gray-400">Late</span>
                         <span className="font-semibold text-orange-600">{selectedAssignment.late}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Not Submitted</span>
+                        <span className="text-gray-600 dark:text-gray-400">Not Submitted</span>
                         <span className="font-semibold text-red-600">{selectedAssignment.not_submitted}</span>
                       </div>
                     </div>

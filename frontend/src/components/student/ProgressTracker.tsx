@@ -95,7 +95,7 @@ const ProgressTracker: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -104,8 +104,8 @@ const ProgressTracker: React.FC = () => {
               <TrendingUp className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Your Progress</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Track your learning journey and course completion</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Your Progress</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Track your learning journey and course completion</p>
             </div>
           </div>
         </div>
@@ -132,8 +132,8 @@ const ProgressTracker: React.FC = () => {
                     <BookOpen className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Total Courses</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats?.total_courses || 0}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Courses</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats?.total_courses || 0}</p>
                   </div>
                 </div>
               </div>
@@ -144,8 +144,8 @@ const ProgressTracker: React.FC = () => {
                     <Target className="w-6 h-6 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Completion</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Completion</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                       {stats?.overall_completion.toFixed(0)}%
                     </p>
                   </div>
@@ -158,8 +158,8 @@ const ProgressTracker: React.FC = () => {
                     <Award className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Average Grade</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Average Grade</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                       {stats?.overall_average_grade.toFixed(1) || '0'}%
                     </p>
                   </div>
@@ -172,8 +172,8 @@ const ProgressTracker: React.FC = () => {
                     <Zap className="w-6 h-6 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Submitted</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Submitted</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                       {stats?.completed_assignments}/{stats?.total_assignments}
                     </p>
                   </div>
@@ -193,14 +193,14 @@ const ProgressTracker: React.FC = () => {
             {/* Timeline Chart */}
             <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6 mb-6 sm:mb-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
                   Performance Timeline
                 </h2>
                 <select
                   value={timeframe}
                   onChange={(e) => setTimeframe(e.target.value as typeof timeframe)}
-                  className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                 >
                   <option value="week">This Week</option>
                   <option value="month">This Month</option>
@@ -209,21 +209,21 @@ const ProgressTracker: React.FC = () => {
               </div>
 
               {timeframeData.length === 0 ? (
-                <div className="text-center py-12 text-gray-600">
+                <div className="text-center py-12 text-gray-600 dark:text-gray-400">
                   No data available for this timeframe
                 </div>
               ) : (
                 <div className="space-y-4">
                   {timeframeData.map((point, idx) => (
                     <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                      <div className="w-20 sm:w-24 text-sm font-medium text-gray-600">
+                      <div className="w-20 sm:w-24 text-sm font-medium text-gray-600 dark:text-gray-400">
                         <span className="hidden sm:inline">Week {point.week}</span>
                         <span className="sm:hidden">W{point.week}</span>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
                             {point.assignments_completed} assignment{point.assignments_completed !== 1 ? 's' : ''} completed
                           </span>
                           <span className={`text-sm font-medium px-2 py-1 rounded ${getGradeColor(point.average_grade)}`}>
@@ -245,13 +245,13 @@ const ProgressTracker: React.FC = () => {
 
             {/* Course Breakdown */}
             <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
                 Course Breakdown
               </h2>
 
               {!stats || stats.courses.length === 0 ? (
-                <div className="text-center py-12 text-gray-600">
+                <div className="text-center py-12 text-gray-600 dark:text-gray-400">
                   No courses enrolled yet
                 </div>
               ) : (
@@ -259,14 +259,14 @@ const ProgressTracker: React.FC = () => {
                   {stats.courses.map((course) => (
                     <div
                       key={course.course_id}
-                      className="border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow"
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow"
                     >
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                         <div>
-                          <h3 className="font-bold text-gray-900 text-base sm:text-lg break-words">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg break-words">
                             {course.course_name}
                           </h3>
-                          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
                             {course.completed_assignments} of {course.total_assignments} assignments completed
                           </p>
                         </div>
@@ -283,8 +283,8 @@ const ProgressTracker: React.FC = () => {
 
                       <div className="mb-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs sm:text-sm font-medium text-gray-600">Overall Progress</span>
-                          <span className="text-xs sm:text-sm font-bold text-gray-900">
+                          <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Overall Progress</span>
+                          <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
                             {course.completion_percentage.toFixed(0)}%
                           </span>
                         </div>
@@ -298,7 +298,7 @@ const ProgressTracker: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                         <Clock className="w-3 h-3" />
                         <span>Last activity: {new Date(course.last_activity).toLocaleDateString()}</span>
                       </div>

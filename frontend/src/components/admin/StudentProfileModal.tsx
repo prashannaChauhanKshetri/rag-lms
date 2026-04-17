@@ -76,7 +76,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
       case 'active':
         return 'bg-green-100 text-green-800';
       case 'inactive':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800';
       case 'suspended':
         return 'bg-red-100 text-red-800';
       default:
@@ -95,7 +95,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
       case 'excused':
         return 'bg-blue-50 text-blue-900';
       default:
-        return 'bg-gray-50 text-gray-900';
+        return 'bg-gray-50 dark:bg-gray-800 text-gray-900';
     }
   };
 
@@ -131,7 +131,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                 onClick={() => setActiveTab('profile')}
                 className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'profile'
                     ? 'text-[#10B981] border-[#10B981]'
-                    : 'text-gray-600 border-transparent hover:text-gray-900'
+                    : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                   }`}
               >
                 <User className="inline w-5 h-5 mr-2" />
@@ -141,7 +141,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                 onClick={() => setActiveTab('attendance')}
                 className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'attendance'
                     ? 'text-[#10B981] border-[#10B981]'
-                    : 'text-gray-600 border-transparent hover:text-gray-900'
+                    : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
                   }`}
               >
                 <Calendar className="inline w-5 h-5 mr-2" />
@@ -153,9 +153,9 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
             {activeTab === 'profile' && (
               <div className="space-y-6">
                 {/* Personal Information */}
-                <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Personal Information</h3>
                     {profile.display_id && (
                       <span className="inline-flex items-center gap-1.5 text-sm font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
                         <span className="text-emerald-400">#</span>{profile.display_id}
@@ -164,60 +164,60 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                      <p className="text-gray-900 font-medium">{profile.first_name}</p>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
+                      <p className="text-gray-900 dark:text-white font-medium">{profile.first_name}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                      <p className="text-gray-900 font-medium">{profile.last_name}</p>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
+                      <p className="text-gray-900 dark:text-white font-medium">{profile.last_name}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         <Mail className="inline w-4 h-4 mr-1" />
                         Email
                       </label>
-                      <p className="text-gray-900 break-all">{profile.email}</p>
+                      <p className="text-gray-900 dark:text-white break-all">{profile.email}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         <User className="inline w-4 h-4 mr-1" />
                         Username
                       </label>
-                      <p className="text-gray-900">@{profile.username}</p>
+                      <p className="text-gray-900 dark:text-white">@{profile.username}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Institution Information */}
                 <div className="bg-blue-50 rounded-xl p-6 space-y-4 border border-blue-200">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <Building2 className="w-5 h-5 text-blue-600" />
                     Institution Information
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
-                      <p className="text-gray-900 font-medium">{profile.institution}</p>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institution</label>
+                      <p className="text-gray-900 dark:text-white font-medium">{profile.institution}</p>
                     </div>
                     {profile.department && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           <BookOpen className="inline w-4 h-4 mr-1" />
                           Department
                         </label>
-                        <p className="text-gray-900">{profile.department}</p>
+                        <p className="text-gray-900 dark:text-white">{profile.department}</p>
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         <Calendar className="inline w-4 h-4 mr-1" />
                         Enrollment Date
                       </label>
-                      <p className="text-gray-900">{new Date(profile.enrollment_date).toLocaleDateString()}</p>
+                      <p className="text-gray-900 dark:text-white">{new Date(profile.enrollment_date).toLocaleDateString()}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(profile.status)}`}>
                         {profile.status.charAt(0).toUpperCase() + profile.status.slice(1)}
                       </span>
@@ -226,10 +226,10 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                 </div>
 
                 {/* Verification Status */}
-                <div className="flex items-center justify-between bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                   <div>
-                    <p className="font-medium text-gray-900">Email Verification</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-gray-900 dark:text-white">Email Verification</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {profile.is_email_verified ? 'Email has been verified' : 'Email pending verification'}
                     </p>
                   </div>
@@ -248,9 +248,9 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
               <div className="space-y-6">
                 {/* Attendance Statistics */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-gray-600 text-xs font-semibold uppercase tracking-wide">Total Classes</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-1">{attendanceStats.total}</p>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-xs font-semibold uppercase tracking-wide">Total Classes</p>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{attendanceStats.total}</p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                     <p className="text-green-700 text-xs font-semibold uppercase tracking-wide">Present</p>
@@ -271,7 +271,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                   <div className="flex items-center gap-4">
                     <BarChart3 className="w-10 h-10 text-[#10B981]" />
                     <div>
-                      <p className="text-gray-600 text-sm font-medium">Attendance Rate</p>
+                      <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm font-medium">Attendance Rate</p>
                       <p className="text-4xl font-bold text-[#10B981]">{attendanceStats.percentage}%</p>
                     </div>
                   </div>
@@ -280,7 +280,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                 {/* Attendance Records */}
                 {attendance.length > 0 ? (
                   <div className="space-y-2">
-                    <h3 className="font-bold text-gray-900 mb-3">Recent Attendance Records</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-3">Recent Attendance Records</h3>
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                       {attendance.map((record, idx) => (
                         <div key={idx} className={`p-3 rounded-lg flex items-center justify-between ${getAttendanceColor(record.status)}`}>
@@ -297,7 +297,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studentId, on
                 ) : (
                   <div className="text-center py-8">
                     <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500">No attendance records yet</p>
+                    <p className="text-gray-500 dark:text-gray-400">No attendance records yet</p>
                   </div>
                 )}
               </div>

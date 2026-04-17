@@ -264,8 +264,8 @@ const AdminEnrollmentCenter: React.FC = () => {
                     <UserPlus className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Enrollment Management</h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Manage student enrollments across all sections</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Enrollment Management</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-0.5">Manage student enrollments across all sections</p>
                 </div>
             </div>
 
@@ -287,7 +287,7 @@ const AdminEnrollmentCenter: React.FC = () => {
 
             {/* Section Selector */}
             <div className="bg-white rounded-xl shadow p-4 sm:p-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Section</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Section</label>
                 <div className="relative">
                     <select
                         value={selectedSectionId}
@@ -297,7 +297,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                             setSuccess('');
                             setBulkResult(null);
                         }}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] appearance-none bg-white pr-10"
+                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] appearance-none bg-white dark:bg-gray-900 pr-10"
                     >
                         <option value="">— Choose a section —</option>
                         {sections.map((s) => (
@@ -306,7 +306,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                             </option>
                         ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 pointer-events-none" />
                 </div>
             </div>
 
@@ -314,7 +314,7 @@ const AdminEnrollmentCenter: React.FC = () => {
             {selectedSectionId && (
                 <>
                     {/* Tab Navigation */}
-                    <div className="border-b border-gray-200">
+                    <div className="border-b border-gray-200 dark:border-gray-700">
                         <div className="flex gap-4 sm:gap-6 overflow-x-auto">
                             {([
                                 { key: 'enrolled', label: 'Enrolled', icon: Users },
@@ -327,7 +327,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                                     onClick={() => setActiveTab(key)}
                                     className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 whitespace-nowrap flex items-center gap-1.5 ${activeTab === key
                                         ? 'text-[#10B981] border-[#10B981]'
-                                        : 'text-gray-500 border-transparent hover:text-gray-700'
+                                        : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-700'
                                         }`}
                                 >
                                     <Icon className="w-4 h-4" />
@@ -343,9 +343,9 @@ const AdminEnrollmentCenter: React.FC = () => {
                         {activeTab === 'enrolled' && (
                             <div className="p-4 sm:p-6">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                         Enrolled Students
-                                        <span className="ml-2 text-sm font-normal text-gray-500">
+                                        <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
                                             ({enrolledStudents.length} student{enrolledStudents.length !== 1 ? 's' : ''})
                                         </span>
                                     </h3>
@@ -356,7 +356,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                                         <Loader2 className="w-8 h-8 animate-spin text-[#10B981]" />
                                     </div>
                                 ) : enrolledStudents.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-500">
+                                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                                         <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
                                         <p className="text-sm">No students enrolled in this section</p>
                                         <button
@@ -371,13 +371,13 @@ const AdminEnrollmentCenter: React.FC = () => {
                                         {/* Desktop Table */}
                                         <div className="hidden md:block overflow-x-auto">
                                             <table className="w-full">
-                                                <thead className="bg-gray-50 border-b">
+                                                <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                                                     <tr>
-                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Student</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Roll No.</th>
-                                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Attendance</th>
-                                                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Student</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Email</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Roll No.</th>
+                                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Attendance</th>
+                                                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100">
@@ -387,13 +387,13 @@ const AdminEnrollmentCenter: React.FC = () => {
                                                                 <div className="flex items-center gap-2">
                                                                     <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-mono flex-shrink-0">{student.display_id || student.student_id.slice(0, 6)}</span>
                                                                     <div>
-                                                                        <p className="text-sm font-medium text-gray-900">{student.full_name || student.username}</p>
-                                                                        <p className="text-xs text-gray-500">@{student.username}</p>
+                                                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{student.full_name || student.username}</p>
+                                                                        <p className="text-xs text-gray-500 dark:text-gray-400">@{student.username}</p>
                                                                     </div>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-3 text-sm text-gray-600">{student.email}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-600">{student.roll_number || '—'}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{student.email}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{student.roll_number || '—'}</td>
                                                             <td className="px-4 py-3 text-center">
                                                                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${(student.attendance_percentage || 0) >= 75
                                                                     ? 'bg-green-100 text-green-700'
@@ -422,14 +422,14 @@ const AdminEnrollmentCenter: React.FC = () => {
                                         {/* Mobile Cards */}
                                         <div className="md:hidden space-y-3">
                                             {enrolledStudents.map((student) => (
-                                                <div key={student.enrollment_id} className="border border-gray-200 rounded-lg p-3">
+                                                <div key={student.enrollment_id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="text-sm font-medium text-gray-900 truncate">{student.full_name || student.username}</p>
-                                                            <p className="text-xs text-gray-500 truncate">{student.email}</p>
+                                                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{student.full_name || student.username}</p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 truncate">{student.email}</p>
                                                             <div className="flex items-center gap-2 mt-1.5">
                                                                 {student.roll_number && (
-                                                                    <span className="text-xs text-gray-500">#{student.roll_number}</span>
+                                                                    <span className="text-xs text-gray-500 dark:text-gray-400">#{student.roll_number}</span>
                                                                 )}
                                                                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${(student.attendance_percentage || 0) >= 75
                                                                     ? 'bg-green-100 text-green-700'
@@ -457,7 +457,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                         {/* ---- Single Enroll Tab ---- */}
                         {activeTab === 'single-enroll' && (
                             <div className="p-4 sm:p-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Student to Section</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Student to Section</h3>
 
                                 {/* Search */}
                                 <div className="relative mb-4">
@@ -468,13 +468,13 @@ const AdminEnrollmentCenter: React.FC = () => {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         onKeyUp={() => loadAvailableStudents()}
                                         placeholder="Search students by name, email, or username..."
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                                     />
                                 </div>
 
                                 {/* Available Students */}
                                 {availableStudents.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-500">
+                                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                                         <Users className="w-10 h-10 mx-auto mb-2 opacity-30" />
                                         <p className="text-sm">{searchTerm ? 'No matching students found' : 'Type to search for available students'}</p>
                                     </div>
@@ -483,14 +483,14 @@ const AdminEnrollmentCenter: React.FC = () => {
                                         {availableStudents.map((student) => (
                                             <div
                                                 key={student.id}
-                                                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                                                className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-mono">{student.display_id}</span>
-                                                        <p className="text-sm font-medium text-gray-900">{student.full_name}</p>
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{student.full_name}</p>
                                                     </div>
-                                                    <p className="text-xs text-gray-500">{student.email} · @{student.username}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{student.email} · @{student.username}</p>
                                                 </div>
                                                 <button
                                                     onClick={() => handleSingleEnroll(student.id)}
@@ -510,34 +510,34 @@ const AdminEnrollmentCenter: React.FC = () => {
                         {/* ---- Bulk Enroll Tab ---- */}
                         {activeTab === 'bulk-enroll' && (
                             <div className="p-4 sm:p-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Bulk Enroll Students</h3>
-                                <p className="text-sm text-gray-500 mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Bulk Enroll Students</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">
                                     Enter student IDs (one per line or comma-separated) or upload a CSV file.
                                 </p>
 
                                 {/* Text Input */}
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Student IDs</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student IDs</label>
                                     <textarea
                                         value={bulkInput}
                                         onChange={(e) => setBulkInput(e.target.value)}
                                         placeholder={"student-id-001\nstudent-id-002\nstudent-id-003"}
                                         rows={6}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] font-mono resize-y"
+                                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] font-mono resize-y"
                                     />
                                 </div>
 
                                 {/* OR divider */}
                                 <div className="flex items-center gap-3 my-4">
                                     <div className="flex-1 h-px bg-gray-200" />
-                                    <span className="text-xs text-gray-400 font-medium">OR</span>
+                                    <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">OR</span>
                                     <div className="flex-1 h-px bg-gray-200" />
                                 </div>
 
                                 {/* CSV Upload */}
                                 <div className="mb-6">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Upload CSV</label>
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#10B981] transition-colors">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload CSV</label>
+                                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center hover:border-[#10B981] transition-colors">
                                         <input
                                             type="file"
                                             accept=".csv,.txt"
@@ -546,11 +546,11 @@ const AdminEnrollmentCenter: React.FC = () => {
                                             id="csv-upload"
                                         />
                                         <label htmlFor="csv-upload" className="cursor-pointer">
-                                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                            <Upload className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
                                             {csvFile ? (
                                                 <p className="text-sm text-[#10B981] font-medium">{csvFile.name}</p>
                                             ) : (
-                                                <p className="text-sm text-gray-500">Click to upload CSV file</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Click to upload CSV file</p>
                                             )}
                                         </label>
                                     </div>
@@ -571,8 +571,8 @@ const AdminEnrollmentCenter: React.FC = () => {
 
                                 {/* Bulk Result */}
                                 {bulkResult && (
-                                    <div className="mt-4 p-4 bg-gray-50 rounded-lg space-y-2">
-                                        <p className="text-sm font-medium text-gray-900">
+                                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">
                                             ✅ Enrolled: {bulkResult.enrolled.length} student{bulkResult.enrolled.length !== 1 ? 's' : ''}
                                         </p>
                                         {bulkResult.skipped.length > 0 && (
@@ -582,7 +582,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                                                 </p>
                                                 <ul className="mt-1 space-y-1">
                                                     {bulkResult.skipped.map((s, i) => (
-                                                        <li key={i} className="text-xs text-gray-600">
+                                                        <li key={i} className="text-xs text-gray-600 dark:text-gray-400">
                                                             {s.student_id}: {s.reason}
                                                         </li>
                                                     ))}
@@ -597,30 +597,30 @@ const AdminEnrollmentCenter: React.FC = () => {
                         {/* ---- History Tab ---- */}
                         {activeTab === 'history' && (
                             <div className="p-4 sm:p-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Enrollment History</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Enrollment History</h3>
                                 {auditHistory.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-500">
+                                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                                         <Clock className="w-10 h-10 mx-auto mb-2 opacity-30" />
                                         <p className="text-sm">No enrollment activity recorded yet</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2 max-h-96 overflow-y-auto">
                                         {auditHistory.map((entry) => (
-                                            <div key={entry.id} className="flex items-start gap-3 p-3 border border-gray-100 rounded-lg">
+                                            <div key={entry.id} className="flex items-start gap-3 p-3 border border-gray-100 dark:border-gray-800 rounded-lg">
                                                 <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${entry.action === 'enrolled' ? 'bg-green-500' : 'bg-red-500'
                                                     }`} />
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm text-gray-900">
+                                                    <p className="text-sm text-gray-900 dark:text-white">
                                                         <span className="font-mono text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded">{entry.student_display_id || entry.student_id.slice(0, 8)}</span>
-                                                        {' '}<span className="text-gray-600">{entry.student_name ? `(${entry.student_name})` : ''}</span>
+                                                        {' '}<span className="text-gray-600 dark:text-gray-400">{entry.student_name ? `(${entry.student_name})` : ''}</span>
                                                         {' '}<span className={entry.action === 'enrolled' ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>
                                                             {entry.action}
                                                         </span>
                                                     </p>
                                                     {entry.reason && (
-                                                        <p className="text-xs text-gray-500 mt-0.5">Reason: {entry.reason}</p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-0.5">Reason: {entry.reason}</p>
                                                     )}
-                                                    <p className="text-xs text-gray-400 mt-0.5">
+                                                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                                                         {new Date(entry.created_at).toLocaleString()}
                                                     </p>
                                                 </div>
@@ -638,7 +638,7 @@ const AdminEnrollmentCenter: React.FC = () => {
             {!selectedSectionId && (
                 <div className="bg-white rounded-xl shadow p-8 text-center">
                     <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-gray-500 text-sm">Select a section above to manage enrollments</p>
+                    <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm">Select a section above to manage enrollments</p>
                 </div>
             )}
         </div>

@@ -253,14 +253,14 @@ const CourseResourceLibrary: React.FC = () => {
       case 'assignment':
         return 'bg-orange-100 text-orange-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800';
     }
   };
 
 
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 md:p-6 lg:p-8">
       <ConfirmDialog
         isOpen={!!pendingDelete}
         title="Delete Resource"
@@ -275,8 +275,8 @@ const CourseResourceLibrary: React.FC = () => {
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Course Resources</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Organize and share course materials with students</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">Course Resources</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Organize and share course materials with students</p>
             </div>
             <div className="flex items-center gap-4">
               <select
@@ -286,7 +286,7 @@ const CourseResourceLibrary: React.FC = () => {
                   const unit = units.find(u => u.chatbot_id === cbId && u.section_id === secId);
                   setSelectedUnit(unit || null);
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 w-full sm:w-auto overflow-hidden text-ellipsis whitespace-nowrap"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 w-full sm:w-auto overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 {units.map(u => (
                   <option key={`${u.chatbot_id}|${u.section_id}`} value={`${u.chatbot_id}|${u.section_id}`}>
@@ -324,38 +324,38 @@ const CourseResourceLibrary: React.FC = () => {
         {/* Upload Form */}
         {showUploadForm && (
           <div className="bg-white rounded-lg sm:rounded-xl shadow p-6 sm:p-8 mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Upload New Resource</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6">Upload New Resource</h2>
 
             <form onSubmit={handleUpload} className="space-y-4 sm:space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title *</label>
                   <input
                     type="text"
                     value={uploadData.title}
                     onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
                     placeholder="e.g., Chapter 5 - Photosynthesis"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
                   <textarea
                     value={uploadData.description}
                     onChange={(e) => setUploadData({ ...uploadData, description: e.target.value })}
                     placeholder="Add details about this resource..."
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type *</label>
                   <select
                     value={uploadData.type}
                     onChange={(e) => setUploadData({ ...uploadData, type: e.target.value as typeof uploadData.type })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="document">Document (PDF, Word, etc)</option>
                     <option value="video">Video Link</option>
@@ -366,24 +366,24 @@ const CourseResourceLibrary: React.FC = () => {
 
                 {(uploadData.type === 'video' || uploadData.type === 'link') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">URL *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL *</label>
                     <input
                       type="url"
                       value={uploadData.url}
                       onChange={(e) => setUploadData({ ...uploadData, url: e.target.value })}
                       placeholder="https://..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
                 )}
 
                 {uploadData.type === 'document' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">File *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File *</label>
                     <input
                       type="file"
                       onChange={(e) => setUploadData({ ...uploadData, file: e.target.files?.[0] || null })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                     />
                   </div>
                 )}
@@ -393,7 +393,7 @@ const CourseResourceLibrary: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowUploadForm(false)}
-                  className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm sm:text-base"
+                  className="flex-1 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 font-medium text-sm sm:text-base"
                 >
                   Cancel
                 </button>
@@ -411,20 +411,20 @@ const CourseResourceLibrary: React.FC = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-            <p className="text-xs sm:text-sm text-gray-600">Total Resources</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{resources.length}</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Resources</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{resources.length}</p>
           </div>
 
           <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-            <p className="text-xs sm:text-sm text-gray-600">Total Downloads</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Downloads</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">
               {resources.reduce((sum, r) => sum + r.downloads, 0)}
             </p>
           </div>
 
           <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6">
-            <p className="text-xs sm:text-sm text-gray-600">Most Popular</p>
-            <p className="text-sm font-semibold text-gray-900 mt-1 truncate">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Most Popular</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1 truncate">
               {resources.sort((a, b) => b.downloads - a.downloads)[0]?.title || '-'}
             </p>
           </div>
@@ -432,13 +432,13 @@ const CourseResourceLibrary: React.FC = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg sm:rounded-xl shadow p-4 sm:p-6 mb-6 sm:mb-8">
-          <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Filter className="w-5 h-5" />
             Filters
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Search</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -446,17 +446,17 @@ const CourseResourceLibrary: React.FC = () => {
                   value={filter.searchTerm}
                   onChange={(e) => setFilter({ ...filter, searchTerm: e.target.value })}
                   placeholder="Search resources..."
-                  className="w-full pl-9 pr-3 sm:pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-9 pr-3 sm:pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Type</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
               <select
                 value={filter.type}
                 onChange={(e) => setFilter({ ...filter, type: e.target.value as typeof filter.type })}
-                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="all">All Types</option>
                 <option value="document">Document</option>
@@ -467,11 +467,11 @@ const CourseResourceLibrary: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sort By</label>
               <select
                 value={filter.sortBy}
                 onChange={(e) => setFilter({ ...filter, sortBy: e.target.value as typeof filter.sortBy })}
-                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="recent">Most Recent</option>
                 <option value="popular">Most Popular</option>
@@ -489,22 +489,22 @@ const CourseResourceLibrary: React.FC = () => {
         ) : (
           <div className="space-y-3">
             {filteredResources.length === 0 ? (
-              <div className="p-12 text-center bg-white rounded-lg">
+              <div className="p-12 text-center bg-white dark:bg-gray-900 rounded-lg">
                 <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600">No resources found</p>
+                <p className="text-gray-600 dark:text-gray-400">No resources found</p>
               </div>
             ) : (
               filteredResources.map((resource) => (
-                <div key={resource.id} className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                <div key={resource.id} className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div className={`p-2 sm:p-3 rounded-lg flex-shrink-0 ${getTypeColor(resource.type)}`}>
                         {getTypeIcon(resource.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm sm:text-base font-bold text-gray-900 break-words">{resource.title}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-1">{resource.description}</p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-2">
+                        <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white break-words">{resource.title}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-1">{resource.description}</p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
                           <span className="flex items-center gap-1">
                             <User className="w-3 h-3" />
                             {resource.uploaded_by}
