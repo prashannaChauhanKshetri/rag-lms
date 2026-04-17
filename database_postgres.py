@@ -415,14 +415,29 @@ def list_documents(chatbot_id: str) -> List[Dict]:
 
 # --- Conversation Operations ---
 
-def log_conversation(conv_id: str, chatbot_id: str, question: str, answer: str, sources: List[Dict]):
+def log_conversation(conv_id: str, chatbot_id: str, question: str, answer: str, sources: List[Dict], user_id: str = None):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO conversations (id, chatbot_id, question, answer, sources) 
-                   VALUES (%s, %s, %s, %s, %s)""",
-                (conv_id, chatbot_id, question, answer, json.dumps(sources))
+                """INSERT INTO conversations (id, chatbot_id, question, answer, sources, user_id)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (conv_id, chatbot_id, question, answer, json.dumps(sources), user_id)
             )
+
+def get_user_conversations(user_id: str, chatbot_id: str, limit: int = 50, offset: int = 0) -> List[Dict]:
+    """Fetch conversation history for a specific student + chatbot pair, newest first."""
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute(
+                """SELECT id, chatbot_id, question, answer, timestamp
+                   FROM conversations
+                   WHERE user_id = %s AND chatbot_id = %s
+                   ORDER BY timestamp DESC
+                   LIMIT %s OFFSET %s""",
+                (user_id, chatbot_id, limit, offset)
+            )
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
 
 def get_conversations(chatbot_id: str, limit: int = 50) -> List[Dict]:
     with get_db_connection() as conn:

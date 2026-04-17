@@ -9,6 +9,7 @@ from vectorstore_postgres import add_documents, delete_chatbot
 from utils import process_pdf
 from models import get_embed_model
 import utils_auth
+import utils_redis as rc
 
 router = APIRouter(prefix="/chatbots", tags=["Chatbots"], dependencies=[Depends(utils_auth.get_current_user)])
 
@@ -66,7 +67,8 @@ async def delete_chatbot_endpoint(chatbot_id: str, user=Depends(utils_auth.get_c
     """Delete a chatbot and its data (Admin only)"""
     _require_admin(user)
     db.delete_chatbot(chatbot_id)
-    delete_chatbot(chatbot_id)  # Delete vector store
+    delete_chatbot(chatbot_id)
+    rc.cache_delete_pattern(f"rag:{chatbot_id}:*")
     return {"message": "Chatbot deleted"}
 
 @router.post("/{chatbot_id}/upload")
@@ -123,10 +125,19 @@ async def upload_document(chatbot_id: str, file: UploadFile = File(...), user=De
     
     # Add to vectorstore
     res = add_documents(chatbot_id, emb, metadatas)
-    
+
     # Record in DB
     db.add_document(chatbot_id, file.filename, len(texts))
-    
+
+    # Invalidate all RAG response cache entries for this chatbot —
+    # content changed so cached answers may be stale
+    invalidated = rc.cache_delete_pattern(f"rag:{chatbot_id}:*")
+    if invalidated:
+        import logging
+        logging.getLogger("rag-chat").info(
+            f"Invalidated {invalidated} RAG cache entries for chatbot {chatbot_id}"
+        )
+
     return {
         "message": "Document uploaded and ingested",
         "filename": file.filename,
