@@ -80,6 +80,7 @@ def get_current_user_from_token(token: str) -> Optional[Dict]:
 async def get_current_user(request: Request):
     """
     Dependency to get current user from cookie.
+    Checks Redis session cache first; falls back to JWT decode on miss.
     Usage: user = Depends(get_current_user)
     """
     token = request.cookies.get("access_token")
@@ -88,14 +89,34 @@ async def get_current_user(request: Request):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
         )
-    
+
+    # ── Redis session cache: skip JWT decode if we already validated this token ──
+    try:
+        import utils_redis as rc
+        cached = rc.cache_get(rc.session_key(token))
+        if cached:
+            return cached
+    except Exception:
+        pass  # Redis down — fall through to JWT decode
+
     user_data = get_current_user_from_token(token)
     if not user_data:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired session"
         )
-    
+
+    # Cache the decoded payload for the remaining lifetime of the token
+    try:
+        import utils_redis as rc
+        import time
+        exp = user_data.get("exp", 0)
+        remaining_ttl = int(exp - time.time())
+        if remaining_ttl > 60:
+            rc.cache_set(rc.session_key(token), user_data, remaining_ttl)
+    except Exception:
+        pass
+
     return user_data
 # ============================================
 # Authorization Helper Functions

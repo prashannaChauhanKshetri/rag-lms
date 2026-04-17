@@ -324,8 +324,15 @@ async def login(response: Response, request: Request, login_data: LoginRequest):
     return result
 
 @router.post("/logout")
-async def logout():
-    """Logout endpoint"""
+async def logout(request: Request):
+    """Logout endpoint — clears cookie and invalidates Redis session cache."""
+    token = request.cookies.get("access_token")
+    if token:
+        try:
+            import utils_redis as rc
+            rc.cache_delete(rc.session_key(token))
+        except Exception:
+            pass
     response = JSONResponse({"message": "Logged out successfully"})
     response.delete_cookie("access_token")
     return response
@@ -343,16 +350,24 @@ async def get_session(request: Request):
     if not user_data:
         raise HTTPException(status_code=401, detail="Invalid session")
     
-    # Return user info (mapping 'sub' back to 'user_id' for frontend compatibility)
-    # Also fetch fresh display_id from DB
-    user_record = db.get_user_by_id(user_data.get("sub"))
+    # Fetch fresh user record for fields not stored in the JWT
+    user_record = db.get_user_by_id(user_data.get("sub")) or {}
+    institution_name = ""
+    institution_id = user_data.get("institution_id") or user_record.get("institution_id", "")
+    if institution_id:
+        inst = db.get_institution(institution_id)
+        if inst:
+            institution_name = inst.get("name", "")
     return {
         "user_id": user_data.get("sub"),
-        "display_id": (user_record or {}).get("display_id") or user_data.get("sub", "")[:8],
+        "id": user_data.get("sub"),
+        "display_id": user_record.get("display_id") or user_data.get("sub", "")[:8],
         "username": user_data.get("username"),
         "role": user_data.get("role"),
         "full_name": user_data.get("full_name"),
-        "institution_id": user_data.get("institution_id")
+        "email": user_record.get("email", ""),
+        "institution_id": institution_id,
+        "institution_name": institution_name,
     }
 
 
