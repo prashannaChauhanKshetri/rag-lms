@@ -11,6 +11,7 @@ import {
   ChevronRight,
   GraduationCap,
   BarChart2,
+  Search,
 } from 'lucide-react';
 
 interface EnhancedSectionManagerProps {
@@ -57,6 +58,8 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sectionSearch, setSectionSearch] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
 
   useEffect(() => {
     fetchSections();
@@ -81,6 +84,7 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
   const handleSectionSelect = (section: Section) => {
     setSelectedSection(section);
     setEnrolledStudents((section.students as unknown as EnrolledStudent[]) || []);
+    setStudentSearch('');
     if (onSectionSelect) onSectionSelect(section.id, section.name);
   };
 
@@ -149,7 +153,28 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
 
         {/* ── LEFT: Section cards ── */}
         <div className="space-y-3">
-          {sections.map((section) => {
+          {/* Section search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={sectionSearch}
+              onChange={(e) => setSectionSearch(e.target.value)}
+              placeholder="Search classes..."
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white dark:placeholder-gray-400"
+            />
+          </div>
+          {sections
+            .filter((s) => {
+              if (!sectionSearch) return true;
+              const q = sectionSearch.toLowerCase();
+              return (
+                s.name.toLowerCase().includes(q) ||
+                (s.class_name || '').toLowerCase().includes(q) ||
+                (s.description || '').toLowerCase().includes(q)
+              );
+            })
+            .map((section) => {
             const students = (section.students as unknown as EnrolledStudent[]) || [];
             const avg =
               students.length > 0
@@ -274,6 +299,20 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                   </span>
                 </div>
 
+                {/* Student search */}
+                {enrolledStudents.length > 0 && (
+                  <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 relative">
+                    <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={studentSearch}
+                      onChange={(e) => setStudentSearch(e.target.value)}
+                      placeholder="Search students..."
+                      className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white dark:placeholder-gray-400"
+                    />
+                  </div>
+                )}
+
                 {enrolledStudents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-3">
                     <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
@@ -283,7 +322,18 @@ export function EnhancedSectionManager({ onSectionSelect }: EnhancedSectionManag
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {enrolledStudents.map((student, idx) => {
+                    {enrolledStudents
+                      .filter((s) => {
+                        if (!studentSearch) return true;
+                        const q = studentSearch.toLowerCase();
+                        return (
+                          (s.full_name || '').toLowerCase().includes(q) ||
+                          s.username.toLowerCase().includes(q) ||
+                          (s.email || '').toLowerCase().includes(q) ||
+                          (s.roll_number || '').toLowerCase().includes(q)
+                        );
+                      })
+                      .map((student, idx) => {
                       const atColor = getAttendanceColor(student.attendance_percentage);
                       return (
                         <div

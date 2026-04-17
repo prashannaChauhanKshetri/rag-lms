@@ -14,6 +14,7 @@ import {
   Microscope,
   Languages,
   Monitor,
+  Search,
 } from 'lucide-react';
 
 interface EnrolledClass {
@@ -151,6 +152,7 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
   const [classes, setClasses] = useState<EnrolledClass[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchSections = async () => {
@@ -192,13 +194,27 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Page header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Subjects</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {classes.length === 0
-            ? 'No enrolled subjects'
-            : `You have ${classes.length} active enrollment${classes.length === 1 ? '' : 's'} this semester`}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Subjects</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {classes.length === 0
+              ? 'No enrolled subjects'
+              : `You have ${classes.length} active enrollment${classes.length === 1 ? '' : 's'} this semester`}
+          </p>
+        </div>
+        {classes.length > 0 && (
+          <div className="relative sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search subjects..."
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white dark:placeholder-gray-400"
+            />
+          </div>
+        )}
       </div>
 
       {classes.length === 0 ? (
@@ -213,7 +229,18 @@ export function EnrolledSections({ onSectionSelect }: EnrolledSectionsProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {classes.map((item, idx) => {
+          {classes
+            .filter((item) => {
+              if (!searchQuery) return true;
+              const q = searchQuery.toLowerCase();
+              return (
+                item.subject_name.toLowerCase().includes(q) ||
+                item.class_name.toLowerCase().includes(q) ||
+                item.section_name.toLowerCase().includes(q) ||
+                (item.teacher_name || '').toLowerCase().includes(q)
+              );
+            })
+            .map((item, idx) => {
             const theme = CARD_THEMES[idx % CARD_THEMES.length];
             const SubjectIcon = SUBJECT_ICONS[idx % SUBJECT_ICONS.length];
             const code = generateSubjectCode(item.subject_name, item.section_name);

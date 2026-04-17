@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Mail, Phone, BookOpen, Award, MapPin, Clock, Edit2 } from 'lucide-react';
+import { Users, Mail, Phone, BookOpen, Award, MapPin, Clock, Edit2, Search } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface Teacher {
@@ -26,6 +26,7 @@ export function AdminTeacherManager() {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Edit form state
   const [editData, setEditData] = useState({
@@ -91,12 +92,24 @@ export function AdminTeacherManager() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg shadow-sm">
+    <div className="w-full max-w-7xl mx-auto p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 rounded-lg shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <Users className="w-8 h-8 text-purple-600" />
-        <h1 className="text-3xl font-bold text-slate-800">Teacher Management</h1>
-        <span className="ml-auto text-sm text-slate-600">Total: {teachers.length} teachers</span>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Teacher Management</h1>
+        <span className="ml-auto text-sm text-slate-600 dark:text-gray-400">Total: {teachers.length} teachers</span>
+      </div>
+
+      {/* Search */}
+      <div className="mb-4 relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by name, department, or email..."
+          className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+        />
       </div>
 
       {error && (
@@ -108,20 +121,31 @@ export function AdminTeacherManager() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Teachers List */}
         <div className="lg:col-span-1">
-          <h2 className="text-xl font-semibold text-slate-800 mb-4">Teachers List</h2>
+          <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Teachers List</h2>
           {isLoading ? (
             <p className="text-slate-500">Loading teachers...</p>
           ) : teachers.length === 0 ? (
-            <p className="text-slate-500 text-sm">No teachers found</p>
+            <p className="text-slate-500 dark:text-gray-400 dark:text-gray-500 text-sm">No teachers found</p>
           ) : (
             <div className="space-y-2 max-h-[600px] overflow-y-auto">
-              {teachers.map((teacher) => (
+              {teachers
+                .filter((t) => {
+                  if (!searchQuery) return true;
+                  const q = searchQuery.toLowerCase();
+                  const name = `${t.first_name || ''} ${t.last_name || ''} ${t.full_name || ''} ${t.username}`.toLowerCase();
+                  return (
+                    name.includes(q) ||
+                    (t.department || '').toLowerCase().includes(q) ||
+                    (t.email || '').toLowerCase().includes(q)
+                  );
+                })
+                .map((teacher) => (
                 <div
                   key={teacher.user_id}
                   onClick={() => handleSelectTeacher(teacher)}
                   className={`p-3 rounded-lg cursor-pointer transition-all ${selectedTeacher?.user_id === teacher.user_id
                       ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-white text-slate-800 border border-slate-200 hover:border-purple-400'
+                      : 'bg-white text-slate-800 dark:text-white border border-slate-200 dark:border-gray-700 hover:border-purple-400'
                     }`}
                 >
                   <p className="font-medium">
@@ -144,12 +168,12 @@ export function AdminTeacherManager() {
         {/* Teacher Details */}
         <div className="lg:col-span-2">
           {selectedTeacher ? (
-            <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+            <div className="bg-white rounded-lg border border-slate-200 dark:border-gray-700 shadow-sm">
               {/* Header */}
-              <div className="p-6 border-b border-slate-200">
+              <div className="p-6 border-b border-slate-200 dark:border-gray-700">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-800">
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
                       {selectedTeacher.first_name && selectedTeacher.last_name
                         ? `${selectedTeacher.first_name} ${selectedTeacher.last_name}`
                         : selectedTeacher.full_name || selectedTeacher.username}
@@ -158,7 +182,7 @@ export function AdminTeacherManager() {
                       {selectedTeacher.display_id && (
                         <span className="text-xs font-bold font-mono bg-purple-100 text-purple-700 px-2 py-0.5 rounded">{selectedTeacher.display_id}</span>
                       )}
-                      <p className="text-sm text-slate-600">@{selectedTeacher.username}</p>
+                      <p className="text-sm text-slate-600 dark:text-gray-400">@{selectedTeacher.username}</p>
                     </div>
                   </div>
                   <button
@@ -171,22 +195,22 @@ export function AdminTeacherManager() {
               </div>
 
               {/* Contact Information */}
-              <div className="p-6 border-b border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-700 mb-4 uppercase tracking-wide">Contact Information</h4>
+              <div className="p-6 border-b border-slate-200 dark:border-gray-700">
+                <h4 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4 uppercase tracking-wide">Contact Information</h4>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-slate-400" />
                     <div>
-                      <p className="text-xs text-slate-500 uppercase">Email</p>
-                      <p className="text-slate-800">{selectedTeacher.email || 'N/A'}</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Email</p>
+                      <p className="text-slate-800 dark:text-white">{selectedTeacher.email || 'N/A'}</p>
                     </div>
                   </div>
                   {selectedTeacher.phone && (
                     <div className="flex items-center gap-3">
                       <Phone className="w-5 h-5 text-slate-400" />
                       <div>
-                        <p className="text-xs text-slate-500 uppercase">Phone</p>
-                        <p className="text-slate-800">{selectedTeacher.phone}</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Phone</p>
+                        <p className="text-slate-800 dark:text-white">{selectedTeacher.phone}</p>
                       </div>
                     </div>
                   )}
@@ -194,43 +218,43 @@ export function AdminTeacherManager() {
               </div>
 
               {/* Professional Information */}
-              <div className="p-6 border-b border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-700 mb-4 uppercase tracking-wide">Professional Details</h4>
+              <div className="p-6 border-b border-slate-200 dark:border-gray-700">
+                <h4 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-4 uppercase tracking-wide">Professional Details</h4>
                 {!editMode ? (
                   <div className="space-y-3">
                     {selectedTeacher.department && (
                       <div className="flex items-start gap-3">
-                        <BookOpen className="w-5 h-5 text-slate-400 mt-1" />
+                        <BookOpen className="w-5 h-5 text-slate-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1" />
                         <div>
-                          <p className="text-xs text-slate-500 uppercase">Department</p>
-                          <p className="text-slate-800">{selectedTeacher.department}</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Department</p>
+                          <p className="text-slate-800 dark:text-white">{selectedTeacher.department}</p>
                         </div>
                       </div>
                     )}
                     {selectedTeacher.qualifications && (
                       <div className="flex items-start gap-3">
-                        <Award className="w-5 h-5 text-slate-400 mt-1" />
+                        <Award className="w-5 h-5 text-slate-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1" />
                         <div>
-                          <p className="text-xs text-slate-500 uppercase">Qualifications</p>
-                          <p className="text-slate-800">{selectedTeacher.qualifications}</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Qualifications</p>
+                          <p className="text-slate-800 dark:text-white">{selectedTeacher.qualifications}</p>
                         </div>
                       </div>
                     )}
                     {selectedTeacher.years_experience && (
                       <div className="flex items-start gap-3">
-                        <Clock className="w-5 h-5 text-slate-400 mt-1" />
+                        <Clock className="w-5 h-5 text-slate-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1" />
                         <div>
-                          <p className="text-xs text-slate-500 uppercase">Experience</p>
-                          <p className="text-slate-800">{selectedTeacher.years_experience} years</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Experience</p>
+                          <p className="text-slate-800 dark:text-white">{selectedTeacher.years_experience} years</p>
                         </div>
                       </div>
                     )}
                     {selectedTeacher.office_location && (
                       <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-slate-400 mt-1" />
+                        <MapPin className="w-5 h-5 text-slate-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1" />
                         <div>
-                          <p className="text-xs text-slate-500 uppercase">Office Location</p>
-                          <p className="text-slate-800">{selectedTeacher.office_location}</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Office Location</p>
+                          <p className="text-slate-800 dark:text-white">{selectedTeacher.office_location}</p>
                         </div>
                       </div>
                     )}
@@ -243,14 +267,14 @@ export function AdminTeacherManager() {
                         placeholder="First Name"
                         value={editData.first_name}
                         onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
-                        className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="px-3 py-2 border border-slate-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                       <input
                         type="text"
                         placeholder="Last Name"
                         value={editData.last_name}
                         onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
-                        className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="px-3 py-2 border border-slate-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
                     <input
@@ -258,35 +282,35 @@ export function AdminTeacherManager() {
                       placeholder="Phone"
                       value={editData.phone}
                       onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                     <input
                       type="text"
                       placeholder="Department"
                       value={editData.department}
                       onChange={(e) => setEditData({ ...editData, department: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                     <input
                       type="text"
                       placeholder="Qualifications"
                       value={editData.qualifications}
                       onChange={(e) => setEditData({ ...editData, qualifications: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                     <input
                       type="number"
                       placeholder="Years of Experience"
                       value={editData.years_experience}
                       onChange={(e) => setEditData({ ...editData, years_experience: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                     <textarea
                       placeholder="Bio"
                       value={editData.bio}
                       onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
                       rows={3}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                     <div className="flex gap-2">
                       <button
@@ -297,7 +321,7 @@ export function AdminTeacherManager() {
                       </button>
                       <button
                         onClick={() => setEditMode(false)}
-                        className="flex-1 px-4 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400 transition-colors"
+                        className="flex-1 px-4 py-2 bg-slate-300 text-slate-700 dark:text-gray-300 rounded-lg hover:bg-slate-400 transition-colors"
                       >
                         Cancel
                       </button>
@@ -308,14 +332,14 @@ export function AdminTeacherManager() {
 
               {/* Bio */}
               {selectedTeacher.bio && !editMode && (
-                <div className="p-6 border-b border-slate-200">
-                  <h4 className="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide">Bio</h4>
-                  <p className="text-slate-700 text-sm leading-relaxed">{selectedTeacher.bio}</p>
+                <div className="p-6 border-b border-slate-200 dark:border-gray-700">
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-3 uppercase tracking-wide">Bio</h4>
+                  <p className="text-slate-700 dark:text-gray-300 text-sm leading-relaxed">{selectedTeacher.bio}</p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="bg-white p-12 rounded-lg border border-slate-200 text-center">
+            <div className="bg-white p-12 rounded-lg border border-slate-200 dark:border-gray-700 text-center">
               <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
               <p className="text-slate-500">Select a teacher to view details</p>
             </div>
