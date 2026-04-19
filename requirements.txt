@@ -1,36 +1,40 @@
-chainlit==1.0.400
-langchain==0.1.20
-langchain-community==0.0.38
-langchain-groq==0.1.4
-sentence-transformers>=2.6.0
-faiss-cpu==1.7.4
-pypdf==3.17.4
-python-dotenv==1.0.1
-tiktoken==0.5.2
+# ── Web framework ────────────────────────────────────────────────────────────
 fastapi
-uvicorn
+uvicorn[standard]
 python-multipart
+starlette
+
+# ── LLM (Groq) ───────────────────────────────────────────────────────────────
 groq
+
+# ── Embeddings + reranker (CPU-only torch installed separately in Dockerfile) ─
+sentence-transformers>=2.6.0
+
+# ── Retrieval + PDF processing ───────────────────────────────────────────────
+rank-bm25==0.2.2
+tiktoken==0.5.2
+pypdf==3.17.4
+pymupdf==1.26.6
 pytesseract
 pdf2image
 Pillow
-rank-bm25==0.2.2
-pymupdf==1.26.6
-langchain-huggingface
-ollama
-# PostgreSQL dependencies
+
+# ── PostgreSQL + pgvector ────────────────────────────────────────────────────
 psycopg2-binary>=2.9.9
 pgvector>=0.2.4
 
-# JWT Authentication
+# ── Auth ─────────────────────────────────────────────────────────────────────
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt==4.0.1
-# Email validation
 email-validator>=2.0.0
 
-# Redis caching
+# ── Caching + rate limiting ──────────────────────────────────────────────────
 redis>=5.0.0
+slowapi>=0.1.9
 
-# Testing
+# ── Config ───────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1
+
+# ── Testing ──────────────────────────────────────────────────────────────────
 pytest>=8.0.0

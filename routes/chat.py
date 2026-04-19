@@ -2,7 +2,7 @@ import os
 import uuid
 import numpy as np
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Form, Depends
+from fastapi import APIRouter, HTTPException, Form, Depends, Request
 from pydantic import BaseModel
 import database_postgres as db
 import vectorstore_postgres as vs
@@ -11,6 +11,7 @@ import utils_auth
 import utils_redis as rc
 import logging
 from models import get_embed_model
+from utils_ratelimit import limiter
 
 logger = logging.getLogger("rag-chat")
 
@@ -193,9 +194,11 @@ def classify_query(question: str) -> Dict[str, Any]:
 # =============================================================================
 
 @router.post("/chatbots/{chatbot_id}/chat")
+@limiter.limit("20/minute;200/day")
 async def chat_endpoint(
+    request: Request,
     chatbot_id: str,
-    request: ChatRequest,
+    body: ChatRequest,
     user: dict = Depends(utils_auth.get_current_user),
 ):
     """Chat with a specific chatbot using hybrid retrieval with query classification."""
@@ -203,7 +206,7 @@ async def chat_endpoint(
     if not chatbot:
         raise HTTPException(status_code=404, detail="Chatbot not found")
 
-    question = request.message
+    question = body.message
     user_id = utils_auth.get_user_id(user)
 
     # ── 1. RAG Response Cache ─────────────────────────────────────────────────
@@ -236,7 +239,7 @@ async def chat_endpoint(
     # ── 3. Classify query & retrieve ─────────────────────────────────────────
     query_config = classify_query(question)
     logger.info(f"Query classified as: {query_config['query_type']} | top_k={query_config['top_k']}")
-    final_top_k = max(request.top_k, query_config["top_k"])
+    final_top_k = max(body.top_k, query_config["top_k"])
 
     section_filter = query_config.get("section_type_filter")
     hits = vs.hybrid_query(

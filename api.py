@@ -25,6 +25,9 @@ if missing_vars:
 from routes import auth, admin, chatbots, chat, instructor, student, super_admin, notifications
 from models import get_embed_model
 import database_postgres as db
+from utils_ratelimit import limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -47,6 +50,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-api")
 
 app = FastAPI(title="RAG-LMS API", lifespan=lifespan)
+
+# Rate limiting (slowapi) — attaches limiter state and the 429 handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -100,10 +107,40 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/health")
 def health():
-    return {
-        "status": "ok",
-        "service": "RAG-LMS API"
-    }
+    """Liveness + dependency check. Returns 503 if any critical dep is down."""
+    checks = {"service": "RAG-LMS API", "db": "unknown", "redis": "unknown"}
+    ok = True
+
+    # Postgres
+    try:
+        with db.get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+                cur.fetchone()
+        checks["db"] = "ok"
+    except Exception as e:
+        checks["db"] = f"error: {type(e).__name__}"
+        ok = False
+
+    # Redis (optional — app still works without it)
+    try:
+        import utils_redis as rc
+        r = rc.get_redis()
+        if r is None:
+            checks["redis"] = "unavailable"
+        else:
+            r.ping()
+            checks["redis"] = "ok"
+    except Exception as e:
+        checks["redis"] = f"error: {type(e).__name__}"
+
+    import json as _json
+    checks["status"] = "ok" if ok else "degraded"
+    return Response(
+        content=_json.dumps(checks),
+        media_type="application/json",
+        status_code=200 if ok else 503,
+    )
 
 # --- Include Routers ---
 app.include_router(auth.router)
