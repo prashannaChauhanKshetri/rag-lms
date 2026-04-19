@@ -4,9 +4,8 @@ import EnhancedLogin from './components/auth/EnhancedLogin';
 import Signup from './components/auth/Signup';
 import ResetPassword from './components/auth/ResetPassword';
 import SuperAdminDashboard from './components/admin/SuperAdminDashboard';
-import { Sidebar } from './components/shared/Sidebar';
-import { MobileNav } from './components/shared/MobileNav';
-import { Header } from './components/shared/Header';
+import { RoleShell } from './components/shared/RoleShell';
+import { LoadingState } from './components/shared/States';
 import { StudentHome } from './components/student/StudentHome';
 import { ChatInterface } from './components/student/ChatInterface';
 import {
@@ -50,6 +49,7 @@ import { StudentSettings } from './components/student/StudentSettings';
 import { InstructorSettings } from './components/instructor/InstructorSettings';
 import { AdminSettings } from './components/admin/AdminSettings';
 import { SuperAdminSettings } from './components/admin/SuperAdminSettings';
+import type { ShellTab, ShellUser } from './components/shared/RoleShell';
 
 interface User {
   id: string;
@@ -71,10 +71,9 @@ interface AuthUser {
   institution_name?: string;
 }
 
-const studentTabs = [
+const studentTabs: ShellTab[] = [
   { id: 'home', label: 'Home', icon: HomeIcon },
   { id: 'enrolled-sections', label: 'Enrolled Subject', icon: BookOpen },
-  // { id: 'course-overview', label: 'Course Details', icon: LayoutDashboard },
   { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
   { id: 'assignment-manager', label: 'My Submissions', icon: CheckSquare },
   { id: 'quiz', label: 'Quizzes', icon: Brain },
@@ -82,7 +81,7 @@ const studentTabs = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-const instructorTabs = [
+const instructorTabs: ShellTab[] = [
   { id: 'home', label: 'Home', icon: HomeIcon },
   { id: 'sections', label: 'My Classes', icon: Users },
   { id: 'attendance', label: 'Attendance', icon: Calendar },
@@ -96,7 +95,7 @@ const instructorTabs = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-const adminTabs = [
+const adminTabs: ShellTab[] = [
   { id: 'home', label: 'Dashboard', icon: HomeIcon },
   { id: 'courses', label: 'Course Bots', icon: Brain },
   { id: 'classes', label: 'Classes', icon: BookOpen },
@@ -116,13 +115,29 @@ interface SessionResponse {
   institution_name?: string;
 }
 
+function toShellUser(user: User): ShellUser {
+  return {
+    id: user.id,
+    full_name: user.full_name,
+    role: user.role,
+    email: user.email,
+    institution: user.institution,
+    institution_name: user.institution_name,
+  };
+}
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('home');
   const [isSignupMode, setIsSignupMode] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
 
-  // On mount: restore session from HTTP-only cookie if still valid
+  // Shared navigation state for views that hand-off IDs between tabs.
+  const [selectedCourseId, setSelectedCourseId] = useState<string | undefined>(undefined);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+
+  // On mount: restore session from HTTP-only cookie if still valid.
   useEffect(() => {
     api.get<SessionResponse>('/auth/session')
       .then((data) => {
@@ -136,15 +151,10 @@ function App() {
           institution_name: data.institution_name || data.institution_id,
         });
       })
-      .catch(() => {
-        // Cookie absent or expired — stay on login page
-      })
-      .finally(() => {
-        setSessionChecked(true);
-      });
+      .catch(() => {/* cookie absent or expired — stay on login */})
+      .finally(() => setSessionChecked(true));
   }, []);
 
-  // Detect password-reset token in URL (from email link: ?token=xxx)
   const resetToken = new URLSearchParams(window.location.search).get('token');
   const isResetFlow = !!resetToken && !user;
 
@@ -152,7 +162,7 @@ function App() {
     setUser({
       id: userData.id,
       username: userData.username,
-      role: userData.role as 'student' | 'instructor' | 'admin' | 'super_admin',
+      role: userData.role as User['role'],
       full_name: userData.full_name || userData.username,
       email: userData.email,
       institution: userData.institution_id,
@@ -165,298 +175,257 @@ function App() {
     setUser(null);
   };
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string | undefined>(undefined);
-  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-
   const handleNavigate = (tabId: string, courseId?: string) => {
     setActiveTab(tabId);
-    if (courseId) {
-      setSelectedCourseId(courseId);
-    }
+    if (courseId) setSelectedCourseId(courseId);
   };
 
-  const renderContent = () => {
-    // Wait for cookie/session check before rendering anything
-    if (!sessionChecked) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-          <div className="text-center">
-            <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Loading session…</p>
-          </div>
-        </div>
-      );
-    }
+  /* ---------- Session loading / pre-auth screens ---------- */
 
-    // Password reset flow — token present in URL from email link
-    if (isResetFlow) {
-      return (
-        <ResetPassword
-          token={resetToken!}
-          onBackToLogin={() => window.history.replaceState({}, '', '/')}
-        />
-      );
-    }
+  if (!sessionChecked) {
+    return <LoadingState fullHeight label="Loading session…" />;
+  }
 
-    // Show signup or login based on mode
-    if (!user) {
-      if (isSignupMode) {
-        return (
-          <Signup onBackToLogin={() => setIsSignupMode(false)} />
-        );
-      }
-      return (
-        <EnhancedLogin
-          onLoginSuccess={handleLoginSuccess}
-          onSignupClick={() => setIsSignupMode(true)}
-        />
-      );
-    }
-
-    if (user.role === 'student') {
-      return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden transition-colors duration-200">
-          <Sidebar
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            tabs={studentTabs}
-          />
-
-          <main className="flex-1 flex flex-col h-screen overflow-hidden">
-            <Header
-              userName={user.full_name}
-              userRole={user.role}
-              institutionName={user.institution_name || user.institution || 'Gyana Learning'}
-              userEmail={user.email}
-              userId={user.id}
-              canEditProfile={true}
-              onSettingsClick={() => setActiveTab('settings')}
-              onNavigate={handleNavigate}
-              onLogout={handleLogout}
-            />
-
-            <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
-              {activeTab === 'home' && <StudentHome onNavigate={handleNavigate} />}
-              {activeTab === 'enrolled-sections' && (
-                <EnrolledSections
-                  onSectionSelect={(sectionId, _, chatbotId) => {
-                    setSelectedSectionId(sectionId);
-                    setSelectedSubjectId(chatbotId || null);
-                    setActiveTab('course-overview');
-                  }}
-                />
-              )}
-              {activeTab === 'course-overview' && selectedSectionId && (
-                <SectionOverview
-                  sectionId={selectedSectionId}
-                  chatbotId={selectedSubjectId || undefined}
-                />
-              )}
-              {activeTab === 'chat' && (
-                <ChatInterface
-                  courseId={selectedCourseId}
-                  onNavigate={handleNavigate}
-                />
-              )}
-              {activeTab === 'assignment-manager' && <StudentAssignmentManager />}
-              {activeTab === 'flashcards' && <StudentFlashcards />}
-              {activeTab === 'quiz' && <StudentQuizzes />}
-              {activeTab === 'settings' && (
-                <StudentSettings
-                  user={{
-                    id: user.id,
-                    username: user.username,
-                    full_name: user.full_name,
-                    email: user.email,
-                    role: user.role,
-                    institution_name: user.institution_name,
-                  }}
-                  onLogout={handleLogout}
-                />
-              )}
-            </div>
-          </main>
-
-          <MobileNav
-            tabs={studentTabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        </div>
-      );
-    }
-
-
-    if (user.role === 'instructor') {
-      return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden transition-colors duration-200">
-          <Sidebar
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            tabs={instructorTabs}
-          />
-          <main className="flex-1 flex flex-col h-screen overflow-hidden">
-            <Header
-              userName={user.full_name}
-              userRole={user.role}
-              institutionName={user.institution_name || user.institution || 'Gyana Learning'}
-              userEmail={user.email}
-              userId={user.id}
-              canEditProfile={true}
-              onSettingsClick={() => setActiveTab('settings')}
-              onNavigate={handleNavigate}
-              onLogout={handleLogout}
-            />
-            <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
-              {activeTab === 'home' && <InstructorHome user={user} onNavigate={handleNavigate} />}
-              {activeTab === 'sections' && (
-                <EnhancedSectionManager
-                  onSectionSelect={(sectionId) => {
-                    setSelectedSectionId(sectionId);
-                  }}
-                />
-              )}
-
-              {activeTab === 'attendance-report' && (
-                <AttendanceReportView />
-              )}
-              {activeTab === 'attendance' && <AttendanceManager sectionId={selectedSectionId || ""} />}
-              {activeTab === 'quizzes' && <QuizCreator />}
-              {activeTab === 'quiz-review' && <QuizReviewManager />}
-              {activeTab === 'flashcards' && <FlashcardManager />}
-              {activeTab === 'lesson-plans' && <LessonPlanner />}
-              {activeTab === 'assignments' && <AssignmentManager />}
-              {activeTab === 'analytics' && <AnalyticsDashboard />}
-              {activeTab === 'settings' && (
-                <InstructorSettings
-                  user={{
-                    id: user.id,
-                    username: user.username,
-                    full_name: user.full_name,
-                    email: user.email,
-                    role: user.role,
-                    institution_name: user.institution_name,
-                  }}
-                  onLogout={handleLogout}
-                />
-              )}
-            </div>
-          </main>
-          <MobileNav
-            tabs={instructorTabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        </div>
-      );
-    }
-
-    // Super Admin Dashboard
-    if (user.role === 'super_admin') {
-      if (activeTab === 'settings') {
-        return (
-          <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden transition-colors duration-200">
-            <main className="flex-1 flex flex-col h-screen overflow-hidden">
-              <Header
-                userName={user.full_name}
-                userRole={user.role}
-                institutionName={user.institution_name || user.institution || 'Gyana Learning'}
-                userEmail={user.email}
-                userId={user.id}
-                canEditProfile={true}
-                onSettingsClick={() => setActiveTab('settings')}
-                onLogout={handleLogout}
-              />
-              <div className="flex-1 overflow-y-auto p-4 lg:p-8">
-                <SuperAdminSettings
-                  user={{
-                    id: user.id,
-                    username: user.username,
-                    full_name: user.full_name,
-                    email: user.email,
-                    role: user.role,
-                  }}
-                  onLogout={handleLogout}
-                />
-              </div>
-            </main>
-          </div>
-        );
-      }
-      return <SuperAdminDashboard />;
-    }
-
-    // Admin Dashboard
-    if (user.role === 'admin') {
-      return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden transition-colors duration-200">
-          <Sidebar
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            tabs={adminTabs}
-          />
-          <main className="flex-1 flex flex-col h-screen overflow-hidden">
-            <Header
-              userName={user.full_name}
-              userRole={user.role}
-              institutionName={user.institution_name || user.institution || 'Gyana Learning'}
-              userEmail={user.email}
-              userId={user.id}
-              canEditProfile={true}
-              onSettingsClick={() => setActiveTab('settings')}
-              onNavigate={handleNavigate}
-              onLogout={handleLogout}
-            />
-            <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-24 lg:pb-8">
-              {activeTab === 'home' && (
-                <AdminDashboard onNavigate={handleNavigate} />
-              )}
-              {activeTab === 'teachers' && <AdminTeacherManager />}
-              {activeTab === 'classes' && <AdminClassManager />}
-              {activeTab === 'courses' && <AdminCourseManager />}
-              {activeTab === 'enrollments' && <AdminEnrollmentCenter />}
-              {activeTab === 'settings' && (
-                <AdminSettings
-                  user={{
-                    id: user.id,
-                    username: user.username,
-                    full_name: user.full_name,
-                    email: user.email,
-                    role: user.role,
-                    institution_name: user.institution_name,
-                    institution: user.institution,
-                  }}
-                  onLogout={handleLogout}
-                />
-              )}
-            </div>
-          </main>
-          <MobileNav
-            tabs={adminTabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        </div>
-      );
-    }
-
-    // Fallback for other roles for now
+  if (isResetFlow) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 dark:text-white flex flex-col items-center justify-center p-4 transition-colors duration-200">
-        <h1 className="text-2xl font-bold mb-4">Welcome, {user.full_name}!</h1>
-        <p className="text-gray-600 dark:text-gray-300 mb-8">Dashboard for {user.role} is under construction.</p>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-        >
-          Logout
-        </button>
-      </div>
+      <ResetPassword
+        token={resetToken!}
+        onBackToLogin={() => window.history.replaceState({}, '', '/')}
+      />
     );
-  };
+  }
 
-  return renderContent();
+  if (!user) {
+    if (isSignupMode) {
+      return <Signup onBackToLogin={() => setIsSignupMode(false)} />;
+    }
+    return (
+      <EnhancedLogin
+        onLoginSuccess={handleLoginSuccess}
+        onSignupClick={() => setIsSignupMode(true)}
+      />
+    );
+  }
+
+  /* ---------- Per-role content routing ---------- */
+
+  const shellUser = toShellUser(user);
+  const onSettingsClick = () => setActiveTab('settings');
+
+  if (user.role === 'student') {
+    const content = (() => {
+      switch (activeTab) {
+        case 'home':
+          return <StudentHome onNavigate={handleNavigate} />;
+        case 'enrolled-sections':
+          return (
+            <EnrolledSections
+              onSectionSelect={(sectionId, _, chatbotId) => {
+                setSelectedSectionId(sectionId);
+                setSelectedSubjectId(chatbotId || null);
+                setActiveTab('course-overview');
+              }}
+            />
+          );
+        case 'course-overview':
+          return selectedSectionId ? (
+            <SectionOverview
+              sectionId={selectedSectionId}
+              chatbotId={selectedSubjectId || undefined}
+            />
+          ) : null;
+        case 'chat':
+          return <ChatInterface courseId={selectedCourseId} onNavigate={handleNavigate} />;
+        case 'assignment-manager':
+          return <StudentAssignmentManager />;
+        case 'flashcards':
+          return <StudentFlashcards />;
+        case 'quiz':
+          return <StudentQuizzes />;
+        case 'settings':
+          return (
+            <StudentSettings
+              user={{
+                id: user.id,
+                username: user.username,
+                full_name: user.full_name,
+                email: user.email,
+                role: user.role,
+                institution_name: user.institution_name,
+              }}
+              onLogout={handleLogout}
+            />
+          );
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <RoleShell
+        user={shellUser}
+        tabs={studentTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onNavigate={handleNavigate}
+        onSettingsClick={onSettingsClick}
+        onLogout={handleLogout}
+      >
+        {content}
+      </RoleShell>
+    );
+  }
+
+  if (user.role === 'instructor') {
+    const content = (() => {
+      switch (activeTab) {
+        case 'home':
+          return <InstructorHome user={user} onNavigate={handleNavigate} />;
+        case 'sections':
+          return (
+            <EnhancedSectionManager
+              onSectionSelect={(sectionId) => setSelectedSectionId(sectionId)}
+            />
+          );
+        case 'attendance-report':
+          return <AttendanceReportView />;
+        case 'attendance':
+          return <AttendanceManager sectionId={selectedSectionId || ''} />;
+        case 'quizzes':
+          return <QuizCreator />;
+        case 'quiz-review':
+          return <QuizReviewManager />;
+        case 'flashcards':
+          return <FlashcardManager />;
+        case 'lesson-plans':
+          return <LessonPlanner />;
+        case 'assignments':
+          return <AssignmentManager />;
+        case 'analytics':
+          return <AnalyticsDashboard />;
+        case 'settings':
+          return (
+            <InstructorSettings
+              user={{
+                id: user.id,
+                username: user.username,
+                full_name: user.full_name,
+                email: user.email,
+                role: user.role,
+                institution_name: user.institution_name,
+              }}
+              onLogout={handleLogout}
+            />
+          );
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <RoleShell
+        user={shellUser}
+        tabs={instructorTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onNavigate={handleNavigate}
+        onSettingsClick={onSettingsClick}
+        onLogout={handleLogout}
+      >
+        {content}
+      </RoleShell>
+    );
+  }
+
+  if (user.role === 'super_admin') {
+    if (activeTab === 'settings') {
+      return (
+        <RoleShell
+          user={shellUser}
+          tabs={[]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onSettingsClick={onSettingsClick}
+          onLogout={handleLogout}
+          hideNav
+        >
+          <SuperAdminSettings
+            user={{
+              id: user.id,
+              username: user.username,
+              full_name: user.full_name,
+              email: user.email,
+              role: user.role,
+            }}
+            onLogout={handleLogout}
+          />
+        </RoleShell>
+      );
+    }
+    return <SuperAdminDashboard />;
+  }
+
+  if (user.role === 'admin') {
+    const content = (() => {
+      switch (activeTab) {
+        case 'home':
+          return <AdminDashboard onNavigate={handleNavigate} />;
+        case 'teachers':
+          return <AdminTeacherManager />;
+        case 'classes':
+          return <AdminClassManager />;
+        case 'courses':
+          return <AdminCourseManager />;
+        case 'enrollments':
+          return <AdminEnrollmentCenter />;
+        case 'settings':
+          return (
+            <AdminSettings
+              user={{
+                id: user.id,
+                username: user.username,
+                full_name: user.full_name,
+                email: user.email,
+                role: user.role,
+                institution_name: user.institution_name,
+                institution: user.institution,
+              }}
+              onLogout={handleLogout}
+            />
+          );
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <RoleShell
+        user={shellUser}
+        tabs={adminTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onNavigate={handleNavigate}
+        onSettingsClick={onSettingsClick}
+        onLogout={handleLogout}
+      >
+        {content}
+      </RoleShell>
+    );
+  }
+
+  // Fallback for unknown roles
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 dark:text-white flex flex-col items-center justify-center p-4 transition-colors duration-200">
+      <h1 className="text-2xl font-bold mb-4">Welcome, {user.full_name}!</h1>
+      <p className="text-gray-600 dark:text-gray-300 mb-8">Dashboard for {user.role} is under construction.</p>
+      <button
+        onClick={handleLogout}
+        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+      >
+        Logout
+      </button>
+    </div>
+  );
 }
 
 export default App;
