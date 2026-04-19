@@ -105,7 +105,7 @@ const ProgressTracker: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Your Progress</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Track your learning journey and course completion</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Track your learning journey and course completion</p>
             </div>
           </div>
         </div>
@@ -266,7 +266,7 @@ const ProgressTracker: React.FC = () => {
                           <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg break-words">
                             {course.course_name}
                           </h3>
-                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
+                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                             {course.completed_assignments} of {course.total_assignments} assignments completed
                           </p>
                         </div>
