@@ -1,0 +1,48 @@
+# Python
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Node (frontend copies its own context)
+frontend/node_modules/
+frontend/dist/
+
+# Local data that should come from volumes, not the image
+fin_ed_docs/*
+!fin_ed_docs/.gitkeep
+uploads/*
+!uploads/.gitkeep
+
+# Test artifacts
+test/eval_results/
+test/*.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Docker itself
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Docs / reports
+report/
+diagrams/
+*.md
+!README.md
