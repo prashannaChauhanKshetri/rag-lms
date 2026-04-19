@@ -32,51 +32,66 @@ export function Header({
     const [showProfile, setShowProfile] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
 
     const initial = (userName || '?').charAt(0).toUpperCase();
 
-    // Close dropdown on outside click — no blocking backdrop needed
+    // Close dropdown on outside click OR Escape; return focus to trigger on Escape.
     useEffect(() => {
         if (!showDropdown) return;
-        const handler = (e: MouseEvent) => {
+        const handleClick = (e: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
                 setShowDropdown(false);
             }
         };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setShowDropdown(false);
+                triggerRef.current?.focus();
+            }
+        };
+        document.addEventListener('mousedown', handleClick);
+        document.addEventListener('keydown', handleKey);
+        return () => {
+            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('keydown', handleKey);
+        };
     }, [showDropdown]);
 
     return (
         <>
-            <header className="h-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-8 flex items-center justify-between sticky top-0 z-30">
+            <header className="h-16 lg:h-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 pl-20 pr-3 lg:px-8 flex items-center justify-between sticky top-0 z-30 gap-2">
                 {/* Left: welcome text */}
-                <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                <div className="min-w-0 flex-1">
+                    <h2 className="text-base lg:text-xl font-bold text-gray-800 dark:text-white truncate">
                         Welcome back, {userName.split(' ')[0]}
                     </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 truncate">
                         {institutionName || 'Gyana Learning'}
                     </p>
                 </div>
 
                 {/* Right: controls */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1 lg:gap-4 flex-shrink-0">
                     <ThemeToggle />
 
                     {/* Bell */}
                     <NotificationBell userRole={userRole} onNavigate={onNavigate} />
 
-                    <div className="h-8 w-[1px] bg-gray-200 dark:bg-gray-700" />
+                    <div className="hidden lg:block h-8 w-[1px] bg-gray-200 dark:bg-gray-700" />
 
                     {/* Avatar + dropdown — ref wraps both trigger and panel */}
                     <div ref={dropdownRef} className="relative">
                         {/* Trigger button */}
                         <button
+                            ref={triggerRef}
                             onClick={() => setShowDropdown(prev => !prev)}
-                            className="flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl px-2 py-1 transition-colors"
+                            aria-haspopup="menu"
+                            aria-expanded={showDropdown}
+                            aria-label="User menu"
+                            className="flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl px-1 py-1 lg:px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                         >
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg shadow-green-500/20 flex-shrink-0">
+                            <div className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg shadow-green-500/20 flex-shrink-0 text-sm lg:text-base">
                                 {initial}
                             </div>
                             <div className="hidden md:block text-left">
@@ -88,9 +103,10 @@ export function Header({
                             </div>
                         </button>
 
-                        {/* Dropdown panel — no backdrop, closed via useEffect outside-click */}
+                        {/* Dropdown panel — no backdrop, closed via useEffect outside-click or Escape */}
                         {showDropdown && (
                             <div
+                                role="menu"
                                 className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden"
                                 style={{ zIndex: 9999 }}
                             >

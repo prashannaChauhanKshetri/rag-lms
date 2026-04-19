@@ -21,7 +21,9 @@ export function Sidebar({ activeTab, onTabChange, tabs }: SidebarProps) {
             {/* Mobile Menu Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed top-4 left-4 z-50 lg:hidden bg-emerald-900 dark:bg-gray-900 text-white p-3 rounded-xl shadow-lg"
+                aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-expanded={isOpen}
+                className="fixed top-4 left-4 z-50 lg:hidden bg-emerald-900 dark:bg-gray-900 text-white p-3 rounded-xl shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
                 {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -35,10 +37,12 @@ export function Sidebar({ activeTab, onTabChange, tabs }: SidebarProps) {
             )}
 
             {/* Sidebar */}
-            <aside className={cn(
-                "fixed lg:sticky top-0 left-0 h-screen bg-emerald-900 dark:bg-gray-900 text-white transition-all duration-300 z-40 flex flex-col w-64 flex-shrink-0 border-r border-white/10 dark:border-gray-800",
-                isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-            )}>
+            <aside
+                aria-label="Primary navigation"
+                className={cn(
+                    "fixed lg:sticky top-0 left-0 h-screen bg-emerald-900 dark:bg-gray-900 text-white transition-all duration-300 z-40 flex flex-col w-64 flex-shrink-0 border-r border-white/10 dark:border-gray-800",
+                    isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                )}>
                 <div className="p-6 border-b border-white/10 dark:border-gray-700">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">

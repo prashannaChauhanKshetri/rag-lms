@@ -143,16 +143,24 @@ export function NotificationBell({ userRole = 'student', onNavigate }: Notificat
         if (open) void fetchNotifications();
     }, [open, fetchNotifications]);
 
-    // Close on outside click
+    // Close on outside click or Escape
     useEffect(() => {
-        const handler = (e: MouseEvent) => {
+        if (!open) return;
+        const handleClick = (e: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
                 setOpen(false);
             }
         };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setOpen(false);
+        };
+        document.addEventListener('mousedown', handleClick);
+        document.addEventListener('keydown', handleKey);
+        return () => {
+            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('keydown', handleKey);
+        };
+    }, [open]);
 
     const markAllRead = async () => {
         try {
@@ -206,7 +214,11 @@ export function NotificationBell({ userRole = 'student', onNavigate }: Notificat
 
             {/* Dropdown */}
             {open && (
-                <div className="absolute top-full mt-2 right-0 w-80 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50">
+                <div
+                    role="menu"
+                    aria-label="Notifications"
+                    className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 sm:mt-2 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50"
+                >
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                         <span className="font-semibold text-sm text-gray-900 dark:text-white">Notifications</span>
