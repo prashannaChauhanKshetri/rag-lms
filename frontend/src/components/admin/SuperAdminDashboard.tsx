@@ -13,6 +13,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 import { ConfirmDialog } from '../shared/ConfirmDialog';
 import { Pagination } from '../shared/Pagination';
@@ -96,6 +97,9 @@ const SuperAdminDashboard: React.FC = () => {
   });
 
   const [editingInstitution, setEditingInstitution] = useState<Institution | null>(null);
+
+  useModalDismiss({ isOpen: showNewInstitution, onClose: () => setShowNewInstitution(false) });
+  useModalDismiss({ isOpen: !!editingInstitution, onClose: () => setEditingInstitution(null) });
   const [showEditModal, setShowEditModal] = useState(false);
 
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -248,7 +252,7 @@ const SuperAdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('overview')}
               className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'overview'
                 ? 'text-[#10B981] border-[#10B981]'
-                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                 }`}
             >
               <BarChart3 className="inline w-5 h-5 mr-2" />
@@ -258,7 +262,7 @@ const SuperAdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('institutions')}
               className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'institutions'
                 ? 'text-[#10B981] border-[#10B981]'
-                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                 }`}
             >
               <Building2 className="inline w-5 h-5 mr-2" />
@@ -268,7 +272,7 @@ const SuperAdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('users')}
               className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'users'
                 ? 'text-[#10B981] border-[#10B981]'
-                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                 }`}
             >
               <Users className="inline w-5 h-5 mr-2" />
@@ -278,7 +282,7 @@ const SuperAdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('analytics')}
               className={`pb-4 px-1 font-medium transition-colors border-b-2 ${activeTab === 'analytics'
                 ? 'text-[#10B981] border-[#10B981]'
-                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                 }`}
             >
               <BarChart3 className="inline w-5 h-5 mr-2" />
@@ -620,7 +624,7 @@ const SuperAdminDashboard: React.FC = () => {
               ) : institutions.length === 0 ? (
                 <div className="p-12 text-center">
                   <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium">No institutions found</p>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">No institutions found</p>
                 </div>
               ) : (
                 <>
@@ -643,7 +647,7 @@ const SuperAdminDashboard: React.FC = () => {
                             <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{inst.name}</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{inst.code}</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{inst.domain || '-'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 truncate max-w-xs" title={inst.contact_email}>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 truncate max-w-xs" title={inst.contact_email}>
                               {inst.contact_email || '-'}
                             </td>
                             <td className="px-6 py-4 text-sm">
@@ -711,7 +715,7 @@ const SuperAdminDashboard: React.FC = () => {
                           <p className="text-sm text-gray-600 dark:text-gray-400"><span className="font-medium">Domain:</span> {inst.domain}</p>
                         )}
                         {inst.contact_email && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 truncate"><span className="font-medium">Contact:</span> {inst.contact_email}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate"><span className="font-medium">Contact:</span> {inst.contact_email}</p>
                         )}
                         <div className="flex gap-2 pt-2">
                           <button
@@ -876,7 +880,7 @@ const SuperAdminDashboard: React.FC = () => {
                                 user.role}
                           </span>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 space-y-1">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                           <p>{user.email}</p>
                           <p className="flex items-center gap-2">
                             {user.is_email_verified ? (
@@ -922,19 +926,19 @@ const SuperAdminDashboard: React.FC = () => {
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white rounded-xl shadow p-6">
-                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">Total Institutions</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Total Institutions</p>
                     <p className="text-4xl font-bold text-gray-900 dark:text-white">{analytics?.total_institutions}</p>
                   </div>
                   <div className="bg-white rounded-xl shadow p-6">
-                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">Active Institutions</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Active Institutions</p>
                     <p className="text-4xl font-bold text-[#10B981]">{analytics?.active_institutions}</p>
                   </div>
                   <div className="bg-white rounded-xl shadow p-6">
-                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">Total Users</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Total Users</p>
                     <p className="text-4xl font-bold text-gray-900 dark:text-white">{analytics?.total_users}</p>
                   </div>
                   <div className="bg-white rounded-xl shadow p-6">
-                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">Inactive Institutions</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Inactive Institutions</p>
                     <p className="text-4xl font-bold text-red-500">
                       {(analytics?.total_institutions || 0) - (analytics?.active_institutions || 0)}
                     </p>
@@ -947,7 +951,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {Object.entries(analytics.users_by_role).map(([role, count]) => (
                         <div key={role} className="p-4 bg-gradient-to-br from-[#10B981]/10 to-[#059669]/10 rounded-lg border border-[#10B981]/20">
-                          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm capitalize font-medium">{role}</p>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm capitalize font-medium">{role}</p>
                           <p className="text-3xl font-bold text-[#10B981] mt-2">{count}</p>
                         </div>
                       ))}

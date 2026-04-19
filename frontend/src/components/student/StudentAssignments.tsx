@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 import type { Chatbot } from '../../types';
 import { FileText, Calendar, Clock, BookOpen, AlertCircle, Upload, X, CheckCircle, Eye } from 'lucide-react';
 
@@ -34,6 +35,8 @@ export function StudentAssignments() {
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useModalDismiss({ isOpen: !!selectedAssignment, onClose: () => setSelectedAssignment(null) });
     const [submissions, setSubmissions] = useState<Record<string, Submission>>({});
 
     useEffect(() => {
@@ -166,7 +169,7 @@ export function StudentAssignments() {
             {assignments.length === 0 ? (
                 <div className="bg-white rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
                     <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-lg">No assignments yet for this course</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">No assignments yet for this course</p>
                     <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Check back later for new assignments from your instructor</p>
                 </div>
             ) : (
@@ -213,7 +216,7 @@ export function StudentAssignments() {
                                 <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">{assignment.title}</h3>
 
                                 {/* Description */}
-                                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4 line-clamp-2">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
                                     {assignment.description || 'No description provided'}
                                 </p>
 
@@ -256,7 +259,7 @@ export function StudentAssignments() {
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedAssignment.title}</h2>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">Posted {formatDate(selectedAssignment.created_at)}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Posted {formatDate(selectedAssignment.created_at)}</p>
                             </div>
                             <button
                                 onClick={() => setSelectedAssignment(null)}
@@ -321,7 +324,7 @@ export function StudentAssignments() {
                             <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
                                 <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
                                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Upload Your Work</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">Supported formats: PDF, DOC, DOCX, TXT</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Supported formats: PDF, DOC, DOCX, TXT</p>
 
                                 {selectedFile ? (
                                     <div className="bg-blue-50 p-3 rounded-lg mb-4">
@@ -341,7 +344,7 @@ export function StudentAssignments() {
                                         type="file"
                                         accept=".pdf,.doc,.docx,.txt"
                                         onChange={handleFileSelect}
-                                        className="block w-full text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                        className="block w-full text-sm text-gray-600 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                                     />
                                 )}
 

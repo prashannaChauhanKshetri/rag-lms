@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2, X } from 'lucide-react';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ export function ConfirmDialog({
     onConfirm,
     onCancel,
 }: ConfirmDialogProps) {
+    useModalDismiss({ isOpen, onClose: onCancel });
     if (!isOpen) return null;
 
     return (

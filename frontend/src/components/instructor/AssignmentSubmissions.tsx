@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
 import { X, FileText, Calendar, Download } from 'lucide-react';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 interface Submission {
     id: string;
@@ -27,6 +28,8 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
     const [grade, setGrade] = useState('');
     const [feedback, setFeedback] = useState('');
     const [isGrading, setIsGrading] = useState(false);
+
+    useModalDismiss({ isOpen: true, onClose });
 
     const fetchSubmissions = useCallback(async () => {
         try {
@@ -92,7 +95,7 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Submissions</h2>
-                        <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">{assignmentTitle}</p>
+                        <p className="text-gray-600 dark:text-gray-400 mt-1">{assignmentTitle}</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -185,7 +188,7 @@ export function AssignmentSubmissions({ assignmentId, assignmentTitle, onClose }
 
                             <div className="mb-4">
                                 <p className="text-gray-700 dark:text-gray-300"><strong>Student:</strong> {selectedSubmission.student_name}</p>
-                                <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mt-1">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                                     <strong>File:</strong> <span className="font-mono">{selectedSubmission.file_name}</span>
                                 </p>
                             </div>

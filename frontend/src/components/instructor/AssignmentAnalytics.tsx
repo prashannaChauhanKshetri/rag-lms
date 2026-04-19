@@ -11,6 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
 
 interface AssignmentStats {
   id: string;
@@ -43,6 +44,8 @@ const AssignmentAnalytics: React.FC = () => {
   });
 
   const [selectedAssignment, setSelectedAssignment] = useState<AssignmentStats | null>(null);
+
+  useModalDismiss({ isOpen: !!selectedAssignment, onClose: () => setSelectedAssignment(null) });
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -151,7 +154,7 @@ const AssignmentAnalytics: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">Assignment Analytics</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Monitor submission rates, grades, and student progress</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Monitor submission rates, grades, and student progress</p>
             </div>
             <button
               onClick={downloadReport}
@@ -287,7 +290,7 @@ const AssignmentAnalytics: React.FC = () => {
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {assignment.submissions}/{assignment.total_students}
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             Pending: {assignment.pending}
                           </div>
                         </td>
@@ -298,7 +301,7 @@ const AssignmentAnalytics: React.FC = () => {
                               style={{ width: `${getSubmissionRate(assignment)}%` }}
                             />
                           </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-2">
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                             {getSubmissionRate(assignment).toFixed(0)}%
                           </div>
                         </td>
