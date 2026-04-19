@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import {
     User,
     Lock,
@@ -21,11 +21,9 @@ import {
     CalendarCheck,
     TrendingUp,
 } from 'lucide-react';
-import {
-    PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
-    BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from 'recharts';
 import { api } from '../../lib/api';
+
+const PrivacyCharts = lazy(() => import('./PrivacyCharts'));
 import {
     getExportData,
     exportMyDataAsCSV,
@@ -359,8 +357,6 @@ function AppearanceSection() {
 
 type DataTab = 'quiz' | 'assignments' | 'attendance';
 
-const DONUT_COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6'];
-
 function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: string | number; color: string }) {
     return (
         <div className={`rounded-2xl p-4 border ${color} flex items-center gap-3`}>
@@ -483,73 +479,15 @@ function PrivacySection() {
                         />
                     </div>
 
-                    {/* ── Charts Row ── */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        {/* Attendance Donut */}
-                        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
-                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Attendance Breakdown</p>
-                            {donutData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={180}>
-                                    <PieChart>
-                                        <Pie
-                                            data={donutData}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={48}
-                                            outerRadius={72}
-                                            paddingAngle={3}
-                                            dataKey="value"
-                                        >
-                                            {donutData.map((_, index) => (
-                                                <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip formatter={(value: unknown) => [value as number, 'Sessions']} />
-                                        <Legend
-                                            iconType="circle"
-                                            iconSize={8}
-                                            formatter={(value) => <span className="text-xs text-gray-600 dark:text-gray-400">{value}</span>}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <div className="h-[180px] flex items-center justify-center">
-                                    <p className="text-sm text-gray-400">No attendance data</p>
-                                </div>
-                            )}
+                    {/* ── Charts Row ── lazy-loaded to keep recharts out of the main bundle */}
+                    <Suspense fallback={
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div className="h-[228px] rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 animate-pulse" />
+                            <div className="h-[228px] rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 animate-pulse" />
                         </div>
-
-                        {/* Score Averages Bar Chart */}
-                        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
-                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Score Averages</p>
-                            {averagesData.some(d => d.hasData) ? (
-                                <ResponsiveContainer width="100%" height={180}>
-                                    <BarChart data={averagesData} barSize={40}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                                        <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                                        <Tooltip
-                                            formatter={(value: unknown, _name: unknown, props: { payload?: { hasData?: boolean } }) =>
-                                                props.payload?.hasData ? [`${value as number}`, 'Avg Score'] : ['Not graded yet', 'Avg Score']
-                                            }
-                                        />
-                                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                                            {averagesData.map((entry, index) => (
-                                                <Cell
-                                                    key={`bar-${index}`}
-                                                    fill={!entry.hasData ? '#d1d5db' : index === 0 ? '#22c55e' : '#6366f1'}
-                                                />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <div className="h-[180px] flex items-center justify-center">
-                                    <p className="text-sm text-gray-400">No graded scores yet</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    }>
+                        <PrivacyCharts donutData={donutData} averagesData={averagesData} />
+                    </Suspense>
 
                     {/* ── Tabs ── */}
                     <div className="mb-2">
@@ -775,14 +713,14 @@ export function StudentSettings({ user, onLogout }: StudentSettingsProps) {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Manage your account preferences</p>
             </div>
-            <div className="flex gap-6 items-start">
-                {/* Left Nav */}
-                <nav className="w-56 flex-shrink-0 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-2 sticky top-4">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-start">
+                {/* Left Nav — horizontal scroll on mobile, vertical sidebar on desktop */}
+                <nav className="lg:w-56 lg:flex-shrink-0 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-2 lg:sticky lg:top-4 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
                     {NAV_ITEMS.map(({ id, label, icon: Icon, danger }) => (
                         <button
                             key={id}
                             onClick={() => setActive(id)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${active === id
+                            className={`flex-shrink-0 lg:w-full flex items-center gap-2 lg:gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${active === id
                                 ? danger
                                     ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
                                     : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
@@ -793,7 +731,7 @@ export function StudentSettings({ user, onLogout }: StudentSettingsProps) {
                         >
                             <Icon className="w-4 h-4 flex-shrink-0" />
                             {label}
-                            {active === id && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
+                            {active === id && <ChevronRight className="w-3.5 h-3.5 ml-auto hidden lg:block" />}
                         </button>
                     ))}
                 </nav>

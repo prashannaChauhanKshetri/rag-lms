@@ -497,13 +497,13 @@ export function SuperAdminSettings({ user, onLogout }: SuperAdminSettingsProps) 
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Manage your super admin account and platform configuration</p>
             </div>
-            <div className="flex gap-6 items-start">
-                <nav className="w-56 flex-shrink-0 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-2 sticky top-4">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-start">
+                <nav className="lg:w-56 lg:flex-shrink-0 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-2 lg:sticky lg:top-4 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
                     {NAV_ITEMS.map(({ id, label, icon: Icon, danger }) => (
-                        <button key={id} onClick={() => setActive(id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${active === id ? danger ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400' : danger ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                        <button key={id} onClick={() => setActive(id)} className={`flex-shrink-0 lg:w-full flex items-center gap-2 lg:gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${active === id ? danger ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400' : danger ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
                             <Icon className="w-4 h-4 flex-shrink-0" />
                             {label}
-                            {active === id && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
+                            {active === id && <ChevronRight className="w-3.5 h-3.5 ml-auto hidden lg:block" />}
                         </button>
                     ))}
                 </nav>
