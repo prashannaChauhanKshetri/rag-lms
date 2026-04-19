@@ -1,12 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Loader2, BookOpen, ChevronRight, Trash2, History } from 'lucide-react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { Send, User, Bot, Loader2, BookOpen, ChevronRight, Trash2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { api } from '../../lib/api';
 import type { Chatbot } from '../../types';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+
+const LAST_COURSE_KEY = 'chat:lastCourseId';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -38,8 +40,8 @@ export function ChatInterface({ courseId }: ChatInterfaceProps) {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-    const [showHistory, setShowHistory] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // ── Load courses ──────────────────────────────────────────────────────────
     useEffect(() => {
@@ -47,9 +49,11 @@ export function ChatInterface({ courseId }: ChatInterfaceProps) {
             try {
                 const data = await api.get<{ chatbots: Chatbot[] }>('/chatbots/list');
                 setCourses(data.chatbots);
-                if (courseId) {
-                    const course = data.chatbots.find(c => c.id === courseId);
-                    if (course) setSelectedCourse(course);
+                const remembered = typeof window !== 'undefined' ? localStorage.getItem(LAST_COURSE_KEY) : null;
+                const preferredId = courseId || remembered;
+                const preferred = preferredId ? data.chatbots.find(c => c.id === preferredId) : null;
+                if (preferred) {
+                    setSelectedCourse(preferred);
                 } else if (data.chatbots.length > 0) {
                     setSelectedCourse(data.chatbots[0]);
                 }
@@ -59,6 +63,13 @@ export function ChatInterface({ courseId }: ChatInterfaceProps) {
         };
         fetchCourses();
     }, [courseId]);
+
+    // Persist selected course so refresh keeps the user in context.
+    useEffect(() => {
+        if (selectedCourse?.id) {
+            localStorage.setItem(LAST_COURSE_KEY, selectedCourse.id);
+        }
+    }, [selectedCourse?.id]);
 
     // ── Load persistent conversation history when course changes ─────────────
     useEffect(() => {
@@ -86,10 +97,18 @@ export function ChatInterface({ courseId }: ChatInterfaceProps) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    // Auto-grow textarea to fit content (cap at 5 lines ≈ 140px).
+    useLayoutEffect(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+    }, [input]);
+
     // ── Send message ──────────────────────────────────────────────────────────
-    const handleSend = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim() || !selectedCourse) return;
+    const handleSend = async (e?: React.FormEvent) => {
+        e?.preventDefault();
+        if (!input.trim() || !selectedCourse || isLoading) return;
 
         const userMsg = input.trim();
         setInput('');
@@ -201,19 +220,6 @@ export function ChatInterface({ courseId }: ChatInterfaceProps) {
                                 ))}
                             </Select>
                         </div>
-                        {/* History toggle */}
-                        <button
-                            onClick={() => setShowHistory(v => !v)}
-                            title="Toggle history view"
-                            className={cn(
-                                "p-2 rounded-lg transition-colors text-sm",
-                                showHistory
-                                    ? "bg-green-100 text-green-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                                    : "text-muted-foreground hover:bg-muted"
-                            )}
-                        >
-                            <History className="w-4 h-4" />
-                        </button>
                         {/* New Chat */}
                         <button
                             onClick={handleNewChat}
@@ -295,7 +301,13 @@ export function ChatInterface({ courseId }: ChatInterfaceProps) {
                                                     ? "bg-gray-900 text-white rounded-tr-sm"
                                                     : "bg-card border border-border rounded-tl-sm text-foreground"
                                             )}>
-                                                <p className="whitespace-pre-wrap">{msg.content}</p>
+                                                {msg.role === 'user' ? (
+                                                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                                                ) : (
+                                                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:mt-3 prose-headings:mb-1 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-pre:my-2 prose-code:text-xs prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
+                                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                                    </div>
+                                                )}
 
                                                 {msg.sources && msg.sources.length > 0 && !msg.fromHistory && (
                                                     <div className="mt-4 pt-4 border-t border-border">
@@ -342,19 +354,29 @@ export function ChatInterface({ courseId }: ChatInterfaceProps) {
                 {/* Input */}
                 <div className="p-4 bg-card border-t border-border">
                     <form onSubmit={handleSend} className="relative max-w-4xl mx-auto">
-                        <Input
-                            type="text"
+                        <textarea
+                            ref={textareaRef}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder={selectedCourse ? `Ask about ${selectedCourse.name}…` : 'Select a course first…'}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSend();
+                                }
+                            }}
+                            rows={1}
+                            placeholder={selectedCourse ? `Ask about ${selectedCourse.name}…  (Shift+Enter for newline)` : 'Select a course first…'}
                             disabled={isLoading || !selectedCourse}
-                            className="h-12 pl-4 pr-12"
+                            aria-label="Chat message"
+                            className="w-full resize-none rounded-xl border border-border bg-card py-3 pl-4 pr-14 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 leading-6"
+                            style={{ maxHeight: 140 }}
                         />
                         <Button
                             type="submit"
                             disabled={isLoading || !input.trim() || !selectedCourse}
                             size="sm"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:hover:bg-green-500"
+                            aria-label="Send message"
+                            className="absolute right-2 bottom-2 h-9 w-9 p-0 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:hover:bg-green-500"
                         >
                             {isLoading
                                 ? <Loader2 className="w-4 h-4 animate-spin" />
