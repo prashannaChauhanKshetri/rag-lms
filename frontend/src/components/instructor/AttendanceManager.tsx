@@ -100,7 +100,6 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
         }
 
         const data = await res.json();
-        console.log('📋 Attendance records received:', data);
 
         const records: Student[] = data.attendance_records || [];
         setStudents(records);
@@ -121,7 +120,6 @@ export default function AttendanceManager({ sectionId: initialSectionId }: { sec
           initialAttendance.set(s.student_id, record);
         });
 
-        console.log('📊 Initial attendance map:', Array.from(initialAttendance.entries()));
         setAttendance(initialAttendance);
       } catch (error) {
         console.error('Failed to fetch attendance data:', error);
