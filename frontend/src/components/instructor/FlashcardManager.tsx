@@ -126,14 +126,14 @@ export function FlashcardManager() {
                 <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg mb-6">
                     <button
                         onClick={() => setActiveMode('ai')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeMode === 'ai' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-gray-700'
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeMode === 'ai' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
                             }`}
                     >
                         AI Generator
                     </button>
                     <button
                         onClick={() => setActiveMode('manual')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeMode === 'manual' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-gray-700'
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${activeMode === 'manual' ? 'bg-white shadow text-[#10B981]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
                             }`}
                     >
                         Manual Entry
@@ -239,7 +239,7 @@ export function FlashcardManager() {
                                 </div>
                                 <div className="border-t pt-2 mt-2">
                                     <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase mb-1">Back</div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-2">{card.back}</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{card.back}</p>
                                 </div>
 
                                 <button

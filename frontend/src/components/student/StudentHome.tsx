@@ -21,8 +21,6 @@ import {
     TrendingUp,
     BarChart3,
     ChevronRight,
-    Loader2,
-    AlertCircle,
     Calendar,
     Users,
     GraduationCap,
@@ -31,6 +29,7 @@ import {
     FileText,
     type LucideIcon,
 } from 'lucide-react';
+import { LoadingState, ErrorState, EmptyState } from '../shared/States';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -181,33 +180,12 @@ export function StudentHome({ onNavigate }: StudentHomeProps) {
 
     /* ============ Loading state ============ */
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <Loader2 className="w-10 h-10 animate-spin text-green-600 mx-auto mb-4" />
-                    <p className="text-gray-500 text-sm">Loading your dashboard...</p>
-                </div>
-            </div>
-        );
+        return <LoadingState label="Loading your dashboard..." />;
     }
 
     /* ============ Error fallback ============ */
     if (error) {
-        return (
-            <div className="max-w-xl mx-auto mt-16 p-6 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4">
-                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                    <p className="font-semibold text-red-800">Something went wrong</p>
-                    <p className="text-sm text-red-700 mt-1">{error}</p>
-                    <button
-                        onClick={loadData}
-                        className="mt-3 text-sm font-medium text-red-700 underline hover:text-red-900"
-                    >
-                        Try again
-                    </button>
-                </div>
-            </div>
-        );
+        return <ErrorState message={error} onRetry={loadData} />;
     }
 
     /* ================================================================ */
@@ -278,11 +256,11 @@ export function StudentHome({ onNavigate }: StudentHomeProps) {
                         </div>
 
                         {subjects.length === 0 ? (
-                            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-10 text-center">
-                                <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                <p className="text-gray-500">No enrolled subjects yet.</p>
-                                <p className="text-sm text-gray-400 mt-1">Contact your school to be enrolled in your classes.</p>
-                            </div>
+                            <EmptyState
+                                icon={BookOpen}
+                                title="No enrolled subjects yet."
+                                description="Contact your school to be enrolled in your classes."
+                            />
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {subjects.slice(0, 6).map((sub) => {

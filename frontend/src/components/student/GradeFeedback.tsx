@@ -126,7 +126,7 @@ const GradeFeedback: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Your Grades</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">View feedback and grades from instructors</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">View feedback and grades from instructors</p>
             </div>
           </div>
         </div>
@@ -242,8 +242,8 @@ const GradeFeedback: React.FC = () => {
             {filteredAssignments.length === 0 ? (
               <div className="bg-white rounded-lg sm:rounded-xl p-12 text-center">
                 <Award className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-lg">No graded assignments yet</p>
-                <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-2">Your instructors will post grades here as they grade your work.</p>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">No graded assignments yet</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">Your instructors will post grades here as they grade your work.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -265,7 +265,7 @@ const GradeFeedback: React.FC = () => {
                           <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white break-words">
                             {assignment.title}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-2">
+                          <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-2">
                             <span className="flex items-center gap-1">
                               <BookOpen className="w-3 h-3 flex-shrink-0" />
                               {assignment.section_name}

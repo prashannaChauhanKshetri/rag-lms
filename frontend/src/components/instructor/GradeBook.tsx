@@ -222,7 +222,7 @@ const GradeBook: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">Grade Book</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Track and manage all student grades</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Track and manage all student grades</p>
             </div>
             <button
               onClick={downloadGradebook}
@@ -385,7 +385,7 @@ const GradeBook: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">{student.student_name}</h3>
                       <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{student.student_email}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {student.assignments_graded} of {student.total_assignments} assignments graded
                       </p>
                     </div>
@@ -490,7 +490,7 @@ const GradeBook: React.FC = () => {
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="p-1 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:text-gray-100"
+                              className="p-1 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:text-gray-100"
                             >
                               <X className="w-4 h-4" />
                             </button>

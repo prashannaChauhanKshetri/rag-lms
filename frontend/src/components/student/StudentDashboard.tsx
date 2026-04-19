@@ -104,7 +104,7 @@ const StudentDashboard: React.FC = () => {
             </div>
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">My Courses</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Track your assignments and progress</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Track your assignments and progress</p>
             </div>
           </div>
         </div>
@@ -124,7 +124,7 @@ const StudentDashboard: React.FC = () => {
               onClick={() => setActiveTab('overview')}
               className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'overview'
                   ? 'text-blue-600 border-blue-600'
-                  : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                 }`}
             >
               <TrendingUp className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
@@ -135,7 +135,7 @@ const StudentDashboard: React.FC = () => {
               onClick={() => setActiveTab('assignments')}
               className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'assignments'
                   ? 'text-blue-600 border-blue-600'
-                  : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                 }`}
             >
               <FileText className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
@@ -150,7 +150,7 @@ const StudentDashboard: React.FC = () => {
               onClick={() => setActiveTab('courses')}
               className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'courses'
                   ? 'text-blue-600 border-blue-600'
-                  : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                 }`}
             >
               <BookOpen className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
@@ -160,7 +160,7 @@ const StudentDashboard: React.FC = () => {
               onClick={() => setActiveTab('progress')}
               className={`pb-3 sm:pb-4 px-1 font-medium text-sm sm:text-base transition-colors border-b-2 whitespace-nowrap ${activeTab === 'progress'
                   ? 'text-blue-600 border-blue-600'
-                  : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                 }`}
             >
               <Award className="inline w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
@@ -234,7 +234,7 @@ const StudentDashboard: React.FC = () => {
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{assignment.title}</p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-0.5">{assignment.section_name}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{assignment.section_name}</p>
                               </div>
                               <Clock className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
                             </div>
@@ -259,7 +259,7 @@ const StudentDashboard: React.FC = () => {
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{assignment.title}</p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-0.5">{assignment.section_name}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{assignment.section_name}</p>
                               </div>
                               <span className="px-3 py-1 text-xs font-bold bg-green-200 text-green-800 rounded-full flex-shrink-0">
                                 {assignment.score}%
@@ -307,7 +307,7 @@ const StudentDashboard: React.FC = () => {
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white truncate">{assignment.title}</h3>
-                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">{assignment.section_name}</p>
+                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">{assignment.section_name}</p>
                           </div>
                           <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full flex-shrink-0 ${assignment.status === 'pending'
                               ? 'bg-orange-100 text-orange-800'
@@ -319,7 +319,7 @@ const StudentDashboard: React.FC = () => {
                           </span>
                         </div>
 
-                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-3 sm:mb-4 line-clamp-2">{assignment.description}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 line-clamp-2">{assignment.description}</p>
 
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                           <div className="flex items-center gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -381,11 +381,11 @@ const StudentDashboard: React.FC = () => {
                             </span>
                           )}
                         </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-3 sm:mb-4 flex items-center gap-1.5 flex-wrap">
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 flex items-center gap-1.5 flex-wrap">
                           Taught by
                           <span className="font-semibold">{section.teacher_name}</span>
                           {section.teacher_display_id && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold font-mono bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-full align-middle whitespace-nowrap">
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold font-mono bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-full align-middle whitespace-nowrap">
                               <span className="text-gray-400">#</span>{section.teacher_display_id.split(',')[0]}
                             </span>
                           )}

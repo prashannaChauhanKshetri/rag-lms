@@ -134,7 +134,7 @@ const StudentAssignmentSubmission: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Submit Assignments</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                 {assignments.length} assignment{assignments.length !== 1 ? 's' : ''} awaiting submission
               </p>
             </div>
@@ -151,8 +151,8 @@ const StudentAssignmentSubmission: React.FC = () => {
         ) : assignments.length === 0 ? (
           <div className="bg-white rounded-lg sm:rounded-xl p-12 text-center">
             <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-green-600" />
-            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-lg">No pending assignments!</p>
-            <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-2">All your assignments are submitted.</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">No pending assignments!</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">All your assignments are submitted.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -175,7 +175,7 @@ const StudentAssignmentSubmission: React.FC = () => {
                   <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base break-words">
                     {assignment.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">{assignment.section_name}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">{assignment.section_name}</p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
                     <Calendar className="w-3 h-3 flex-shrink-0" />
                     <span>{new Date(assignment.due_date).toLocaleDateString()}</span>
@@ -285,7 +285,7 @@ const StudentAssignmentSubmission: React.FC = () => {
                         rows={6}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                         {submissionData.content_text.length} characters
                       </p>
                     </div>
@@ -323,7 +323,7 @@ const StudentAssignmentSubmission: React.FC = () => {
                           </div>
                         </label>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">PDF, DOC, DOCX, TXT up to 10MB</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">PDF, DOC, DOCX, TXT up to 10MB</p>
                     </div>
 
                     <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

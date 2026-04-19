@@ -125,7 +125,7 @@ export function AdminTeacherManager() {
           {isLoading ? (
             <p className="text-slate-500">Loading teachers...</p>
           ) : teachers.length === 0 ? (
-            <p className="text-slate-500 dark:text-gray-400 dark:text-gray-500 text-sm">No teachers found</p>
+            <p className="text-slate-500 dark:text-gray-400 text-sm">No teachers found</p>
           ) : (
             <div className="space-y-2 max-h-[600px] overflow-y-auto">
               {teachers
@@ -201,7 +201,7 @@ export function AdminTeacherManager() {
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-slate-400" />
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Email</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 uppercase">Email</p>
                       <p className="text-slate-800 dark:text-white">{selectedTeacher.email || 'N/A'}</p>
                     </div>
                   </div>
@@ -209,7 +209,7 @@ export function AdminTeacherManager() {
                     <div className="flex items-center gap-3">
                       <Phone className="w-5 h-5 text-slate-400" />
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Phone</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-400 uppercase">Phone</p>
                         <p className="text-slate-800 dark:text-white">{selectedTeacher.phone}</p>
                       </div>
                     </div>
@@ -224,36 +224,36 @@ export function AdminTeacherManager() {
                   <div className="space-y-3">
                     {selectedTeacher.department && (
                       <div className="flex items-start gap-3">
-                        <BookOpen className="w-5 h-5 text-slate-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1" />
+                        <BookOpen className="w-5 h-5 text-slate-400 dark:text-gray-500 mt-1" />
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Department</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400 uppercase">Department</p>
                           <p className="text-slate-800 dark:text-white">{selectedTeacher.department}</p>
                         </div>
                       </div>
                     )}
                     {selectedTeacher.qualifications && (
                       <div className="flex items-start gap-3">
-                        <Award className="w-5 h-5 text-slate-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1" />
+                        <Award className="w-5 h-5 text-slate-400 dark:text-gray-500 mt-1" />
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Qualifications</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400 uppercase">Qualifications</p>
                           <p className="text-slate-800 dark:text-white">{selectedTeacher.qualifications}</p>
                         </div>
                       </div>
                     )}
                     {selectedTeacher.years_experience && (
                       <div className="flex items-start gap-3">
-                        <Clock className="w-5 h-5 text-slate-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1" />
+                        <Clock className="w-5 h-5 text-slate-400 dark:text-gray-500 mt-1" />
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Experience</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400 uppercase">Experience</p>
                           <p className="text-slate-800 dark:text-white">{selectedTeacher.years_experience} years</p>
                         </div>
                       </div>
                     )}
                     {selectedTeacher.office_location && (
                       <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-slate-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1" />
+                        <MapPin className="w-5 h-5 text-slate-400 dark:text-gray-500 mt-1" />
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-gray-400 dark:text-gray-500 uppercase">Office Location</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400 uppercase">Office Location</p>
                           <p className="text-slate-800 dark:text-white">{selectedTeacher.office_location}</p>
                         </div>
                       </div>

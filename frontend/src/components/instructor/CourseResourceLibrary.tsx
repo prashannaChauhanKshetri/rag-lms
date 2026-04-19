@@ -276,7 +276,7 @@ const CourseResourceLibrary: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">Course Resources</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">Organize and share course materials with students</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Organize and share course materials with students</p>
             </div>
             <div className="flex items-center gap-4">
               <select
@@ -503,8 +503,8 @@ const CourseResourceLibrary: React.FC = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white break-words">{resource.title}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-1">{resource.description}</p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-1">{resource.description}</p>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-2">
                           <span className="flex items-center gap-1">
                             <User className="w-3 h-3" />
                             {resource.uploaded_by}

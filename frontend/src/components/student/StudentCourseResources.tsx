@@ -171,7 +171,7 @@ const StudentCourseResources: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Course Resources</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                 Access materials shared by your instructors
               </p>
             </div>
@@ -291,8 +291,8 @@ const StudentCourseResources: React.FC = () => {
             {filteredResources.length === 0 ? (
               <div className="bg-white rounded-lg sm:rounded-xl p-12 text-center">
                 <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-lg">No resources found</p>
-                <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-2">
+                <p className="text-gray-600 dark:text-gray-400 text-lg">No resources found</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                   {resources.length === 0
                     ? 'Your instructors haven\'t shared any resources yet.'
                     : 'Try adjusting your filters.'}
@@ -317,11 +317,11 @@ const StudentCourseResources: React.FC = () => {
                           <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white break-words">
                             {resource.title}
                           </h3>
-                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-2 mt-1">
+                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
                             {resource.description}
                           </p>
 
-                          <div className="flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
+                          <div className="flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400 mt-2">
                             <span className="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
                               {getTypeLabel(resource.type)}
                             </span>

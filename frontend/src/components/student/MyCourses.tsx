@@ -58,7 +58,7 @@ export function MyCourses({ onNavigate }: MyCoursesProps) {
                         <BookOpen className="h-8 w-8 text-gray-400" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No courses found</h3>
-                    <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 max-w-md mx-auto">
+                    <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                         It looks like you aren't enrolled in any courses yet. Ask your instructor to create some!
                     </p>
                 </div>
@@ -74,7 +74,7 @@ export function MyCourses({ onNavigate }: MyCoursesProps) {
                                 <div className="w-12 h-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
                                     <BookOpen className="h-6 w-6" />
                                 </div>
-                                <span className="text-xs font-medium px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500 rounded-lg">
+                                <span className="text-xs font-medium px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg">
                                     Active
                                 </span>
                             </div>
@@ -83,7 +83,7 @@ export function MyCourses({ onNavigate }: MyCoursesProps) {
                                 {course.name}
                             </h3>
 
-                            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-6 line-clamp-2 min-h-[40px]">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 line-clamp-2 min-h-[40px]">
                                 {course.description || "No description available for this course."}
                             </p>
 

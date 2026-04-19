@@ -119,7 +119,7 @@ export default function CourseOverview() {
 
               <div className="divide-y divide-slate-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
                 {sections.length === 0 ? (
-                  <p className="p-4 text-slate-500 dark:text-gray-400 dark:text-gray-500 text-sm text-center">Not enrolled in any courses</p>
+                  <p className="p-4 text-slate-500 dark:text-gray-400 text-sm text-center">Not enrolled in any courses</p>
                 ) : (
                   sections.map((section) => (
                     <button
@@ -147,24 +147,24 @@ export default function CourseOverview() {
                 {/* Course Header */}
                 <div className="bg-white rounded-lg border border-slate-200 dark:border-gray-700 p-6 shadow-sm">
                   <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mb-2">{selectedSection.name}</h2>
-                  <p className="text-slate-600 dark:text-gray-400 dark:text-gray-500 mb-4">Instructor: {selectedSection.teacher_name}</p>
+                  <p className="text-slate-600 dark:text-gray-400 mb-4">Instructor: {selectedSection.teacher_name}</p>
 
                   {attendance && (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
                       <div>
-                        <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">Classes</p>
+                        <p className="text-xs text-slate-600 dark:text-gray-400 font-medium">Classes</p>
                         <p className="text-2xl font-bold text-slate-800 dark:text-white">{attendance.total}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">Present</p>
+                        <p className="text-xs text-slate-600 dark:text-gray-400 font-medium">Present</p>
                         <p className="text-2xl font-bold text-green-600">{attendance.present}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">Attendance</p>
+                        <p className="text-xs text-slate-600 dark:text-gray-400 font-medium">Attendance</p>
                         <p className="text-2xl font-bold text-blue-600">{attendance.percentage}%</p>
                       </div>
                       <div className="hidden sm:block">
-                        <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">Status</p>
+                        <p className="text-xs text-slate-600 dark:text-gray-400 font-medium">Status</p>
                         <p className={`text-sm font-bold ${attendance.percentage >= 75 ? 'text-green-600' : 'text-orange-600'}`}>
                           {attendance.percentage >= 75 ? '✓ Good' : '⚠ Low'}
                         </p>
@@ -182,7 +182,7 @@ export default function CourseOverview() {
                       className={`px-4 py-2 font-medium text-sm rounded-t-lg transition-colors ${
                         activeTab === tab
                           ? 'bg-blue-600 text-white'
-                          : 'text-slate-600 dark:text-gray-400 dark:text-gray-500 hover:text-slate-800 dark:text-white'
+                          : 'text-slate-600 dark:text-gray-400 hover:text-slate-800 dark:text-white'
                       }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -219,7 +219,7 @@ export default function CourseOverview() {
                   {activeTab === 'assignments' && (
                     <div className="space-y-3">
                       {assignments.length === 0 ? (
-                        <p className="text-center text-slate-500 dark:text-gray-400 dark:text-gray-500 py-8">No assignments yet</p>
+                        <p className="text-center text-slate-500 dark:text-gray-400 py-8">No assignments yet</p>
                       ) : (
                         assignments.map((assignment) => (
                           <div key={assignment.id} className="p-4 border border-slate-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
@@ -253,7 +253,7 @@ export default function CourseOverview() {
                   {activeTab === 'resources' && (
                     <div className="space-y-3">
                       {resources.length === 0 ? (
-                        <p className="text-center text-slate-500 dark:text-gray-400 dark:text-gray-500 py-8">No resources shared yet</p>
+                        <p className="text-center text-slate-500 dark:text-gray-400 py-8">No resources shared yet</p>
                       ) : (
                         resources.map((resource) => (
                           <div key={resource.id} className="p-4 border border-slate-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow flex items-center justify-between">
@@ -280,7 +280,7 @@ export default function CourseOverview() {
                           { label: 'Status', value: attendance.percentage >= 75 ? '✓ Good' : '⚠ Low', color: attendance.percentage >= 75 ? 'text-green-600' : 'text-orange-600' }
                         ].map((item, idx) => (
                           <div key={idx} className="p-4 bg-slate-50 dark:bg-gray-900 rounded-lg border border-slate-200 dark:border-gray-700">
-                            <p className="text-xs text-slate-600 dark:text-gray-400 dark:text-gray-500 font-medium">{item.label}</p>
+                            <p className="text-xs text-slate-600 dark:text-gray-400 font-medium">{item.label}</p>
                             <p className={`text-2xl font-bold ${item.color || 'text-slate-800 dark:text-white'}`}>{item.value}</p>
                           </div>
                         ))}
@@ -292,7 +292,7 @@ export default function CourseOverview() {
             ) : (
               <div className="bg-white rounded-lg p-12 text-center border border-slate-200 dark:border-gray-700">
                 <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-600 dark:text-gray-400 dark:text-gray-500 text-lg">No courses to display</p>
+                <p className="text-slate-600 dark:text-gray-400 text-lg">No courses to display</p>
               </div>
             )}
           </div>

@@ -266,7 +266,7 @@ export function AssignmentManager() {
                         onClick={() => setActiveTab('assignments')}
                         className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'assignments'
                             ? 'text-blue-600 border-blue-600'
-                            : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                             }`}
                     >
                         <FileText className="inline w-5 h-5 mr-2" />
@@ -276,7 +276,7 @@ export function AssignmentManager() {
                         onClick={() => setActiveTab('submissions')}
                         className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'submissions'
                             ? 'text-blue-600 border-blue-600'
-                            : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                             }`}
                     >
                         <Users className="inline w-5 h-5 mr-2" />
@@ -286,7 +286,7 @@ export function AssignmentManager() {
                         onClick={() => setActiveTab('grading')}
                         className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'grading'
                             ? 'text-blue-600 border-blue-600'
-                            : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                             }`}
                     >
                         <Check className="inline w-5 h-5 mr-2" />
@@ -296,7 +296,7 @@ export function AssignmentManager() {
                         onClick={() => setActiveTab('stats')}
                         className={`pb-4 px-2 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'stats'
                             ? 'text-blue-600 border-blue-600'
-                            : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900'
                             }`}
                     >
                         <BarChart3 className="inline w-5 h-5 mr-2" />
@@ -365,7 +365,7 @@ export function AssignmentManager() {
                             <button
                                 type="button"
                                 onClick={() => setShowForm(false)}
-                                className="px-4 py-2 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:bg-gray-700 rounded-lg"
+                                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-700 rounded-lg"
                             >
                                 Cancel
                             </button>
@@ -490,8 +490,8 @@ function AssignmentCard({ assignment, onPublish, onDelete, onView }: AssignmentC
                     {assignment.is_published ? 'Published' : 'Draft'}
                 </span>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4 line-clamp-2">{assignment.description}</p>
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">{assignment.description}</p>
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
                 <Clock className="w-4 h-4" />
                 Due: {new Date(assignment.due_date).toLocaleDateString()}
             </div>
@@ -567,7 +567,7 @@ function SubmissionsTab({ assignments, onSelectAssignment }: SubmissionsTabProps
                     className="bg-white p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
                 >
                     <h3 className="font-bold text-lg mb-2">{a.title}</h3>
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                         <p className="flex items-center gap-2">
                             <Users className="w-4 h-4" />
                             {a.submitted_count || 0} submissions
@@ -625,7 +625,7 @@ function GradingTab({
                             {assignments.map(a => (
                                 <div key={a.id} className="text-sm p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
                                     <p className="font-medium">{a.title}</p>
-                                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-xs">{a.submitted_count || 0} to grade</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-xs">{a.submitted_count || 0} to grade</p>
                                 </div>
                             ))}
                         </div>
@@ -658,7 +658,7 @@ function GradingTab({
                                 <div className="flex gap-2 pt-2 border-t">
                                     <button
                                         onClick={() => onSelectSubmission(null)}
-                                        className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:bg-gray-700 rounded-lg"
+                                        className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-700 rounded-lg"
                                     >
                                         Cancel
                                     </button>

@@ -106,10 +106,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform`}>
                                 <card.icon className="w-5 h-5" />
                             </div>
-                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 dark:text-gray-400 dark:text-gray-500 group-hover:translate-x-0.5 transition-all" />
+                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 dark:text-gray-400 group-hover:translate-x-0.5 transition-all" />
                         </div>
                         <p className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-0.5">{card.label}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{card.label}</p>
                     </div>
                 ))}
             </div>

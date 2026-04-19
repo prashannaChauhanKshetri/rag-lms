@@ -265,7 +265,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                 </div>
                 <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Enrollment Management</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-0.5">Manage student enrollments across all sections</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Manage student enrollments across all sections</p>
                 </div>
             </div>
 
@@ -327,7 +327,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                                     onClick={() => setActiveTab(key)}
                                     className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 whitespace-nowrap flex items-center gap-1.5 ${activeTab === key
                                         ? 'text-[#10B981] border-[#10B981]'
-                                        : 'text-gray-500 dark:text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-700'
+                                        : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700'
                                         }`}
                                 >
                                     <Icon className="w-4 h-4" />
@@ -373,11 +373,11 @@ const AdminEnrollmentCenter: React.FC = () => {
                                             <table className="w-full">
                                                 <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                                                     <tr>
-                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Student</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Email</th>
-                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Roll No.</th>
-                                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Attendance</th>
-                                                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-500 uppercase">Actions</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Student</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Email</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Roll No.</th>
+                                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Attendance</th>
+                                                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100">
@@ -426,7 +426,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="min-w-0 flex-1">
                                                             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{student.full_name || student.username}</p>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 truncate">{student.email}</p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{student.email}</p>
                                                             <div className="flex items-center gap-2 mt-1.5">
                                                                 {student.roll_number && (
                                                                     <span className="text-xs text-gray-500 dark:text-gray-400">#{student.roll_number}</span>
@@ -511,7 +511,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                         {activeTab === 'bulk-enroll' && (
                             <div className="p-4 sm:p-6">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Bulk Enroll Students</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                                     Enter student IDs (one per line or comma-separated) or upload a CSV file.
                                 </p>
 
@@ -618,7 +618,7 @@ const AdminEnrollmentCenter: React.FC = () => {
                                                         </span>
                                                     </p>
                                                     {entry.reason && (
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-0.5">Reason: {entry.reason}</p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Reason: {entry.reason}</p>
                                                     )}
                                                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                                                         {new Date(entry.created_at).toLocaleString()}
@@ -638,7 +638,7 @@ const AdminEnrollmentCenter: React.FC = () => {
             {!selectedSectionId && (
                 <div className="bg-white rounded-xl shadow p-8 text-center">
                     <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm">Select a section above to manage enrollments</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Select a section above to manage enrollments</p>
                 </div>
             )}
         </div>
