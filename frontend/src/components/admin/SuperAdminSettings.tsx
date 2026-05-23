@@ -18,6 +18,7 @@ import {
     Moon,
     Info,
     ToggleLeft,
+    Type,
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { getUserSettings, updateUserSettings } from '../../lib/settings';
@@ -397,28 +398,78 @@ function NotificationsSection() {
 }
 
 function AppearanceSection() {
-    const { isDark, setDarkMode } = useTheme();
+    const { isDark, setDarkMode, fontSize, setFontSize, reduceMotion, setReduceMotion, highContrast, setHighContrast } = useTheme();
 
-    const persistTheme = async (darkMode: boolean) => {
-        setDarkMode(darkMode);
+    const persist = async (patch: Record<string, unknown>) => {
         try {
-            await updateUserSettings({ appearance: { theme: darkMode ? 'dark' : 'light' } });
-        } catch {
-            // Ignore persistence errors because local theme switch already succeeded.
-        }
+            await updateUserSettings({ appearance: patch as Parameters<typeof updateUserSettings>[0]['appearance'] });
+        } catch { /* applied locally; ignore persistence failures */ }
     };
 
+    const handleTheme = (dark: boolean) => {
+        setDarkMode(dark);
+        void persist({ theme: dark ? 'dark' : 'light', fontSize, reduceMotion, highContrast });
+    };
+
+    const FONT_SIZES = [
+        { value: 'small' as const, label: 'Small', sample: 'text-xs' },
+        { value: 'medium' as const, label: 'Medium', sample: 'text-sm' },
+        { value: 'large' as const, label: 'Large', sample: 'text-base' },
+    ];
+
     return (
-        <SectionCard title="Appearance" subtitle="Customize your view">
-            <div className="flex gap-4">
-                <button onClick={() => { void persistTheme(false); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-                    <Sun className={`w-6 h-6 ${!isDark ? 'text-rose-600' : 'text-gray-400'}`} />
-                    <span className={`text-sm font-semibold ${!isDark ? 'text-rose-700' : 'text-gray-500'}`}>Light</span>
-                </button>
-                <button onClick={() => { void persistTheme(true); }} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
-                    <Moon className={`w-6 h-6 ${isDark ? 'text-rose-400' : 'text-gray-400'}`} />
-                    <span className={`text-sm font-semibold ${isDark ? 'text-rose-400' : 'text-gray-500'}`}>Dark</span>
-                </button>
+        <SectionCard title="Appearance & Accessibility" subtitle="Customize how the platform looks and behaves">
+            {/* Theme */}
+            <div className="mb-6">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                    <Sun className="w-3.5 h-3.5" /> Theme
+                </p>
+                <div className="flex gap-3">
+                    <button onClick={() => handleTheme(false)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}>
+                        <Sun className={`w-5 h-5 ${!isDark ? 'text-rose-600' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-semibold ${!isDark ? 'text-rose-700 dark:text-rose-400' : 'text-gray-500'}`}>Light</span>
+                    </button>
+                    <button onClick={() => handleTheme(true)} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${isDark ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}>
+                        <Moon className={`w-5 h-5 ${isDark ? 'text-rose-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-semibold ${isDark ? 'text-rose-400' : 'text-gray-500'}`}>Dark</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Text Size */}
+            <div className="mb-6">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                    <Type className="w-3.5 h-3.5" /> Text Size
+                </p>
+                <div className="flex gap-3">
+                    {FONT_SIZES.map(({ value, label, sample }) => (
+                        <button
+                            key={value}
+                            onClick={() => { setFontSize(value); void persist({ theme: isDark ? 'dark' : 'light', fontSize: value, reduceMotion, highContrast }); }}
+                            className={`flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 transition-all ${fontSize === value ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                        >
+                            <span className={`font-bold ${sample} ${fontSize === value ? 'text-rose-700 dark:text-rose-400' : 'text-gray-500 dark:text-gray-400'}`}>A</span>
+                            <span className={`text-xs font-medium ${fontSize === value ? 'text-rose-600 dark:text-rose-400' : 'text-gray-400'}`}>{label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Toggles */}
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Accessibility</p>
+                <Toggle
+                    enabled={reduceMotion}
+                    onChange={(v) => { setReduceMotion(v); void persist({ theme: isDark ? 'dark' : 'light', fontSize, reduceMotion: v, highContrast }); }}
+                    label="Reduce Motion"
+                    description="Disables animations and transitions"
+                />
+                <Toggle
+                    enabled={highContrast}
+                    onChange={(v) => { setHighContrast(v); void persist({ theme: isDark ? 'dark' : 'light', fontSize, reduceMotion, highContrast: v }); }}
+                    label="High Contrast"
+                    description="Increases visual contrast for easier reading"
+                />
             </div>
         </SectionCard>
     );

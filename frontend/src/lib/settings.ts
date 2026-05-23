@@ -23,6 +23,9 @@ export interface UserSettings {
     };
     appearance?: {
         theme: 'light' | 'dark';
+        fontSize?: 'small' | 'medium' | 'large';
+        reduceMotion?: boolean;
+        highContrast?: boolean;
     };
 }
 
