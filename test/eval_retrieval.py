@@ -51,7 +51,7 @@ from models import get_embed_model
 TOP_K            = 8
 MIN_KEYWORD_HITS = 2
 
-GEMINI_KEY  = "AIzaSyBzozQHs0XuYgy3xmRM9euO3WauxIJNUIA"
+GEMINI_KEY  = os.environ.get("GEMINI_API_KEY", "")
 GEMMA_MODEL = "gemma-4-26b-a4b-it"     # 26B total / 4B active MoE (primary)
 FLASH_MODEL = "gemini-flash-latest"     # gemini-3.5-flash  (fallback)
 GEMINI_URL  = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
