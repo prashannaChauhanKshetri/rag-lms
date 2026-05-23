@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 680" font-family="Segoe UI, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" font-family="Segoe UI, Arial, sans-serif">
   <defs>
     <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
       <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.12"/>
@@ -19,122 +19,154 @@
       <stop offset="0%" stop-color="#CE93D8"/>
       <stop offset="100%" stop-color="#7B1FA2"/>
     </linearGradient>
+    <marker id="arrowGrey" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#546E7A"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#9C27B0"/>
+    </marker>
   </defs>
 
   <!-- Title -->
-  <text x="450" y="35" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a2e">System Architecture</text>
-  <line x1="300" y1="45" x2="600" y2="45" stroke="#388E3C" stroke-width="3" stroke-linecap="round"/>
+  <text x="450" y="35" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a2e">System Architecture — RAG-LMS</text>
+  <line x1="280" y1="45" x2="620" y2="45" stroke="#388E3C" stroke-width="3" stroke-linecap="round"/>
 
   <!-- ════════ PRESENTATION LAYER ════════ -->
-  <rect x="40" y="65" width="820" height="120" rx="14" fill="url(#gFrontend)" filter="url(#shadow)"/>
-  <text x="450" y="92" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">PRESENTATION LAYER</text>
-  <text x="450" y="112" text-anchor="middle" font-size="12" fill="#E1F5FE">React 19 &bull; TypeScript &bull; Vite &bull; Tailwind CSS</text>
+  <rect x="40" y="60" width="820" height="125" rx="14" fill="url(#gFrontend)" filter="url(#shadow)"/>
+  <text x="450" y="85" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">PRESENTATION LAYER</text>
+  <text x="450" y="102" text-anchor="middle" font-size="11" fill="#E1F5FE">React 18 • TypeScript • Vite • Tailwind CSS • Radix UI</text>
 
   <!-- 3 role boxes -->
-  <rect x="65" y="125" width="230" height="46" rx="8" fill="#fff" fill-opacity="0.92"/>
-  <text x="180" y="143" text-anchor="middle" font-size="11" font-weight="600" fill="#0277BD">Admin Portal</text>
-  <text x="180" y="160" text-anchor="middle" font-size="9.5" fill="#555">Classes &bull; Teachers &bull; Enrollment</text>
+  <rect x="55" y="115" width="250" height="55" rx="8" fill="#fff" fill-opacity="0.95"/>
+  <text x="180" y="135" text-anchor="middle" font-size="11" font-weight="700" fill="#0277BD">Admin Portal</text>
+  <text x="180" y="150" text-anchor="middle" font-size="9" fill="#555">Chatbots • User Mgmt • Documents</text>
+  <text x="180" y="163" text-anchor="middle" font-size="9" fill="#555">Super Admin • Instructor Assign</text>
 
-  <rect x="335" y="125" width="230" height="46" rx="8" fill="#fff" fill-opacity="0.92"/>
-  <text x="450" y="143" text-anchor="middle" font-size="11" font-weight="600" fill="#0277BD">Instructor Portal</text>
-  <text x="450" y="160" text-anchor="middle" font-size="9.5" fill="#555">Assignments &bull; Quizzes &bull; Analytics</text>
+  <rect x="325" y="115" width="250" height="55" rx="8" fill="#fff" fill-opacity="0.95"/>
+  <text x="450" y="135" text-anchor="middle" font-size="11" font-weight="700" fill="#0277BD">Instructor Portal</text>
+  <text x="450" y="150" text-anchor="middle" font-size="9" fill="#555">Quizzes • Flashcards • Assignments</text>
+  <text x="450" y="163" text-anchor="middle" font-size="9" fill="#555">Attendance • Sections • Grading</text>
 
-  <rect x="605" y="125" width="230" height="46" rx="8" fill="#fff" fill-opacity="0.92"/>
-  <text x="720" y="143" text-anchor="middle" font-size="11" font-weight="600" fill="#0277BD">Student Portal</text>
-  <text x="720" y="160" text-anchor="middle" font-size="9.5" fill="#555">AI Chat &bull; Quizzes &bull; Progress</text>
+  <rect x="595" y="115" width="250" height="55" rx="8" fill="#fff" fill-opacity="0.95"/>
+  <text x="720" y="135" text-anchor="middle" font-size="11" font-weight="700" fill="#0277BD">Student Portal</text>
+  <text x="720" y="150" text-anchor="middle" font-size="9" fill="#555">AI Chat • Quiz Taking • Flashcards</text>
+  <text x="720" y="163" text-anchor="middle" font-size="9" fill="#555">Progress • Course Overview</text>
 
   <!-- Arrow down -->
   <line x1="450" y1="185" x2="450" y2="215" stroke="#546E7A" stroke-width="2.5" marker-end="url(#arrowGrey)"/>
-  <text x="530" y="205" font-size="10" fill="#78909C" font-weight="600">REST API + SSE Streaming</text>
-  <defs><marker id="arrowGrey" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-    <polygon points="0 0, 8 3, 0 6" fill="#546E7A"/></marker></defs>
+  <text x="560" y="205" font-size="10" fill="#78909C" font-weight="600">REST API (180+ endpoints) + SSE Streaming</text>
 
   <!-- ════════ APPLICATION LAYER ════════ -->
-  <rect x="40" y="220" width="820" height="165" rx="14" fill="url(#gBackend)" filter="url(#shadow)"/>
-  <text x="450" y="247" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">APPLICATION LAYER</text>
-  <text x="450" y="267" text-anchor="middle" font-size="12" fill="#E8F5E9">FastAPI &bull; Python 3.11 &bull; Uvicorn &bull; JWT Auth</text>
+  <rect x="40" y="220" width="820" height="190" rx="14" fill="url(#gBackend)" filter="url(#shadow)"/>
+  <text x="450" y="245" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">APPLICATION LAYER</text>
+  <text x="450" y="262" text-anchor="middle" font-size="11" fill="#E8F5E9">FastAPI • Python 3.11 • Uvicorn • JWT Cookie Auth • bcrypt</text>
 
-  <!-- Service boxes row 1 -->
-  <rect x="60" y="280" width="155" height="40" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="137" y="304" text-anchor="middle" font-size="10.5" font-weight="600" fill="#2E7D32">Auth Service</text>
+  <!-- Route modules row 1 -->
+  <rect x="55" y="275" width="130" height="38" rx="6" fill="#fff" fill-opacity="0.95"/>
+  <text x="120" y="290" text-anchor="middle" font-size="10" font-weight="600" fill="#2E7D32">Auth (29)</text>
+  <text x="120" y="303" text-anchor="middle" font-size="8" fill="#666">Login • Register • JWT</text>
 
-  <rect x="230" y="280" width="155" height="40" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="307" y="304" text-anchor="middle" font-size="10.5" font-weight="600" fill="#2E7D32">Admin Routes</text>
+  <rect x="195" y="275" width="130" height="38" rx="6" fill="#fff" fill-opacity="0.95"/>
+  <text x="260" y="290" text-anchor="middle" font-size="10" font-weight="600" fill="#2E7D32">Admin (34)</text>
+  <text x="260" y="303" text-anchor="middle" font-size="8" fill="#666">Users • Chatbots • Docs</text>
 
-  <rect x="400" y="280" width="155" height="40" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="477" y="304" text-anchor="middle" font-size="10.5" font-weight="600" fill="#2E7D32">Instructor Routes</text>
+  <rect x="335" y="275" width="130" height="38" rx="6" fill="#fff" fill-opacity="0.95"/>
+  <text x="400" y="290" text-anchor="middle" font-size="10" font-weight="600" fill="#2E7D32">Instructor (66)</text>
+  <text x="400" y="303" text-anchor="middle" font-size="8" fill="#666">Quizzes • Sections • AI</text>
 
-  <rect x="570" y="280" width="155" height="40" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="647" y="304" text-anchor="middle" font-size="10.5" font-weight="600" fill="#2E7D32">Student Routes</text>
+  <rect x="475" y="275" width="130" height="38" rx="6" fill="#fff" fill-opacity="0.95"/>
+  <text x="540" y="290" text-anchor="middle" font-size="10" font-weight="600" fill="#2E7D32">Student (24)</text>
+  <text x="540" y="303" text-anchor="middle" font-size="8" fill="#666">Chat • Progress • Submit</text>
 
-  <!-- Service boxes row 2 -->
-  <rect x="60" y="333" width="235" height="40" rx="7" fill="#E8F5E9" fill-opacity="0.95" stroke="#66BB6A" stroke-width="1.5"/>
-  <text x="177" y="350" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1B5E20">RAG Chat Engine</text>
-  <text x="177" y="364" text-anchor="middle" font-size="9" fill="#4CAF50">Hybrid Search + Cross-Encoder + LLM</text>
+  <rect x="615" y="275" width="130" height="38" rx="6" fill="#fff" fill-opacity="0.95"/>
+  <text x="680" y="290" text-anchor="middle" font-size="10" font-weight="600" fill="#2E7D32">Chat (6)</text>
+  <text x="680" y="303" text-anchor="middle" font-size="8" fill="#666">RAG • Feedback • Stream</text>
 
-  <rect x="310" y="333" width="235" height="40" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="427" y="350" text-anchor="middle" font-size="10.5" font-weight="600" fill="#2E7D32">PDF Processor</text>
-  <text x="427" y="364" text-anchor="middle" font-size="9" fill="#666">TOC &bull; Chunking &bull; OCR &bull; Preeti</text>
+  <rect x="755" y="275" width="90" height="38" rx="6" fill="#fff" fill-opacity="0.95"/>
+  <text x="800" y="290" text-anchor="middle" font-size="10" font-weight="600" fill="#2E7D32">Super (14)</text>
+  <text x="800" y="303" text-anchor="middle" font-size="8" fill="#666">Global Admin</text>
 
-  <rect x="560" y="333" width="170" height="40" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="645" y="350" text-anchor="middle" font-size="10.5" font-weight="600" fill="#2E7D32">Content Gen</text>
-  <text x="645" y="364" text-anchor="middle" font-size="9" fill="#666">Quizzes &bull; Flashcards &bull; Plans</text>
+  <!-- Core services row 2 -->
+  <rect x="55" y="325" width="260" height="70" rx="7" fill="#C8E6C9" fill-opacity="0.95" stroke="#43A047" stroke-width="2"/>
+  <text x="185" y="345" text-anchor="middle" font-size="11" font-weight="700" fill="#1B5E20">RAG Chat Engine</text>
+  <text x="185" y="360" text-anchor="middle" font-size="9" fill="#2E7D32">3-Stage Retrieval Pipeline</text>
+  <text x="185" y="375" text-anchor="middle" font-size="9" fill="#555">BM25 (0.3) + Semantic (0.7) → Cross-Encoder</text>
+  <text x="185" y="388" text-anchor="middle" font-size="9" fill="#555">Top-5 context → Llama 3.3 70B</text>
+
+  <rect x="330" y="325" width="260" height="70" rx="7" fill="#fff" fill-opacity="0.95"/>
+  <text x="460" y="345" text-anchor="middle" font-size="11" font-weight="700" fill="#2E7D32">PDF Processor</text>
+  <text x="460" y="360" text-anchor="middle" font-size="9" fill="#555">4-tier TOC: PyMuPDF → Regex → Docling → Groq</text>
+  <text x="460" y="375" text-anchor="middle" font-size="9" fill="#555">OCR: Tesseract (nep+eng) • Preeti Detection</text>
+  <text x="460" y="388" text-anchor="middle" font-size="9" fill="#555">Section-aware Chunking: 600 tok / 120 overlap</text>
+
+  <rect x="605" y="325" width="240" height="70" rx="7" fill="#fff" fill-opacity="0.95"/>
+  <text x="725" y="345" text-anchor="middle" font-size="11" font-weight="700" fill="#2E7D32">Content Generation</text>
+  <text x="725" y="360" text-anchor="middle" font-size="9" fill="#555">Auto Quiz (MCQ, T/F, Short Answer)</text>
+  <text x="725" y="375" text-anchor="middle" font-size="9" fill="#555">Flashcards • Study Plans</text>
+  <text x="725" y="388" text-anchor="middle" font-size="9" fill="#555">LLM-powered from document chunks</text>
 
   <!-- Arrow down -->
-  <line x1="450" y1="385" x2="450" y2="420" stroke="#546E7A" stroke-width="2.5" marker-end="url(#arrowGrey)"/>
+  <line x1="450" y1="410" x2="450" y2="445" stroke="#546E7A" stroke-width="2.5" marker-end="url(#arrowGrey)"/>
 
   <!-- ════════ DATA LAYER ════════ -->
-  <rect x="40" y="425" width="520" height="130" rx="14" fill="url(#gData)" filter="url(#shadow)"/>
-  <text x="300" y="452" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">DATA LAYER</text>
-  <text x="300" y="472" text-anchor="middle" font-size="12" fill="#FFF3E0">PostgreSQL 17 + pgvector</text>
+  <rect x="40" y="450" width="520" height="140" rx="14" fill="url(#gData)" filter="url(#shadow)"/>
+  <text x="300" y="475" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">DATA LAYER</text>
+  <text x="300" y="492" text-anchor="middle" font-size="11" fill="#FFF3E0">PostgreSQL 17 + pgvector extension</text>
 
-  <rect x="60" y="485" width="230" height="55" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="175" y="505" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E65100">Relational Tables (20+)</text>
-  <text x="175" y="520" text-anchor="middle" font-size="9" fill="#666">Users &bull; Assignments &bull; Quizzes</text>
-  <text x="175" y="533" text-anchor="middle" font-size="9" fill="#666">Attendance &bull; Enrollment &bull; Grades</text>
+  <rect x="55" y="505" width="240" height="70" rx="7" fill="#fff" fill-opacity="0.95"/>
+  <text x="175" y="522" text-anchor="middle" font-size="10" font-weight="700" fill="#E65100">Relational Tables (20+)</text>
+  <text x="175" y="537" text-anchor="middle" font-size="9" fill="#666">users • chatbots • documents • chunks</text>
+  <text x="175" y="550" text-anchor="middle" font-size="9" fill="#666">quizzes • flashcards • assignments</text>
+  <text x="175" y="563" text-anchor="middle" font-size="9" fill="#666">sections • attendance • enrollments</text>
 
-  <rect x="310" y="485" width="230" height="55" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="425" y="505" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E65100">Vector Store</text>
-  <text x="425" y="520" text-anchor="middle" font-size="9" fill="#666">384-dim Embeddings &bull; IVFFlat</text>
-  <text x="425" y="533" text-anchor="middle" font-size="9" fill="#666">BM25 GIN Index &bull; JSONB Metadata</text>
+  <rect x="310" y="505" width="240" height="70" rx="7" fill="#fff" fill-opacity="0.95"/>
+  <text x="430" y="522" text-anchor="middle" font-size="10" font-weight="700" fill="#E65100">Vector Store (chunks table)</text>
+  <text x="430" y="537" text-anchor="middle" font-size="9" fill="#666">384-dim embeddings • IVFFlat index</text>
+  <text x="430" y="550" text-anchor="middle" font-size="9" fill="#666">tsvector + GIN for BM25</text>
+  <text x="430" y="563" text-anchor="middle" font-size="9" fill="#666">JSONB metadata • hybrid_search() fn</text>
 
-  <!-- ════════ EXTERNAL SERVICES ════════ -->
-  <rect x="590" y="425" width="270" height="130" rx="14" fill="url(#gAI)" filter="url(#shadow)"/>
-  <text x="725" y="452" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">EXTERNAL AI</text>
+  <!-- ════════ EXTERNAL AI SERVICES ════════ -->
+  <rect x="590" y="450" width="270" height="140" rx="14" fill="url(#gAI)" filter="url(#shadow)"/>
+  <text x="725" y="475" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">AI / ML SERVICES</text>
 
-  <rect x="610" y="468" width="230" height="36" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="725" y="491" text-anchor="middle" font-size="10.5" font-weight="600" fill="#6A1B9A">Groq API &mdash; Llama 3.3 70B</text>
+  <rect x="605" y="492" width="240" height="40" rx="7" fill="#fff" fill-opacity="0.95"/>
+  <text x="725" y="508" text-anchor="middle" font-size="10" font-weight="700" fill="#6A1B9A">Groq LPU — Llama 3.3 70B</text>
+  <text x="725" y="522" text-anchor="middle" font-size="9" fill="#888">Chat completion • Quiz generation</text>
 
-  <rect x="610" y="512" width="230" height="36" rx="7" fill="#fff" fill-opacity="0.92"/>
-  <text x="725" y="528" text-anchor="middle" font-size="10" font-weight="600" fill="#6A1B9A">Sentence-Transformers</text>
-  <text x="725" y="542" text-anchor="middle" font-size="9" fill="#888">Multilingual MiniLM &bull; Cross-Encoder</text>
+  <rect x="605" y="540" width="240" height="40" rx="7" fill="#fff" fill-opacity="0.95"/>
+  <text x="725" y="556" text-anchor="middle" font-size="10" font-weight="700" fill="#6A1B9A">Sentence-Transformers (Local)</text>
+  <text x="725" y="570" text-anchor="middle" font-size="9" fill="#888">paraphrase-multilingual-MiniLM • Cross-Encoder</text>
 
   <!-- Connection lines AI ↔ Backend -->
-  <line x1="725" y1="425" x2="725" y2="385" stroke="#9C27B0" stroke-width="2" stroke-dasharray="6,3"/>
-  <line x1="725" y1="385" x2="560" y2="385" stroke="#9C27B0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPurple)"/>
-  <defs><marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-    <polygon points="0 0, 8 3, 0 6" fill="#9C27B0"/></marker></defs>
+  <line x1="725" y1="450" x2="725" y2="420" stroke="#9C27B0" stroke-width="2" stroke-dasharray="6,3"/>
+  <line x1="725" y1="420" x2="560" y2="420" stroke="#9C27B0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPurple)"/>
 
   <!-- Legend -->
-  <rect x="40" y="580" width="820" height="85" rx="10" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="1"/>
-  <text x="450" y="600" text-anchor="middle" font-size="12" font-weight="700" fill="#333">Technology Stack</text>
-  <text x="140" y="622" text-anchor="middle" font-size="10" fill="#0288D1" font-weight="600">Frontend</text>
-  <text x="140" y="638" text-anchor="middle" font-size="9" fill="#555">React 19 &bull; TS &bull; Vite</text>
-  <text x="140" y="652" text-anchor="middle" font-size="9" fill="#555">Tailwind &bull; Radix UI</text>
+  <rect x="40" y="610" width="820" height="95" rx="10" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="450" y="632" text-anchor="middle" font-size="12" font-weight="700" fill="#333">Technology Stack Summary</text>
+  
+  <text x="120" y="655" text-anchor="middle" font-size="10" fill="#0288D1" font-weight="600">Frontend</text>
+  <text x="120" y="670" text-anchor="middle" font-size="9" fill="#555">React 18 • TypeScript</text>
+  <text x="120" y="683" text-anchor="middle" font-size="9" fill="#555">Vite • Tailwind • Radix</text>
+  <text x="120" y="696" text-anchor="middle" font-size="9" fill="#555">SSE Streaming</text>
 
-  <text x="320" y="622" text-anchor="middle" font-size="10" fill="#388E3C" font-weight="600">Backend</text>
-  <text x="320" y="638" text-anchor="middle" font-size="9" fill="#555">FastAPI &bull; Python 3.11</text>
-  <text x="320" y="652" text-anchor="middle" font-size="9" fill="#555">PyJWT &bull; bcrypt</text>
+  <text x="280" y="655" text-anchor="middle" font-size="10" fill="#388E3C" font-weight="600">Backend</text>
+  <text x="280" y="670" text-anchor="middle" font-size="9" fill="#555">FastAPI • Python 3.11</text>
+  <text x="280" y="683" text-anchor="middle" font-size="9" fill="#555">PyJWT • bcrypt</text>
+  <text x="280" y="696" text-anchor="middle" font-size="9" fill="#555">180+ REST endpoints</text>
 
-  <text x="500" y="622" text-anchor="middle" font-size="10" fill="#F57C00" font-weight="600">Database</text>
-  <text x="500" y="638" text-anchor="middle" font-size="9" fill="#555">PostgreSQL 17 &bull; pgvector</text>
-  <text x="500" y="652" text-anchor="middle" font-size="9" fill="#555">IVFFlat &bull; GIN Index</text>
+  <text x="440" y="655" text-anchor="middle" font-size="10" fill="#F57C00" font-weight="600">Database</text>
+  <text x="440" y="670" text-anchor="middle" font-size="9" fill="#555">PostgreSQL 17</text>
+  <text x="440" y="683" text-anchor="middle" font-size="9" fill="#555">pgvector • IVFFlat</text>
+  <text x="440" y="696" text-anchor="middle" font-size="9" fill="#555">GIN FTS • JSONB</text>
 
-  <text x="680" y="622" text-anchor="middle" font-size="10" fill="#7B1FA2" font-weight="600">AI / ML</text>
-  <text x="680" y="638" text-anchor="middle" font-size="9" fill="#555">Llama 3.3 70B &bull; Groq</text>
-  <text x="680" y="652" text-anchor="middle" font-size="9" fill="#555">SBERT &bull; Cross-Encoder</text>
+  <text x="600" y="655" text-anchor="middle" font-size="10" fill="#7B1FA2" font-weight="600">AI / ML</text>
+  <text x="600" y="670" text-anchor="middle" font-size="9" fill="#555">Llama 3.3 70B (Groq)</text>
+  <text x="600" y="683" text-anchor="middle" font-size="9" fill="#555">MiniLM-L12 (384d)</text>
+  <text x="600" y="696" text-anchor="middle" font-size="9" fill="#555">mmarco Cross-Encoder</text>
 
-  <text x="830" y="622" text-anchor="middle" font-size="10" fill="#D32F2F" font-weight="600">OCR</text>
-  <text x="830" y="638" text-anchor="middle" font-size="9" fill="#555">Tesseract 5</text>
-  <text x="830" y="652" text-anchor="middle" font-size="9" fill="#555">Docling &bull; PyMuPDF</text>
+  <text x="760" y="655" text-anchor="middle" font-size="10" fill="#D32F2F" font-weight="600">PDF / OCR</text>
+  <text x="760" y="670" text-anchor="middle" font-size="9" fill="#555">Tesseract 5 (nep+eng)</text>
+  <text x="760" y="683" text-anchor="middle" font-size="9" fill="#555">PyMuPDF • Docling</text>
+  <text x="760" y="696" text-anchor="middle" font-size="9" fill="#555">pdf2image • Pillow</text>
 </svg>

@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "description": "Grade 8 English Evaluation - grade-8-english.pdf (Nepal Curriculum)",
+    "total_questions": 10,
+    "book": "grade-8-english.pdf",
+    "language": "English",
+    "categories": ["Grammar", "Modal_Verbs", "Passive_Voice", "Reported_Speech", "Offers", "Comprehension"]
+  },
+  "test_cases": [
+    {
+      "id": "eng8-001",
+      "question": "How do you form a yes/no question with the modal verb 'can'? Transform: 'Linda can win the match.'",
+      "ground_truth": "To form a yes/no question with 'can', move 'can' before the subject. 'Linda can win the match.' → 'Can Linda win the match?' The answer would be: 'Yes, she can.' or 'No, she cannot/can't.'",
+      "book": "grade-8-english.pdf",
+      "category": "Modal_Verbs",
+      "grade": 8,
+      "type": "grammar_transformation"
+    },
+    {
+      "id": "eng8-002",
+      "question": "How do you change 'could' sentences to yes/no questions? Transform: 'They could rescue the victims.'",
+      "ground_truth": "Move the modal 'could' before the subject to form a yes/no question. 'They could rescue the victims.' → 'Could they rescue the victims?' The response: 'Yes, they could.' or 'No, they couldn't.'",
+      "book": "grade-8-english.pdf",
+      "category": "Modal_Verbs",
+      "grade": 8,
+      "type": "grammar_transformation"
+    },
+    {
+      "id": "eng8-003",
+      "question": "The steam engine was invented in 1765 by James Watt. What structure of English is this? Identify the agent.",
+      "ground_truth": "This is a passive voice sentence. Structure: Object + was/were + past participle + by + agent. Here: 'The steam engine' is the subject (originally the object), 'was invented' is the passive verb (past passive), 'by James Watt' indicates the agent (the person who did the action).",
+      "book": "grade-8-english.pdf",
+      "category": "Passive_Voice",
+      "grade": 8,
+      "type": "grammar_analysis"
+    },
+    {
+      "id": "eng8-004",
+      "question": "How do you study the subject-verb relationship in passive sentences? Give an example using 'invent'.",
+      "ground_truth": "In passive voice, the original object becomes the subject and the original subject becomes the agent (by + agent). Active: 'Scientists invented the telephone.' Passive: 'The telephone was invented by scientists.' The subject and verb must agree in passive too.",
+      "book": "grade-8-english.pdf",
+      "category": "Passive_Voice",
+      "grade": 8,
+      "type": "concept"
+    },
+    {
+      "id": "eng8-005",
+      "question": "How do you make an offer using 'shall' or 'would'? Give an example of offering a cup of tea to a friend.",
+      "ground_truth": "Offers are made using 'Shall I...?', 'Would you like...?', or 'Can I...?'. Example: Friend is at home, offer tea → 'Shall I make you a cup of tea?' or 'Would you like a cup of tea?' Response accepting: 'Yes, please.' Response declining: 'No, thank you.'",
+      "book": "grade-8-english.pdf",
+      "category": "Offers",
+      "grade": 8,
+      "type": "functional_language"
+    },
+    {
+      "id": "eng8-006",
+      "question": "How do you report what someone said? Change to reported speech: 'I said to him, Please go to the market.'",
+      "ground_truth": "Reported speech (indirect speech) conveys meaning without quoting exact words. For imperatives: reporting verb + object + infinitive. 'I said to him, Please go to the market.' → 'I requested/told him to go to the market.' The comma and quotation marks are removed, tense may shift.",
+      "book": "grade-8-english.pdf",
+      "category": "Reported_Speech",
+      "grade": 8,
+      "type": "grammar_transformation"
+    },
+    {
+      "id": "eng8-007",
+      "question": "People cycle to work because of environmental reasons — what kind of sentence is this, and how would you complete: 'She doesn't like going out at night because...'?",
+      "ground_truth": "These are sentences showing reason/cause using 'because'. 'Because' introduces a subordinate clause giving the reason. 'She doesn't like going out at night because it is dangerous/dark.' The 'because' clause answers 'Why?'",
+      "book": "grade-8-english.pdf",
+      "category": "Grammar",
+      "grade": 8,
+      "type": "sentence_structure"
+    },
+    {
+      "id": "eng8-008",
+      "question": "How do you use 'would' for polite suggestions? Give an example with 'suggest a solution to a problem'.",
+      "ground_truth": "Would is used for polite requests and hypothetical situations. Examples: 'He would suggest a solution to a problem.' (stating willingness/habit). As a yes/no question: 'Would he suggest a solution?' Response: 'Yes, he would.' or 'No, he wouldn't.'",
+      "book": "grade-8-english.pdf",
+      "category": "Modal_Verbs",
+      "grade": 8,
+      "type": "functional_language"
+    },
+    {
+      "id": "eng8-009",
+      "question": "In reading comprehension, what should you do when asked to 'replace words in red with their synonyms'?",
+      "ground_truth": "When asked to replace words with synonyms: (1) Identify the word in context, (2) Find a word from the provided options (e.g., from a given word bank or passage) that has the same meaning, (3) Check that it fits grammatically in the sentence. Synonyms are words with similar meanings.",
+      "book": "grade-8-english.pdf",
+      "category": "Comprehension",
+      "grade": 8,
+      "type": "reading_skill"
+    },
+    {
+      "id": "eng8-010",
+      "question": "What is the past tense form of 'can' and how is it used? Give an example.",
+      "ground_truth": "The past tense of 'can' is 'could'. It expresses ability or possibility in the past. Example: 'I can swim now.' → Past: 'I could swim when I was young.' Also used for polite requests: 'Could you help me?' As yes/no: 'Could you help me?' → 'Yes, I could.'",
+      "book": "grade-8-english.pdf",
+      "category": "Modal_Verbs",
+      "grade": 8,
+      "type": "grammar"
+    }
+  ]
+}

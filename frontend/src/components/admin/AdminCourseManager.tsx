@@ -20,6 +20,8 @@ import {
     ChevronUp,
     BookOpen,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { api } from '../../lib/api';
 import { ConfirmDialog } from '../shared/ConfirmDialog';
 
@@ -39,6 +41,8 @@ interface DocumentItem {
     filename: string;
     upload_date: string;
     chunk_count: number;
+    status?: 'processing' | 'ready' | 'failed';
+    error_message?: string | null;
 }
 
 interface ChatMessage {
@@ -127,6 +131,16 @@ const AdminCourseManager: React.FC = () => {
         }
     }, [selectedBot, loadDocuments]);
 
+    // Poll while any doc is still processing. Stops automatically once all
+    // docs reach ready/failed, so idle admins don't hammer the API.
+    useEffect(() => {
+        if (!selectedBot) return;
+        const hasProcessing = documents.some(d => d.status === 'processing');
+        if (!hasProcessing) return;
+        const t = setInterval(() => loadDocuments(selectedBot.id), 3000);
+        return () => clearInterval(t);
+    }, [selectedBot, documents, loadDocuments]);
+
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chatMessages]);
@@ -213,8 +227,8 @@ const AdminCourseManager: React.FC = () => {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const result = await api.post<{ message: string; chunks: number }>(`/admin/chatbots/${selectedBot.id}/upload`, formData);
-            setSuccess(`"${file.name}" uploaded — ${result.chunks} chunks ingested`);
+            await api.post<{ message: string; document_id: number; status: string }>(`/admin/chatbots/${selectedBot.id}/upload`, formData);
+            setSuccess(`"${file.name}" uploaded — ingesting in the background...`);
             setUploadProgress('');
             loadDocuments(selectedBot.id);
         } catch (err: unknown) {
@@ -587,27 +601,48 @@ const AdminCourseManager: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-2">
-                                    {documents.map(doc => (
-                                        <div
-                                            key={doc.id}
-                                            className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-border hover:bg-muted transition-colors"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
-                                                    <FileText className="w-4 h-4 text-red-500" />
+                                    {documents.map(doc => {
+                                        const status = doc.status ?? 'ready';
+                                        const isProcessing = status === 'processing';
+                                        const isFailed = status === 'failed';
+                                        return (
+                                            <div
+                                                key={doc.id}
+                                                className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-border hover:bg-muted transition-colors"
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isFailed ? 'bg-red-50' : isProcessing ? 'bg-amber-50' : 'bg-red-50'}`}>
+                                                        {isProcessing ? (
+                                                            <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />
+                                                        ) : isFailed ? (
+                                                            <AlertCircle className="w-4 h-4 text-red-500" />
+                                                        ) : (
+                                                            <FileText className="w-4 h-4 text-red-500" />
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-foreground truncate max-w-xs">{doc.filename}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {isProcessing
+                                                                ? 'Processing…'
+                                                                : isFailed
+                                                                    ? (doc.error_message || 'Ingestion failed')
+                                                                    : `${doc.chunk_count} chunks`}
+                                                            {' • '}
+                                                            {new Date(doc.upload_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-foreground truncate max-w-xs">{doc.filename}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {doc.chunk_count} chunks • {new Date(doc.upload_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                    </p>
-                                                </div>
+                                                <span className={`px-2 py-1 rounded-md text-xs border ${isProcessing
+                                                    ? 'bg-amber-50 border-amber-200 text-amber-700'
+                                                    : isFailed
+                                                        ? 'bg-red-50 border-red-200 text-red-700'
+                                                        : 'bg-card border-border text-muted-foreground'}`}>
+                                                    {isProcessing ? 'Processing' : isFailed ? 'Failed' : 'PDF'}
+                                                </span>
                                             </div>
-                                            <span className="px-2 py-1 bg-card border border-border rounded-md text-xs text-muted-foreground">
-                                                PDF
-                                            </span>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -666,7 +701,13 @@ const AdminCourseManager: React.FC = () => {
                                                     ? 'bg-indigo-600 text-white rounded-tr-sm'
                                                     : 'bg-card border border-border text-foreground rounded-tl-sm shadow-sm'
                                                     }`}>
-                                                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                                                    {msg.role === 'assistant' ? (
+                                                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0 prose-headings:mt-2 prose-headings:mb-1">
+                                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                                                    )}
                                                     {msg.sources && msg.sources.length > 0 && (
                                                         <div className="mt-2 pt-2 border-t border-border">
                                                             <p className="text-[10px] font-semibold text-muted-foreground mb-1 uppercase tracking-wide">Sources</p>

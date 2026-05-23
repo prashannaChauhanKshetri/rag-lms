@@ -395,19 +395,41 @@ def delete_chatbot(chatbot_id: str):
 
 # --- Document Operations ---
 
-def add_document(chatbot_id: str, filename: str, chunk_count: int):
+def add_document(chatbot_id: str, filename: str, chunk_count: int = 0, status: str = "ready") -> int:
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO documents (chatbot_id, filename, chunk_count) VALUES (%s, %s, %s)",
-                (chatbot_id, filename, chunk_count)
+                "INSERT INTO documents (chatbot_id, filename, chunk_count, status) VALUES (%s, %s, %s, %s) RETURNING id",
+                (chatbot_id, filename, chunk_count, status)
             )
+            return cur.fetchone()[0]
+
+def update_document_status(doc_id: int, status: str, chunk_count: Optional[int] = None, error_message: Optional[str] = None):
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            if chunk_count is not None:
+                cur.execute(
+                    "UPDATE documents SET status = %s, chunk_count = %s, error_message = %s WHERE id = %s",
+                    (status, chunk_count, error_message, doc_id)
+                )
+            else:
+                cur.execute(
+                    "UPDATE documents SET status = %s, error_message = %s WHERE id = %s",
+                    (status, error_message, doc_id)
+                )
+
+def get_document(doc_id: int) -> Optional[Dict]:
+    with get_db_connection() as conn:
+        with get_dict_cursor(conn) as cur:
+            cur.execute("SELECT * FROM documents WHERE id = %s", (doc_id,))
+            row = cur.fetchone()
+    return dict(row) if row else None
 
 def list_documents(chatbot_id: str) -> List[Dict]:
     with get_db_connection() as conn:
         with get_dict_cursor(conn) as cur:
             cur.execute(
-                "SELECT * FROM documents WHERE chatbot_id = %s ORDER BY upload_date DESC", 
+                "SELECT * FROM documents WHERE chatbot_id = %s ORDER BY upload_date DESC",
                 (chatbot_id,)
             )
             docs = cur.fetchall()

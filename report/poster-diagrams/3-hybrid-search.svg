@@ -1,94 +1,145 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520" font-family="Segoe UI, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 800" font-family="Segoe UI, Arial, sans-serif">
   <defs>
-    <marker id="arr" markerWidth="9" markerHeight="6" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 9 3, 0 6" fill="#546E7A"/>
+    <!-- Larger, more visible arrow markers -->
+    <marker id="arr" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#546E7A"/>
     </marker>
-    <marker id="arrB" markerWidth="9" markerHeight="6" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 9 3, 0 6" fill="#0277BD"/>
+    <marker id="arrB" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#0277BD"/>
     </marker>
-    <marker id="arrG" markerWidth="9" markerHeight="6" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 9 3, 0 6" fill="#2E7D32"/>
+    <marker id="arrG" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#2E7D32"/>
     </marker>
-    <marker id="arrO" markerWidth="9" markerHeight="6" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 9 3, 0 6" fill="#E65100"/>
+    <marker id="arrO" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#E65100"/>
     </marker>
-    <filter id="sh"><feDropShadow dx="1" dy="2" stdDeviation="2.5" flood-opacity="0.12"/></filter>
+    <marker id="arrP" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#7B1FA2"/>
+    </marker>
+    <filter id="sh"><feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.15"/></filter>
   </defs>
 
-  <rect width="880" height="520" fill="#F8FAFC"/>
+  <!-- Background -->
+  <rect width="950" height="800" fill="#F8FAFC"/>
 
   <!-- Title -->
-  <text x="440" y="36" text-anchor="middle" font-size="21" font-weight="700" fill="#1a1a2e">3-Stage Hybrid Retrieval Pipeline</text>
-  <line x1="220" y1="47" x2="660" y2="47" stroke="#0277BD" stroke-width="3" stroke-linecap="round"/>
+  <text x="475" y="40" text-anchor="middle" font-size="26" font-weight="700" fill="#1a1a2e">3-Stage Hybrid Retrieval Pipeline</text>
+  <line x1="200" y1="55" x2="750" y2="55" stroke="#0277BD" stroke-width="4" stroke-linecap="round"/>
 
-  <!-- ── QUERY INPUT ── -->
-  <rect x="320" y="62" width="240" height="50" rx="10" fill="#004D40" filter="url(#sh)"/>
-  <text x="440" y="81" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Student Query</text>
-  <text x="440" y="100" text-anchor="middle" font-size="10" fill="#80CBC4">"Explain photosynthesis" (English or Nepali)</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- QUERY INPUT BOX -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="325" y="75" width="300" height="60" rx="12" fill="#004D40" filter="url(#sh)"/>
+  <text x="475" y="100" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">Student Query</text>
+  <text x="475" y="122" text-anchor="middle" font-size="12" fill="#80CBC4">"Explain photosynthesis" (English or Nepali)</text>
 
-  <!-- arrow down split -->
-  <line x1="350" y1="112" x2="200" y2="160" stroke="#546E7A" stroke-width="2" marker-end="url(#arr)"/>
-  <line x1="440" y1="112" x2="440" y2="160" stroke="#546E7A" stroke-width="2" marker-end="url(#arr)"/>
-  <line x1="530" y1="112" x2="680" y2="160" stroke="#546E7A" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Arrow down from query - splits into 3 -->
+  <path d="M 475 135 L 475 165" stroke="#546E7A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+  
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- STAGE 1 LABEL -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="200" y="175" width="550" height="28" rx="6" fill="#546E7A"/>
+  <text x="475" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" letter-spacing="1">STAGE 1 — PARALLEL DUAL RETRIEVAL</text>
 
-  <!-- ════ STAGE 1 ════ -->
-  <text x="440" y="148" text-anchor="middle" font-size="11" font-weight="700" fill="#546E7A" letter-spacing="1">STAGE 1 — DUAL RETRIEVAL (Top-30 each)</text>
+  <!-- Arrows splitting to 3 boxes -->
+  <path d="M 380 203 L 200 235" stroke="#0288D1" stroke-width="2.5" fill="none" marker-end="url(#arrB)"/>
+  <path d="M 475 203 L 475 235" stroke="#388E3C" stroke-width="2.5" fill="none" marker-end="url(#arrG)"/>
+  <path d="M 570 203 L 750 235" stroke="#F57C00" stroke-width="2.5" fill="none" marker-end="url(#arrO)"/>
 
-  <!-- BM25 box -->
-  <rect x="60" y="162" width="260" height="100" rx="10" fill="#E3F2FD" stroke="#0288D1" stroke-width="2" filter="url(#sh)"/>
-  <text x="190" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#01579B">BM25 Keyword Search</text>
-  <rect x="80" y="194" width="220" height="24" rx="5" fill="#fff" stroke="#90CAF9" stroke-width="1"/>
-  <text x="190" y="211" text-anchor="middle" font-size="9.5" fill="#0D47A1" font-style="italic">plainto_tsquery('simple', query)</text>
-  <text x="190" y="237" text-anchor="middle" font-size="9.5" fill="#555">GIN full-text index &bull; ts_rank() scoring</text>
-  <text x="190" y="252" text-anchor="middle" font-size="9.5" fill="#555">Term frequency + inverse doc frequency</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- BM25 BOX (Left) -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="50" y="245" width="300" height="130" rx="12" fill="#E3F2FD" stroke="#0288D1" stroke-width="2.5" filter="url(#sh)"/>
+  <text x="200" y="275" text-anchor="middle" font-size="15" font-weight="700" fill="#01579B">BM25 Keyword Search</text>
+  
+  <!-- Code box -->
+  <rect x="70" y="290" width="260" height="30" rx="6" fill="#fff" stroke="#90CAF9" stroke-width="1.5"/>
+  <text x="200" y="312" text-anchor="middle" font-size="11" fill="#0D47A1" font-family="Consolas, monospace">plainto_tsquery('simple', query)</text>
+  
+  <text x="200" y="345" text-anchor="middle" font-size="12" fill="#333">GIN tsvector index</text>
+  <text x="200" y="365" text-anchor="middle" font-size="12" fill="#333">Term frequency × IDF scoring</text>
 
-  <!-- Query Encoder box -->
-  <rect x="320" y="162" width="200" height="100" rx="10" fill="#E8F5E9" stroke="#388E3C" stroke-width="2" filter="url(#sh)"/>
-  <text x="420" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#1B5E20">Query Encoder</text>
-  <text x="420" y="204" text-anchor="middle" font-size="10" fill="#555">MiniLM-L12</text>
-  <text x="420" y="222" text-anchor="middle" font-size="10" fill="#555">50+ languages</text>
-  <text x="420" y="244" text-anchor="middle" font-size="26" fill="#388E3C" font-weight="900">↓</text>
-  <text x="420" y="262" text-anchor="middle" font-size="9.5" fill="#2E7D32" font-weight="600">384-dim vector</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- QUERY ENCODER BOX (Center) -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="375" y="245" width="200" height="130" rx="12" fill="#E8F5E9" stroke="#388E3C" stroke-width="2.5" filter="url(#sh)"/>
+  <text x="475" y="275" text-anchor="middle" font-size="15" font-weight="700" fill="#1B5E20">Query Encoder</text>
+  
+  <text x="475" y="300" text-anchor="middle" font-size="11" fill="#333">paraphrase-multilingual</text>
+  <text x="475" y="318" text-anchor="middle" font-size="11" fill="#333">MiniLM-L12-v2</text>
+  
+  <!-- Arrow symbol -->
+  <text x="475" y="345" text-anchor="middle" font-size="24" fill="#388E3C" font-weight="700">⬇</text>
+  
+  <text x="475" y="370" text-anchor="middle" font-size="11" fill="#2E7D32" font-weight="600">384-dim (50+ languages)</text>
 
-  <!-- Semantic Search box -->
-  <rect x="560" y="162" width="260" height="100" rx="10" fill="#FFF3E0" stroke="#F57C00" stroke-width="2" filter="url(#sh)"/>
-  <text x="690" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#E65100">Semantic Vector Search</text>
-  <rect x="578" y="194" width="224" height="24" rx="5" fill="#fff" stroke="#FFCC80" stroke-width="1"/>
-  <text x="690" y="211" text-anchor="middle" font-size="9.5" fill="#BF360C" font-style="italic">1 − (embedding &lt;=&gt; query_vec)</text>
-  <text x="690" y="237" text-anchor="middle" font-size="9.5" fill="#555">IVFFlat index (lists=100)</text>
-  <text x="690" y="252" text-anchor="middle" font-size="9.5" fill="#555">Cosine similarity &bull; 384-dim space</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- SEMANTIC SEARCH BOX (Right) -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="600" y="245" width="300" height="130" rx="12" fill="#FFF3E0" stroke="#F57C00" stroke-width="2.5" filter="url(#sh)"/>
+  <text x="750" y="275" text-anchor="middle" font-size="15" font-weight="700" fill="#E65100">Semantic Vector Search</text>
+  
+  <!-- Code box -->
+  <rect x="620" y="290" width="260" height="30" rx="6" fill="#fff" stroke="#FFCC80" stroke-width="1.5"/>
+  <text x="750" y="312" text-anchor="middle" font-size="11" fill="#BF360C" font-family="Consolas, monospace">1 - (embedding &lt;=&gt; query_vec)</text>
+  
+  <text x="750" y="345" text-anchor="middle" font-size="12" fill="#333">pgvector HNSW index</text>
+  <text x="750" y="365" text-anchor="middle" font-size="12" fill="#333">Cosine similarity • 384-dim</text>
 
-  <!-- merge arrow -->
-  <line x1="190" y1="262" x2="350" y2="308" stroke="#546E7A" stroke-width="2" marker-end="url(#arr)"/>
-  <line x1="420" y1="270" x2="420" y2="308" stroke="#546E7A" stroke-width="2" marker-end="url(#arr)"/>
-  <line x1="690" y1="262" x2="510" y2="308" stroke="#546E7A" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- ARROWS MERGING TO STAGE 2 -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <path d="M 200 375 L 200 410 L 400 440" stroke="#546E7A" stroke-width="2.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M 475 375 L 475 440" stroke="#546E7A" stroke-width="2.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M 750 375 L 750 410 L 550 440" stroke="#546E7A" stroke-width="2.5" fill="none" marker-end="url(#arr)"/>
 
-  <!-- ════ STAGE 2 ════ -->
-  <text x="440" y="300" text-anchor="middle" font-size="11" font-weight="700" fill="#546E7A" letter-spacing="1">STAGE 2 — SCORE FUSION &amp; METADATA BOOSTING</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- STAGE 2 LABEL -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="150" y="450" width="650" height="28" rx="6" fill="#607D8B"/>
+  <text x="475" y="470" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" letter-spacing="1">STAGE 2 — SCORE FUSION + METADATA BOOSTING</text>
 
-  <rect x="190" y="312" width="500" height="80" rx="10" fill="#ECEFF1" stroke="#607D8B" stroke-width="2" filter="url(#sh)"/>
-  <text x="440" y="334" text-anchor="middle" font-size="12" font-weight="700" fill="#263238">Hybrid Score Fusion</text>
-  <!-- formula box -->
-  <rect x="210" y="344" width="460" height="28" rx="7" fill="#263238"/>
-  <text x="440" y="364" text-anchor="middle" font-size="12" font-weight="600" fill="#80DEEA" font-style="italic">hybrid_score = 0.3 × BM25_norm  +  0.7 × semantic_sim</text>
-  <text x="440" y="385" text-anchor="middle" font-size="9.5" fill="#555">Deduplicate &bull; merge 60 candidates &bull; top-30 selected &bull; chapter/section metadata preserved</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- STAGE 2 BOX -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="150" y="490" width="650" height="100" rx="12" fill="#ECEFF1" stroke="#607D8B" stroke-width="2.5" filter="url(#sh)"/>
+  <text x="475" y="520" text-anchor="middle" font-size="14" font-weight="700" fill="#263238">Hybrid Score Fusion (SQL Function)</text>
+  
+  <!-- Formula box -->
+  <rect x="180" y="535" width="590" height="35" rx="8" fill="#263238"/>
+  <text x="475" y="560" text-anchor="middle" font-size="14" font-weight="600" fill="#80DEEA" font-family="Consolas, monospace">hybrid_score = 0.3 × BM25_norm + 0.7 × semantic_sim</text>
+  
+  <text x="475" y="583" text-anchor="middle" font-size="11" fill="#444">Deduplicate  •  Section boost (+10%)  •  Chapter boost (+15%)  •  Top-30 selected</text>
 
-  <line x1="440" y1="392" x2="440" y2="420" stroke="#546E7A" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- ARROW TO STAGE 3 -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <path d="M 475 590 L 475 620" stroke="#7B1FA2" stroke-width="3" fill="none" marker-end="url(#arrP)"/>
 
-  <!-- ════ STAGE 3 ════ -->
-  <text x="440" y="413" text-anchor="middle" font-size="11" font-weight="700" fill="#546E7A" letter-spacing="1">STAGE 3 — CROSS-ENCODER RERANKING</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- STAGE 3 LABEL -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="150" y="625" width="650" height="28" rx="6" fill="#7B1FA2"/>
+  <text x="475" y="645" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" letter-spacing="1">STAGE 3 — CROSS-ENCODER RERANKING</text>
 
-  <rect x="190" y="424" width="500" height="68" rx="10" fill="#EDE7F6" stroke="#7B1FA2" stroke-width="2.5" filter="url(#sh)"/>
-  <text x="440" y="445" text-anchor="middle" font-size="12" font-weight="700" fill="#4A148C">mmarco-mMiniLMv2-L12-H384-v1</text>
-  <text x="440" y="462" text-anchor="middle" font-size="10" fill="#555">Full query-passage attention &bull; 100+ languages &bull; ~30 passages/sec</text>
-  <!-- formula -->
-  <rect x="210" y="468" width="460" height="20" rx="5" fill="#4A148C"/>
-  <text x="440" y="482" text-anchor="middle" font-size="10.5" font-weight="600" fill="#E1BEE7" font-style="italic">final_score = 0.5 × cross_encoder  +  0.5 × hybrid_score</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- STAGE 3 BOX -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <rect x="150" y="660" width="650" height="55" rx="12" fill="#EDE7F6" stroke="#7B1FA2" stroke-width="2.5" filter="url(#sh)"/>
+  <text x="475" y="685" text-anchor="middle" font-size="13" font-weight="700" fill="#4A148C">mmarco-mMiniLMv2-L12-H384-v1 (Cross-Encoder)</text>
+  <text x="475" y="705" text-anchor="middle" font-size="11" fill="#555">Full query-passage attention  •  100+ languages  •  ~30 passages/sec</text>
 
-  <line x1="440" y1="492" x2="440" y2="510" stroke="#2E7D32" stroke-width="2" marker-end="url(#arrG)"/>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- ARROW FROM STAGE 3 TO OUTPUT -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <path d="M 475 715 L 475 740" stroke="#2E7D32" stroke-width="3" fill="none" marker-end="url(#arrG)"/>
 
-  <!-- Output -->
-  <rect x="290" y="506" width="300" height="0" rx="8" fill="#1B5E20"/>
-  <!-- nudge output label -->
-  <text x="440" y="516" text-anchor="middle" font-size="11" font-weight="700" fill="#1B5E20">Top-5 Chunks → LLM Context</text>
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- OUTPUT SECTION -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+
+  <!-- Final Output Box -->
+  <rect x="175" y="750" width="600" height="50" rx="12" fill="#1B5E20" filter="url(#sh)"/>
+  <text x="475" y="782" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">Top-5 Chunks → Llama 3.3 70B (Groq) → Grounded Answer + Citations</text>
 </svg>

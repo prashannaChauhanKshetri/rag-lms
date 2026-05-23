@@ -20,7 +20,7 @@
 
   <rect x="40" y="78" width="235" height="55" rx="10" fill="#E3F2FD" stroke="#0288D1" stroke-width="2" filter="url(#sh)"/>
   <text x="157" y="99" text-anchor="middle" font-size="11" font-weight="700" fill="#01579B">Digital PDF</text>
-  <text x="157" y="116" text-anchor="middle" font-size="9.5" fill="#555">Standard fonts &bull; English text</text>
+  <text x="157" y="116" text-anchor="middle" font-size="9.5" fill="#555">Standard fonts • English text</text>
   <text x="157" y="130" text-anchor="middle" font-size="9.5" fill="#555">Math, Science, English books</text>
 
   <rect x="313" y="78" width="235" height="55" rx="10" fill="#FFF8E1" stroke="#F9A825" stroke-width="2" filter="url(#sh)"/>
@@ -30,7 +30,7 @@
 
   <rect x="586" y="78" width="235" height="55" rx="10" fill="#FCE4EC" stroke="#C62828" stroke-width="2" filter="url(#sh)"/>
   <text x="703" y="99" text-anchor="middle" font-size="11" font-weight="700" fill="#B71C1C">Scanned PDF</text>
-  <text x="703" y="116" text-anchor="middle" font-size="9.5" fill="#555">Image-only pages &bull; 0 text chars</text>
+  <text x="703" y="116" text-anchor="middle" font-size="9.5" fill="#555">Image-only pages • 0 text chars</text>
   <text x="703" y="130" text-anchor="middle" font-size="9.5" fill="#555">Gr 10 Social Studies, some Science</text>
 
   <!-- arrows down -->
@@ -50,8 +50,8 @@
   <rect x="313" y="163" width="235" height="72" rx="10" fill="#FFF3E0" stroke="#E65100" stroke-width="2" filter="url(#sh)"/>
   <text x="430" y="185" text-anchor="middle" font-size="11" font-weight="700" fill="#BF360C">Font Detection → Force OCR</text>
   <text x="430" y="203" text-anchor="middle" font-size="9.5" fill="#555">Checks pages 10 &amp; 20 for Devanagari</text>
-  <text x="430" y="218" text-anchor="middle" font-size="9.5" fill="#555">Tesseract &bull; lang=nep+eng</text>
-  <text x="430" y="230" text-anchor="middle" font-size="9" fill="#E65100" font-weight="600">PSM 6 &bull; 300 DPI &bull; Parallel threads</text>
+  <text x="430" y="218" text-anchor="middle" font-size="9.5" fill="#555">Tesseract • lang=nep+eng</text>
+  <text x="430" y="230" text-anchor="middle" font-size="9" fill="#E65100" font-weight="600">PSM 6 • 300 DPI • Parallel threads</text>
 
   <rect x="586" y="163" width="235" height="72" rx="10" fill="#FCE4EC" stroke="#C62828" stroke-width="2" filter="url(#sh)"/>
   <text x="703" y="185" text-anchor="middle" font-size="11" font-weight="700" fill="#B71C1C">Tesseract OCR (all pages)</text>
@@ -78,13 +78,13 @@
   <text x="277" y="331" text-anchor="middle" font-size="8.5" fill="#3949AB">Docling</text>
   <rect x="324" y="316" width="82" height="22" rx="5" fill="#fff" stroke="#9FA8DA" stroke-width="1"/>
   <text x="365" y="331" text-anchor="middle" font-size="8.5" fill="#3949AB">Groq LLM</text>
-  <text x="230" y="355" text-anchor="middle" font-size="9.5" fill="#555">English &bull; Devanagari Unicode &bull; Preeti-OCR</text>
+  <text x="230" y="355" text-anchor="middle" font-size="9.5" fill="#555">English • Devanagari Unicode • Preeti-OCR</text>
   <text x="230" y="370" text-anchor="middle" font-size="9.5" fill="#555">Page → Chapter name mapping</text>
 
   <!-- Chunking -->
   <rect x="440" y="286" width="380" height="88" rx="10" fill="#F3E5F5" stroke="#7B1FA2" stroke-width="2" filter="url(#sh)"/>
   <text x="630" y="306" text-anchor="middle" font-size="11" font-weight="700" fill="#4A148C">Section-Aware Chunking (19+ types)</text>
-  <text x="630" y="324" text-anchor="middle" font-size="9.5" fill="#555">600 tokens &bull; 120 overlap &bull; Atomic: 1200 max</text>
+  <text x="630" y="324" text-anchor="middle" font-size="9.5" fill="#555">600 tokens • 120 overlap • Atomic: 1200 max</text>
 
   <!-- section type pills -->
   <rect x="452" y="332" width="68" height="18" rx="5" fill="#CE93D8"/>
@@ -97,7 +97,7 @@
   <text x="680" y="345" text-anchor="middle" font-size="8" fill="#fff">Glossary</text>
   <rect x="720" y="332" width="62" height="18" rx="5" fill="#CE93D8"/>
   <text x="751" y="345" text-anchor="middle" font-size="8" fill="#fff">Grammar</text>
-  <text x="630" y="368" text-anchor="middle" font-size="9.5" fill="#555">Metadata: page &bull; chapter &bull; heading &bull; section_type</text>
+  <text x="630" y="368" text-anchor="middle" font-size="9.5" fill="#555">Metadata: page • chapter • heading • section_type</text>
 
   <!-- final arrow -->
   <line x1="230" y1="374" x2="380" y2="415" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
@@ -106,5 +106,5 @@
   <!-- ════ OUTPUT ════ -->
   <rect x="260" y="418" width="340" height="50" rx="10" fill="#263238" filter="url(#sh)"/>
   <text x="430" y="438" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Vector Store (pgvector)</text>
-  <text x="430" y="457" text-anchor="middle" font-size="10" fill="#80CBC4">384-dim embeddings &bull; JSONB metadata &bull; BM25 GIN index</text>
+  <text x="430" y="457" text-anchor="middle" font-size="10" fill="#80CBC4">384-dim embeddings • JSONB metadata • BM25 GIN index</text>
 </svg>

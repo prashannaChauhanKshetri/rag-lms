@@ -37,3 +37,13 @@ SYSTEM_ARCHITECTURE.md
 Books/
 fin_ed_docs/
 uploads/
+
+# Generated evaluation outputs
+retrieval_eval.csv
+test/eval_results/
+
+# Claude Code settings
+.claude/
+
+# Generated reports
+SECURITY_AUDIT_REPORT.md

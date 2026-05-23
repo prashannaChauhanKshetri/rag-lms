@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Lock, ArrowRight, AlertCircle, Loader2, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { User, Lock, ArrowRight, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface LoginResponse {
@@ -39,7 +39,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
-  const [showDemo, setShowDemo] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -296,31 +295,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSignupClick }) => {
             </button>
           </div>
 
-          {/* Demo credentials — collapsible, dev builds only */}
-          {import.meta.env.DEV && (
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={() => setShowDemo(v => !v)}
-                className="w-full flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors py-1"
-              >
-                Demo credentials
-                <ChevronDown
-                  className={`w-3 h-3 transition-transform ${showDemo ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {showDemo && (
-                <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-600 dark:text-gray-300">
-                  <ul className="space-y-1 font-mono">
-                    <li>student / student123</li>
-                    <li>instructor / instructor123</li>
-                    <li>admin / admin123</li>
-                    <li>superadmin / superadmin123</li>
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
 
         </div>
       </div>

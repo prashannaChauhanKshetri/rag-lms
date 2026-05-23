@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Class 7 Mathematics Evaluation Dataset - Nepal Curriculum",
+    "total_questions": 10,
+    "book": "grade-7-mathematics.pdf",
+    "language": "English",
+    "categories": ["Numbers", "Algebra", "Geometry", "Mensuration", "Statistics"]
+  },
+  "test_cases": [
+    {
+      "id": "math7-001",
+      "question": "What is the LCM of 12 and 18?",
+      "ground_truth": "The LCM (Least Common Multiple) of 12 and 18 is 36. Prime factorization: 12 = 2² × 3, 18 = 2 × 3². LCM = 2² × 3² = 4 × 9 = 36.",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Numbers",
+      "grade": 7,
+      "type": "calculation"
+    },
+    {
+      "id": "math7-002",
+      "question": "What is the HCF of 24 and 36?",
+      "ground_truth": "The HCF (Highest Common Factor) of 24 and 36 is 12. Prime factorization: 24 = 2³ × 3, 36 = 2² × 3². HCF = 2² × 3 = 4 × 3 = 12.",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Numbers",
+      "grade": 7,
+      "type": "calculation"
+    },
+    {
+      "id": "math7-003",
+      "question": "What is a rational number? Give examples.",
+      "ground_truth": "A rational number is any number that can be expressed as a fraction p/q where p and q are integers and q ≠ 0. Examples: 1/2, 3/4, -5/3, 0, 7 (= 7/1), 0.25 (= 1/4).",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Numbers",
+      "grade": 7,
+      "type": "definition"
+    },
+    {
+      "id": "math7-004",
+      "question": "How do you add two algebraic expressions? Give an example.",
+      "ground_truth": "To add algebraic expressions, combine like terms (terms with the same variable and power). Example: (2x + 3y) + (4x - y) = (2x + 4x) + (3y - y) = 6x + 2y.",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Algebra",
+      "grade": 7,
+      "type": "concept"
+    },
+    {
+      "id": "math7-005",
+      "question": "What is a linear equation? Solve: 2x + 5 = 11.",
+      "ground_truth": "A linear equation is an equation where the variable has degree 1. Solving 2x + 5 = 11: subtract 5 from both sides → 2x = 6, divide by 2 → x = 3.",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Algebra",
+      "grade": 7,
+      "type": "problem_solving"
+    },
+    {
+      "id": "math7-006",
+      "question": "What is the sum of angles in a triangle?",
+      "ground_truth": "The sum of all three interior angles of any triangle is always 180°. This is called the angle sum property of triangles. For example, if two angles are 60° and 70°, the third angle is 180° - 60° - 70° = 50°.",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Geometry",
+      "grade": 7,
+      "type": "theorem"
+    },
+    {
+      "id": "math7-007",
+      "question": "What is the perimeter of a rectangle with length 8 cm and breadth 5 cm?",
+      "ground_truth": "Perimeter of a rectangle = 2 × (length + breadth) = 2 × (8 + 5) = 2 × 13 = 26 cm.",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Mensuration",
+      "grade": 7,
+      "type": "calculation"
+    },
+    {
+      "id": "math7-008",
+      "question": "How do you calculate the area of a triangle?",
+      "ground_truth": "Area of a triangle = (1/2) × base × height. For example, a triangle with base 10 cm and height 6 cm has area = (1/2) × 10 × 6 = 30 cm².",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Mensuration",
+      "grade": 7,
+      "type": "formula"
+    },
+    {
+      "id": "math7-009",
+      "question": "What is the mean of the data: 4, 6, 8, 10, 12?",
+      "ground_truth": "Mean = Sum of all values ÷ Number of values = (4 + 6 + 8 + 10 + 12) ÷ 5 = 40 ÷ 5 = 8.",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Statistics",
+      "grade": 7,
+      "type": "calculation"
+    },
+    {
+      "id": "math7-010",
+      "question": "What is ratio? Express the ratio of 15 to 25 in simplest form.",
+      "ground_truth": "A ratio is a comparison of two quantities of the same kind. The ratio 15:25 simplifies by dividing both by HCF(15,25)=5 → 15/5 : 25/5 = 3:5.",
+      "book": "grade-7-mathematics.pdf",
+      "category": "Numbers",
+      "grade": 7,
+      "type": "concept"
+    }
+  ]
+}

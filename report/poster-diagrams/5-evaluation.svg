@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 500" font-family="Segoe UI, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" font-family="Segoe UI, Arial, sans-serif">
   <defs>
     <filter id="sh"><feDropShadow dx="1" dy="2" stdDeviation="2.5" flood-opacity="0.12"/></filter>
     <linearGradient id="barGreen" x1="0" y1="0" x2="1" y2="0">
@@ -17,150 +17,172 @@
       <stop offset="0%" stop-color="#CE93D8"/>
       <stop offset="100%" stop-color="#6A1B9A"/>
     </linearGradient>
+    <linearGradient id="barTeal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4DD0E1"/>
+      <stop offset="100%" stop-color="#00838F"/>
+    </linearGradient>
   </defs>
 
-  <rect width="860" height="500" fill="#F8FAFC"/>
+  <rect width="900" height="620" fill="#F8FAFC"/>
 
   <!-- Title -->
-  <text x="430" y="34" text-anchor="middle" font-size="21" font-weight="700" fill="#1a1a2e">System Evaluation &amp; Results</text>
-  <line x1="200" y1="44" x2="660" y2="44" stroke="#1B5E20" stroke-width="3" stroke-linecap="round"/>
+  <text x="450" y="34" text-anchor="middle" font-size="21" font-weight="700" fill="#1a1a2e">RAG System Evaluation Results</text>
+  <text x="450" y="52" text-anchor="middle" font-size="11" fill="#666">RAGAS Framework • 65 Test Questions • 3 Subject Areas</text>
+  <line x1="180" y1="62" x2="720" y2="62" stroke="#1B5E20" stroke-width="3" stroke-linecap="round"/>
 
-  <!-- ════ TOP ROW: 4 KPI CARDS ════ -->
-  <!-- Card 1 -->
-  <rect x="30" y="58" width="188" height="90" rx="12" fill="#1B5E20" filter="url(#sh)"/>
-  <text x="124" y="88" text-anchor="middle" font-size="36" font-weight="900" fill="#fff">94%</text>
-  <text x="124" y="110" text-anchor="middle" font-size="11" fill="#A5D6A7">Retrieval Accuracy</text>
-  <text x="124" y="127" text-anchor="middle" font-size="10" fill="#C8E6C9">31 / 33 test questions</text>
-  <text x="124" y="141" text-anchor="middle" font-size="10" fill="#C8E6C9">across all book types</text>
+  <!-- ════ LEFT PANEL: Detailed Results Table ════ -->
+  <rect x="20" y="78" width="520" height="280" rx="12" fill="#fff" stroke="#E0E0E0" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="280" y="102" text-anchor="middle" font-size="14" font-weight="700" fill="#263238">Evaluation Results by Subject</text>
 
-  <!-- Card 2 -->
-  <rect x="238" y="58" width="188" height="90" rx="12" fill="#0D47A1" filter="url(#sh)"/>
-  <text x="332" y="88" text-anchor="middle" font-size="36" font-weight="900" fill="#fff">&lt;10ms</text>
-  <text x="332" y="110" text-anchor="middle" font-size="11" fill="#90CAF9">Vector Search Latency</text>
-  <text x="332" y="127" text-anchor="middle" font-size="10" fill="#BBDEFB">pgvector IVFFlat</text>
-  <text x="332" y="141" text-anchor="middle" font-size="10" fill="#BBDEFB">K=10 &bull; 384-dim</text>
+  <!-- Table Header -->
+  <rect x="35" y="115" width="490" height="28" rx="4" fill="#263238"/>
+  <text x="100" y="133" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Subject</text>
+  <text x="185" y="133" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Faithfulness</text>
+  <text x="270" y="133" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Relevancy</text>
+  <text x="355" y="133" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Precision</text>
+  <text x="430" y="133" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">Recall</text>
+  <text x="495" y="133" text-anchor="middle" font-size="10" font-weight="600" fill="#fff">RAGAS</text>
 
-  <!-- Card 3 -->
-  <rect x="446" y="58" width="188" height="90" rx="12" fill="#E65100" filter="url(#sh)"/>
-  <text x="540" y="88" text-anchor="middle" font-size="36" font-weight="900" fill="#fff">96–99%</text>
-  <text x="540" y="110" text-anchor="middle" font-size="11" fill="#FFCC80">OCR Accuracy</text>
-  <text x="540" y="127" text-anchor="middle" font-size="10" fill="#FFE0B2">Clean printed text</text>
-  <text x="540" y="141" text-anchor="middle" font-size="10" fill="#FFE0B2">Tesseract &bull; PSM 6</text>
+  <!-- Row 1: Mathematics Grade 10 -->
+  <rect x="35" y="148" width="490" height="36" rx="0" fill="#E8F5E9"/>
+  <text x="100" y="163" text-anchor="middle" font-size="10" font-weight="600" fill="#1B5E20">Mathematics</text>
+  <text x="100" y="177" text-anchor="middle" font-size="8" fill="#388E3C">Grade 10 (n=25)</text>
+  <text x="185" y="170" text-anchor="middle" font-size="12" font-weight="700" fill="#2E7D32">50.1%</text>
+  <text x="270" y="170" text-anchor="middle" font-size="12" font-weight="700" fill="#2E7D32">69.0%</text>
+  <text x="355" y="170" text-anchor="middle" font-size="12" font-weight="700" fill="#1B5E20">97.1%</text>
+  <text x="430" y="170" text-anchor="middle" font-size="12" font-weight="700" fill="#2E7D32">60.2%</text>
+  <rect x="470" y="157" width="50" height="22" rx="4" fill="#1B5E20"/>
+  <text x="495" y="172" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">69.1%</text>
 
-  <!-- Card 4 -->
-  <rect x="654" y="58" width="188" height="90" rx="12" fill="#4A148C" filter="url(#sh)"/>
-  <text x="748" y="88" text-anchor="middle" font-size="36" font-weight="900" fill="#fff">2–3s</text>
-  <text x="748" y="110" text-anchor="middle" font-size="11" fill="#E1BEE7">LLM Response Time</text>
-  <text x="748" y="127" text-anchor="middle" font-size="10" fill="#F3E5F5">Llama 3.3 70B</text>
-  <text x="748" y="141" text-anchor="middle" font-size="10" fill="#F3E5F5">SSE Streaming</text>
+  <!-- Row 2: English Grade 5 -->
+  <rect x="35" y="188" width="490" height="36" rx="0" fill="#E3F2FD"/>
+  <text x="100" y="203" text-anchor="middle" font-size="10" font-weight="600" fill="#0D47A1">English</text>
+  <text x="100" y="217" text-anchor="middle" font-size="8" fill="#1565C0">Grade 5 (n=25)</text>
+  <text x="185" y="210" text-anchor="middle" font-size="12" font-weight="700" fill="#1565C0">53.6%</text>
+  <text x="270" y="210" text-anchor="middle" font-size="12" font-weight="700" fill="#1565C0">64.5%</text>
+  <text x="355" y="210" text-anchor="middle" font-size="12" font-weight="700" fill="#0D47A1">95.5%</text>
+  <text x="430" y="210" text-anchor="middle" font-size="12" font-weight="700" fill="#1565C0">52.0%</text>
+  <rect x="470" y="197" width="50" height="22" rx="4" fill="#0D47A1"/>
+  <text x="495" y="212" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">66.4%</text>
 
-  <!-- ════ LEFT: TOC Extraction Results Bar Chart ════ -->
-  <rect x="30" y="165" width="395" height="310" rx="12" fill="#fff" stroke="#E0E0E0" stroke-width="1.5" filter="url(#sh)"/>
-  <text x="227" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#263238">TOC Extraction Coverage (by Book)</text>
-  <text x="227" y="207" text-anchor="middle" font-size="10" fill="#888">TOC entries detected per textbook</text>
+  <!-- Row 3: Social Studies (Nepali) -->
+  <rect x="35" y="228" width="490" height="36" rx="0" fill="#F3E5F5"/>
+  <text x="100" y="243" text-anchor="middle" font-size="10" font-weight="600" fill="#6A1B9A">Social Studies</text>
+  <text x="100" y="257" text-anchor="middle" font-size="8" fill="#7B1FA2">Grade 7 Nepali (n=15)</text>
+  <text x="185" y="250" text-anchor="middle" font-size="12" font-weight="700" fill="#7B1FA2">52.9%</text>
+  <text x="270" y="250" text-anchor="middle" font-size="12" font-weight="700" fill="#7B1FA2">52.3%</text>
+  <text x="355" y="250" text-anchor="middle" font-size="12" font-weight="700" fill="#6A1B9A">82.3%</text>
+  <text x="430" y="250" text-anchor="middle" font-size="12" font-weight="700" fill="#7B1FA2">45.1%</text>
+  <rect x="470" y="237" width="50" height="22" rx="4" fill="#6A1B9A"/>
+  <text x="495" y="252" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">58.1%</text>
 
-  <!-- Y axis -->
-  <line x1="100" y1="220" x2="100" y2="440" stroke="#CFD8DC" stroke-width="1.5"/>
-  <line x1="100" y1="440" x2="395" y2="440" stroke="#CFD8DC" stroke-width="1.5"/>
+  <!-- Average Row -->
+  <rect x="35" y="272" width="490" height="32" rx="0" fill="#ECEFF1"/>
+  <text x="100" y="292" text-anchor="middle" font-size="10" font-weight="700" fill="#37474F">Average (n=65)</text>
+  <text x="185" y="292" text-anchor="middle" font-size="12" font-weight="700" fill="#37474F">52.2%</text>
+  <text x="270" y="292" text-anchor="middle" font-size="12" font-weight="700" fill="#37474F">62.0%</text>
+  <text x="355" y="292" text-anchor="middle" font-size="12" font-weight="700" fill="#263238">91.6%</text>
+  <text x="430" y="292" text-anchor="middle" font-size="12" font-weight="700" fill="#37474F">52.4%</text>
+  <rect x="470" y="279" width="50" height="22" rx="4" fill="#263238"/>
+  <text x="495" y="294" text-anchor="middle" font-size="11" font-weight="700" fill="#4DD0E1">64.5%</text>
 
-  <!-- Y gridlines + labels -->
-  <line x1="100" y1="365" x2="395" y2="365" stroke="#ECEFF1" stroke-width="1"/>
-  <text x="92" y="369" text-anchor="end" font-size="9" fill="#90A4AE">25</text>
-  <line x1="100" y1="310" x2="395" y2="310" stroke="#ECEFF1" stroke-width="1"/>
-  <text x="92" y="314" text-anchor="end" font-size="9" fill="#90A4AE">50</text>
-  <line x1="100" y1="255" x2="395" y2="255" stroke="#ECEFF1" stroke-width="1"/>
-  <text x="92" y="259" text-anchor="end" font-size="9" fill="#90A4AE">75</text>
-  <line x1="100" y1="220" x2="395" y2="220" stroke="#ECEFF1" stroke-width="1"/>
-  <text x="92" y="224" text-anchor="end" font-size="9" fill="#90A4AE">100</text>
-  <text x="38" y="340" text-anchor="middle" font-size="9" fill="#607D8B" transform="rotate(-90,38,340)">Entries Detected</text>
+  <!-- Key Findings -->
+  <text x="280" y="325" text-anchor="middle" font-size="10" font-weight="600" fill="#455A64">Key Findings:</text>
+  <text x="280" y="342" text-anchor="middle" font-size="9" fill="#607D8B">• Context Precision 91.6% — retrieval accurately finds relevant content</text>
+  <text x="280" y="355" text-anchor="middle" font-size="9" fill="#607D8B">• Math template improves structured answers by +25 RAGAS points</text>
 
-  <!-- Bars: scale 0-100 → 220px height (220 top, 440 bottom)
-       bar_height = value/100 * 220
-       bar_top = 440 - bar_height -->
-  <!-- English Gr9: 18 units → 18% of max(66)=66 → 18/66*220=60 -->
-  <rect x="118" y="392" width="36" height="48" rx="4" fill="url(#barBlue)" filter="url(#sh)"/>
-  <text x="136" y="387" text-anchor="middle" font-size="9" font-weight="700" fill="#0D47A1">18</text>
-  <text x="136" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">Eng Gr9</text>
+  <!-- ════ RIGHT PANEL: RAGAS Metrics Explained ════ -->
+  <rect x="560" y="78" width="320" height="280" rx="12" fill="#fff" stroke="#E0E0E0" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="720" y="102" text-anchor="middle" font-size="14" font-weight="700" fill="#263238">RAGAS Metrics Explained</text>
 
-  <!-- Math Gr9: 14 units → 14/66*220=47 -->
-  <rect x="165" y="393" width="36" height="47" rx="4" fill="url(#barBlue)" filter="url(#sh)"/>
-  <text x="183" y="388" text-anchor="middle" font-size="9" font-weight="700" fill="#0D47A1">14</text>
-  <text x="183" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">Math Gr9</text>
+  <!-- Metric 1: Faithfulness -->
+  <rect x="575" y="118" width="290" height="48" rx="6" fill="#E8F5E9" stroke="#A5D6A7"/>
+  <text x="590" y="138" font-size="11" font-weight="700" fill="#1B5E20">Faithfulness</text>
+  <text x="590" y="154" font-size="9" fill="#388E3C">Measures if answer is grounded in retrieved context.</text>
+  <text x="840" y="142" text-anchor="end" font-size="14" font-weight="700" fill="#1B5E20">52%</text>
 
-  <!-- Science Gr10: 12 units → 40 -->
-  <rect x="212" y="400" width="36" height="40" rx="4" fill="url(#barOrange)" filter="url(#sh)"/>
-  <text x="230" y="395" text-anchor="middle" font-size="9" font-weight="700" fill="#E65100">12</text>
-  <text x="230" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">Sci Gr10</text>
+  <!-- Metric 2: Answer Relevancy -->
+  <rect x="575" y="172" width="290" height="48" rx="6" fill="#E3F2FD" stroke="#90CAF9"/>
+  <text x="590" y="192" font-size="11" font-weight="700" fill="#0D47A1">Answer Relevancy</text>
+  <text x="590" y="208" font-size="9" fill="#1565C0">Measures if answer addresses the question asked.</text>
+  <text x="840" y="196" text-anchor="end" font-size="14" font-weight="700" fill="#0D47A1">62%</text>
 
-  <!-- SS Gr7 (Preeti): 53 entries → 53/66*220=177 -->
-  <rect x="259" y="263" width="36" height="177" rx="4" fill="url(#barGreen)" filter="url(#sh)"/>
-  <text x="277" y="258" text-anchor="middle" font-size="9" font-weight="700" fill="#1B5E20">53</text>
-  <text x="277" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">SS Gr7</text>
-  <!-- OCR badge -->
-  <rect x="252" y="275" width="50" height="14" rx="4" fill="#FFA726"/>
-  <text x="277" y="286" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="600">OCR</text>
+  <!-- Metric 3: Context Precision -->
+  <rect x="575" y="226" width="290" height="48" rx="6" fill="#FFF3E0" stroke="#FFCC80"/>
+  <text x="590" y="246" font-size="11" font-weight="700" fill="#E65100">Context Precision</text>
+  <text x="590" y="262" font-size="9" fill="#F57C00">Measures if relevant docs are ranked higher (DCG).</text>
+  <text x="840" y="250" text-anchor="end" font-size="14" font-weight="700" fill="#E65100">92%</text>
 
-  <!-- SS Gr9 (Preeti): 66 entries → 220 -->
-  <rect x="306" y="220" width="36" height="220" rx="4" fill="url(#barGreen)" filter="url(#sh)"/>
-  <text x="324" y="215" text-anchor="middle" font-size="9" font-weight="700" fill="#1B5E20">66</text>
-  <text x="324" y="455" text-anchor="middle" font-size="8.5" fill="#607D8B">SS Gr9</text>
-  <rect x="299" y="232" width="50" height="14" rx="4" fill="#FFA726"/>
-  <text x="324" y="243" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="600">OCR</text>
+  <!-- Metric 4: Context Recall -->
+  <rect x="575" y="280" width="290" height="48" rx="6" fill="#F3E5F5" stroke="#CE93D8"/>
+  <text x="590" y="300" font-size="11" font-weight="700" fill="#6A1B9A">Context Recall</text>
+  <text x="590" y="316" font-size="9" fill="#7B1FA2">Measures if context covers required information.</text>
+  <text x="840" y="304" text-anchor="end" font-size="14" font-weight="700" fill="#6A1B9A">52%</text>
 
-  <!-- Legend -->
-  <rect x="105" y="462" width="12" height="12" rx="2" fill="#0D47A1"/>
-  <text x="122" y="473" font-size="9" fill="#555">Text extraction</text>
-  <rect x="205" y="462" width="12" height="12" rx="2" fill="#FFA726"/>
-  <text x="222" y="473" font-size="9" fill="#555">OCR (Preeti)</text>
-  <rect x="295" y="462" width="12" height="12" rx="2" fill="#1B5E20"/>
-  <text x="312" y="473" font-size="9" fill="#555">Best result</text>
+  <!-- Formula -->
+  <text x="720" y="348" text-anchor="middle" font-size="9" fill="#78909C">RAGAS = (F + AR + CP + CR) / 4</text>
 
-  <!-- ════ RIGHT: Retrieval Method Comparison ════ -->
-  <rect x="445" y="165" width="395" height="310" rx="12" fill="#fff" stroke="#E0E0E0" stroke-width="1.5" filter="url(#sh)"/>
-  <text x="642" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#263238">Retrieval Method Comparison</text>
-  <text x="642" y="207" text-anchor="middle" font-size="10" fill="#888">Accuracy on 33 test questions</text>
+  <!-- ════ BOTTOM LEFT: Math Template Impact ════ -->
+  <rect x="20" y="378" width="280" height="115" rx="12" fill="#263238" filter="url(#sh)"/>
+  <text x="160" y="402" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Math Template Improvement</text>
+  
+  <!-- Before/After -->
+  <text x="90" y="432" text-anchor="middle" font-size="9" fill="#90A4AE">Before</text>
+  <text x="90" y="455" text-anchor="middle" font-size="22" font-weight="900" fill="#EF5350">44%</text>
+  <text x="90" y="472" text-anchor="middle" font-size="8" fill="#78909C">Generic template</text>
 
-  <!-- Y axis -->
-  <line x1="520" y1="220" x2="520" y2="410" stroke="#CFD8DC" stroke-width="1.5"/>
-  <line x1="520" y1="410" x2="810" y2="410" stroke="#CFD8DC" stroke-width="1.5"/>
+  <text x="160" y="450" text-anchor="middle" font-size="20" fill="#4DD0E1">→</text>
 
-  <!-- gridlines -->
-  <line x1="520" y1="362" x2="810" y2="362" stroke="#ECEFF1" stroke-width="1"/>
-  <text x="512" y="366" text-anchor="end" font-size="9" fill="#90A4AE">25%</text>
-  <line x1="520" y1="315" x2="810" y2="315" stroke="#ECEFF1" stroke-width="1"/>
-  <text x="512" y="319" text-anchor="end" font-size="9" fill="#90A4AE">50%</text>
-  <line x1="520" y1="267" x2="810" y2="267" stroke="#ECEFF1" stroke-width="1"/>
-  <text x="512" y="271" text-anchor="end" font-size="9" fill="#90A4AE">75%</text>
-  <line x1="520" y1="220" x2="810" y2="220" stroke="#ECEFF1" stroke-width="1"/>
-  <text x="512" y="224" text-anchor="end" font-size="9" fill="#90A4AE">100%</text>
+  <text x="230" y="432" text-anchor="middle" font-size="9" fill="#90A4AE">After</text>
+  <text x="230" y="455" text-anchor="middle" font-size="22" font-weight="900" fill="#66BB6A">69%</text>
+  <text x="230" y="472" text-anchor="middle" font-size="8" fill="#78909C">Specialized math</text>
 
-  <!-- Bar 1: BM25 only: ~70% → 0.7*190=133 → top=410-133=277 -->
-  <rect x="545" y="277" width="55" height="133" rx="4" fill="#90A4AE" filter="url(#sh)"/>
-  <text x="572" y="272" text-anchor="middle" font-size="10" font-weight="700" fill="#546E7A">70%</text>
-  <text x="572" y="426" text-anchor="middle" font-size="9" fill="#607D8B">BM25 Only</text>
+  <rect x="115" y="480" width="90" height="8" rx="4" fill="#1B5E20"/>
+  <text x="160" y="500" text-anchor="middle" font-size="9" font-weight="600" fill="#A5D6A7">+25 points</text>
 
-  <!-- Bar 2: Semantic only: ~78% → 148 → top=262 -->
-  <rect x="625" y="262" width="55" height="148" rx="4" fill="url(#barBlue)" filter="url(#sh)"/>
-  <text x="652" y="257" text-anchor="middle" font-size="10" font-weight="700" fill="#0D47A1">78%</text>
-  <text x="652" y="426" text-anchor="middle" font-size="9" fill="#607D8B">Semantic</text>
+  <!-- ════ BOTTOM CENTER: Retrieval Performance ════ -->
+  <rect x="315" y="378" width="270" height="115" rx="12" fill="#fff" stroke="#E0E0E0" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="450" y="402" text-anchor="middle" font-size="12" font-weight="700" fill="#263238">Retrieval Performance</text>
 
-  <!-- Bar 3: Hybrid: ~88% → 167 → top=243 -->
-  <rect x="705" y="243" width="55" height="167" rx="4" fill="url(#barOrange)" filter="url(#sh)"/>
-  <text x="732" y="238" text-anchor="middle" font-size="10" font-weight="700" fill="#E65100">88%</text>
-  <text x="732" y="426" text-anchor="middle" font-size="9" fill="#607D8B">Hybrid</text>
+  <!-- Stats -->
+  <text x="370" y="435" text-anchor="middle" font-size="24" font-weight="900" fill="#0D47A1">426ms</text>
+  <text x="370" y="452" text-anchor="middle" font-size="9" fill="#607D8B">Avg Retrieval</text>
+  <text x="370" y="465" text-anchor="middle" font-size="8" fill="#90A4AE">Hybrid + Rerank</text>
 
-  <!-- Bar 4: Hybrid + Rerank: 94% → 179 → top=231 -->
-  <rect x="785" y="231" width="0" height="0" rx="4" fill="url(#barGreen)" filter="url(#sh)"/>
-  <!-- shift bar left to fit -->
-  <rect x="762" y="231" width="36" height="179" rx="4" fill="url(#barGreen)" filter="url(#sh)"/>
-  <text x="780" y="226" text-anchor="middle" font-size="10" font-weight="700" fill="#1B5E20">94%</text>
-  <text x="780" y="426" text-anchor="middle" font-size="8.5" fill="#607D8B">Hybrid +</text>
-  <text x="780" y="437" text-anchor="middle" font-size="8.5" fill="#607D8B">Rerank ★</text>
+  <line x1="420" y1="420" x2="420" y2="475" stroke="#E0E0E0" stroke-width="1"/>
 
-  <!-- annotation star -->
-  <text x="780" y="215" text-anchor="middle" font-size="10" fill="#1B5E20" font-weight="700">★ Best</text>
+  <text x="530" y="435" text-anchor="middle" font-size="24" font-weight="900" fill="#E65100">6.5s</text>
+  <text x="530" y="452" text-anchor="middle" font-size="9" fill="#607D8B">Avg LLM</text>
+  <text x="530" y="465" text-anchor="middle" font-size="8" fill="#90A4AE">Llama 3.3 70B</text>
 
-  <!-- bottom note -->
-  <text x="642" y="462" text-anchor="middle" font-size="9.5" fill="#607D8B">All methods tested on same 33-question benchmark dataset</text>
-  <text x="642" y="475" text-anchor="middle" font-size="9.5" fill="#607D8B">across English, Math, Science, Social Studies, Nepali books</text>
+  <text x="450" y="485" text-anchor="middle" font-size="9" fill="#78909C">Total: ~7s per question (Groq API)</text>
+
+  <!-- ════ BOTTOM RIGHT: Test Coverage ════ -->
+  <rect x="600" y="378" width="280" height="115" rx="12" fill="#263238" filter="url(#sh)"/>
+  <text x="740" y="402" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Test Coverage</text>
+
+  <!-- Stats Row 1 -->
+  <text x="660" y="435" text-anchor="middle" font-size="22" font-weight="900" fill="#4DD0E1">65</text>
+  <text x="660" y="452" text-anchor="middle" font-size="9" fill="#B0BEC5">Questions</text>
+
+  <text x="740" y="435" text-anchor="middle" font-size="22" font-weight="900" fill="#A5D6A7">3</text>
+  <text x="740" y="452" text-anchor="middle" font-size="9" fill="#B0BEC5">Subjects</text>
+
+  <text x="820" y="435" text-anchor="middle" font-size="22" font-weight="900" fill="#FFE082">2</text>
+  <text x="820" y="452" text-anchor="middle" font-size="9" fill="#B0BEC5">Languages</text>
+
+  <!-- Subject breakdown -->
+  <text x="740" y="475" text-anchor="middle" font-size="8" fill="#78909C">Math (25) • English (25) • Social Studies (15)</text>
+  <text x="740" y="488" text-anchor="middle" font-size="8" fill="#78909C">English + Nepali (Devanagari via OCR)</text>
+
+  <!-- ════ Footer ════ -->
+  <text x="450" y="510" text-anchor="middle" font-size="9" fill="#78909C">Embedding: paraphrase-multilingual-MiniLM-L12-v2 (384 dim) • Reranker: mmarco-mMiniLMv2-L12-H384-v1 • LLM: Llama 3.3 70B via Groq</text>
+
+  <!-- Overall Score Badge -->
+  <rect x="380" y="528" width="140" height="40" rx="8" fill="#1B5E20" filter="url(#sh)"/>
+  <text x="450" y="550" text-anchor="middle" font-size="11" fill="#A5D6A7">Overall RAGAS</text>
+  <text x="450" y="564" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">64.5%</text>
+
+  <!-- Methodology note -->
+  <text x="450" y="590" text-anchor="middle" font-size="8" fill="#90A4AE">Evaluated using RAGAS framework with embedding-based similarity scoring • Nepal CDC Curriculum Textbooks</text>
 </svg>

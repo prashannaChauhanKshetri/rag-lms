@@ -1,12 +1,13 @@
 import os
 import numpy as np
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Body
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Body, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 import database_postgres as db
 import vectorstore_postgres as vs
 from utils import process_pdf
 from models import get_embed_model
+from routes.chatbots import _ingest_pdf_background
 import utils_auth
 import uuid
 
@@ -30,9 +31,13 @@ class TeacherProfileRequest(BaseModel):
 async def list_users(user=Depends(utils_auth.get_current_user)):
     """List all users (Admin only)"""
     try:
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Only admins can list users")
         institution_id = user.get("institution_id")
         users = db.list_users(institution_id)
         return {"users": users}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -48,6 +53,8 @@ async def get_all_teachers(user=Depends(utils_auth.get_current_user)):
         institution_id = user.get("institution_id")
         teachers = db.get_all_teachers(institution_id)
         return {"teachers": teachers}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -63,6 +70,8 @@ async def get_teacher_details(user_id: str, user=Depends(utils_auth.get_current_
             raise HTTPException(status_code=404, detail="Teacher profile not found")
         
         return {"teacher": profile}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -79,6 +88,8 @@ async def update_teacher_profile(user_id: str, request: TeacherProfileRequest, u
         
         profile = db.get_teacher_profile(user_id)
         return {"message": "Profile updated", "teacher": profile}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -91,6 +102,8 @@ async def get_teacher_classes(user_id: str, user=Depends(utils_auth.get_current_
         
         classes = db.list_classes_for_teacher(user_id)
         return {"classes": classes}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -113,6 +126,8 @@ async def get_teacher_assignments(user_id: str, user=Depends(utils_auth.get_curr
                 all_assignments.extend(assignments)
         
         return {"assignments": all_assignments, "total": len(all_assignments)}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -158,6 +173,8 @@ async def list_all_classes_admin(user=Depends(utils_auth.get_current_user)):
         return {"classes": classes}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -172,6 +189,8 @@ async def create_class_admin(request: AdminCreateClassRequest, user=Depends(util
         class_id = str(uuid.uuid4())
         db.create_class(class_id, request.name, request.description, request.grade_level, institution_id)
         return {"message": "Class created", "class_id": class_id}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -194,6 +213,8 @@ async def get_class_admin(class_id: str, user=Depends(utils_auth.get_current_use
         return cls
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -210,6 +231,8 @@ async def update_class_admin(class_id: str, request: AdminUpdateClassRequest, us
         
         db.update_class(class_id, name=request.name, description=request.description, grade_level=request.grade_level)
         return {"message": "Class updated"}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -230,6 +253,8 @@ async def delete_class_admin(class_id: str, user=Depends(utils_auth.get_current_
         return {"message": "Class deleted"}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -243,6 +268,8 @@ async def list_class_subjects_admin(class_id: str, user=Depends(utils_auth.get_c
             raise HTTPException(status_code=403, detail="Admin only")
         subjects = db.list_class_subjects(class_id)
         return {"subjects": subjects}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -264,6 +291,8 @@ async def add_subject_to_class_admin(class_id: str, request: AddSubjectRequest, 
         return {"message": "Subject added", "class_subject_id": cs_id}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -275,6 +304,8 @@ async def remove_subject_from_class_admin(class_id: str, cs_id: str, user=Depend
             raise HTTPException(status_code=403, detail="Admin only")
         db.remove_subject_from_class(cs_id)
         return {"message": "Subject removed"}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -292,6 +323,8 @@ async def list_teacher_assignments_admin(class_id: str, user=Depends(utils_auth.
         return {"assignments": assignments}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -307,6 +340,8 @@ async def assign_teacher_to_subject_admin(class_id: str, cs_id: str, request: As
         return {"message": "Teacher assigned", "assignment_id": ta_id}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -318,6 +353,8 @@ async def remove_teacher_assignment_admin(ta_id: str, user=Depends(utils_auth.ge
             raise HTTPException(status_code=403, detail="Admin only")
         db.remove_teacher_assignment(ta_id)
         return {"message": "Teacher assignment removed"}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -338,6 +375,8 @@ async def create_section_admin(request: AdminCreateSectionRequest, user=Depends(
         return {"message": "Section created", "section_id": section_id}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -356,6 +395,8 @@ async def update_section_admin(section_id: str, request: AdminUpdateSectionReque
         return {"message": "Section updated"}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -372,6 +413,8 @@ async def delete_section_admin(section_id: str, user=Depends(utils_auth.get_curr
         
         db.delete_section(section_id)
         return {"message": "Section deleted"}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -405,6 +448,8 @@ async def list_all_sections_admin(user=Depends(utils_auth.get_current_user)):
         return {"sections": sections}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -425,6 +470,8 @@ async def get_section_details_admin(section_id: str, user=Depends(utils_auth.get
         return section
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -443,6 +490,8 @@ async def enroll_student_admin(section_id: str, request: EnrollStudentRequest, u
         enrollment_id = str(uuid.uuid4())
         db.enroll_student(enrollment_id, section_id, request.student_id, performed_by=admin_id)
         return {"message": "Student enrolled", "enrollment_id": enrollment_id}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -467,6 +516,8 @@ async def bulk_enroll_students_admin(section_id: str, request: BulkEnrollRequest
         return result
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -484,6 +535,8 @@ async def remove_student_admin(section_id: str, student_id: str, user=Depends(ut
         admin_id = user.get("sub") or user.get("id")
         db.remove_enrollment(section_id, student_id, performed_by=admin_id, reason="Removed by admin")
         return {"message": "Student removed from section"}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -534,6 +587,8 @@ async def get_available_students_admin(section_id: str, search: str = None, user
         ]
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -557,6 +612,8 @@ async def get_enrollment_history_admin(section_id: str, user=Depends(utils_auth.
                 entry["student_display_id"] = (u or {}).get("display_id") or uid[:8]
                 entry["student_name"] = (u or {}).get("full_name") or (u or {}).get("username") or uid[:8]
         return {"enrollment_history": history}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -627,70 +684,36 @@ async def delete_chatbot_admin(chatbot_id: str, user=Depends(utils_auth.get_curr
 @router.post("/chatbots/{chatbot_id}/upload")
 async def upload_document_admin(
     chatbot_id: str,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user=Depends(utils_auth.get_current_user)
 ):
-    """Upload and ingest a PDF for a course bot (Admin only)"""
+    """Upload a PDF for a course bot; ingestion runs in the background."""
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Only admins can upload documents")
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF uploads supported")
-    
+
     chatbot = db.get_chatbot(chatbot_id)
     if not chatbot:
         raise HTTPException(status_code=404, detail="Course bot not found")
-    
+
     contents = await file.read()
-    
-    # Save file
     safe_filename = os.path.basename(file.filename)
     chatbot_dir = os.path.join(PDF_DIR, chatbot_id)
     os.makedirs(chatbot_dir, exist_ok=True)
     path = os.path.join(chatbot_dir, safe_filename)
-    
     with open(path, "wb") as f:
         f.write(contents)
-    
-    # Process PDF
-    try:
-        chunks_with_meta = process_pdf(contents)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF processing error: {e}")
-    
-    if not chunks_with_meta:
-        raise HTTPException(status_code=500, detail="No text extracted from PDF")
-    
-    # Prepare embeddings
-    texts = [c["text"] for c in chunks_with_meta]
-    metadatas = []
-    for c in chunks_with_meta:
-        metadatas.append({
-            "text": c["text"],
-            "original_text": c.get("original_text", c["text"]),
-            "source": file.filename,
-            "page": c["page"],
-            "chapter": c.get("chapter", "Unknown"),
-            "section_type": c.get("section_type", "content"),
-            "heading": c.get("heading", "")
-        })
-    
-    try:
-        emb = get_embed_model().encode(texts, show_progress_bar=False, convert_to_numpy=True)
-        emb = np.asarray(emb).astype("float32")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Embedding error: {e}")
-    
-    # Add to vectorstore
-    res = vs.add_documents(chatbot_id, emb, metadatas)
-    
-    # Record in DB
-    db.add_document(chatbot_id, file.filename, len(texts))
-    
+
+    doc_id = db.add_document(chatbot_id, file.filename, chunk_count=0, status="processing")
+    background_tasks.add_task(_ingest_pdf_background, doc_id, chatbot_id, file.filename, path)
+
     return {
-        "message": "Document uploaded and ingested",
+        "message": "Upload accepted; ingestion started",
+        "document_id": doc_id,
         "filename": file.filename,
-        "chunks": len(texts),
-        "stats": res
+        "status": "processing",
     }
 
 @router.get("/chatbots/{chatbot_id}/documents")
@@ -732,5 +755,7 @@ async def get_dashboard_stats(user=Depends(utils_auth.get_current_user)):
             "recent_teachers": sorted(teachers, key=lambda x: x.get("created_at", ""), reverse=True)[:5],
             "recent_bots": sorted(chatbots, key=lambda x: x.get("created_at", ""), reverse=True)[:5],
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -105,6 +105,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+# Serve chatbot source PDFs (so the frontend can link to "view source")
+os.makedirs("fin_ed_docs", exist_ok=True)
+app.mount("/pdfs", StaticFiles(directory="fin_ed_docs"), name="pdfs")
+
 @app.get("/health")
 def health():
     """Liveness + dependency check. Returns 503 if any critical dep is down."""

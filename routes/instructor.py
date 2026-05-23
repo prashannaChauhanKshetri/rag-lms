@@ -352,6 +352,8 @@ OUTPUT FORMAT (VERY IMPORTANT):
             logger.error(f"Question parsing exception: {e}")
 
         return {"questions": questions, "raw_text": response_text}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -388,6 +390,8 @@ async def create_quiz_endpoint(request: CreateQuizRequest, user=Depends(utils_au
                 idx
             )
         return {"message": "Quiz created", "quiz_id": quiz_id}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -585,6 +589,8 @@ Make them clear and educational."""
                 flashcards.append({"front": front.strip(), "back": back.strip()})
         
         return {"flashcards": flashcards}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -670,6 +676,8 @@ Include:
         
         response = call_groq_llm(system_prompt, user_prompt)
         return {"lesson_plan": response}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -796,6 +804,8 @@ async def create_assignment_endpoint(
         return {"message": f"Assignment created for {len(created_ids)} sections", "assignment_ids": created_ids}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -906,6 +916,8 @@ async def grade_submission_endpoint(request: GradeSubmissionRequest, user=Depend
         return {"message": "Submission graded successfully"}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -942,6 +954,8 @@ async def list_instructor_resources(chatbot_id: str, user=Depends(utils_auth.get
         # Filter to only show resources uploaded by this teacher (or we can show all if desired)
         my_resources = [r for r in all_resources if getattr(r, 'uploaded_by', teacher_name) == teacher_name]
         return {"resources": my_resources}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -981,6 +995,8 @@ async def create_link_resource(request: CreateResourceRequest, user=Depends(util
             uploaded_by=teacher_name
         )
         return {"message": "Resource created successfully", "resource_id": resource_id}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1061,6 +1077,8 @@ async def upload_resource(
         return {"message": "Resource uploaded successfully", "resource_id": resource_id}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1101,6 +1119,8 @@ async def list_teacher_classes(user=Depends(utils_auth.get_current_user)):
             cls["section_count"] = len(sections) if sections else 0
         
         return {"classes": classes}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1117,6 +1137,8 @@ async def get_class(class_id: str, user=Depends(utils_auth.get_current_user)):
         cls["sections"] = sections or []
         
         return cls
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -1168,6 +1190,8 @@ async def list_all_sections(user=Depends(utils_auth.get_current_user)):
         return sections
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1190,6 +1214,8 @@ async def get_section(section_id: str, user=Depends(utils_auth.get_current_user)
         enrollments = db.list_enrollments(section_id)
         section["students"] = enrollments
         return section
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -1255,6 +1281,8 @@ async def get_section_attendance(section_id: str, date: Optional[str] = None, ch
         return {"attendance_records": enrollments}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1275,6 +1303,8 @@ async def list_assignments_for_section(section_id: str, user=Depends(utils_auth.
 
         assignments = db.list_assignments_by_section(section_id)
         return {"assignments": assignments}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -1299,6 +1329,8 @@ async def list_section_resources(section_id: str, user=Depends(utils_auth.get_cu
         return {"resources": resources}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1317,6 +1349,8 @@ async def list_sections(chatbot_id: str, user=Depends(utils_auth.get_current_use
             section["student_count"] = len(enrollments)
         
         return {"sections": sections}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1447,6 +1481,8 @@ async def get_attendance_report_by_range(section_id: str, request: AttendanceRep
         return report
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1474,6 +1510,8 @@ async def create_assignment(section_id: str, request: CreateAssignmentRequest, u
         return {"message": "Assignment created", "assignment_id": assignment_id}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1491,6 +1529,8 @@ async def publish_assignment(assignment_id: str, user=Depends(utils_auth.get_cur
         
         db.publish_assignment(assignment_id)
         return {"message": "Assignment published"}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -1512,6 +1552,8 @@ async def get_submissions(assignment_id: str, user=Depends(utils_auth.get_curren
         return {"submissions": submissions}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1529,6 +1571,8 @@ async def get_submissions_summary(assignment_id: str, user=Depends(utils_auth.ge
         
         summary = db.get_assignment_submissions_summary(assignment_id)
         return summary
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -1551,6 +1595,8 @@ async def update_assignment(assignment_id: str, request: UpdateAssignmentRequest
         return {"message": "Assignment updated", "assignment": updated}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1570,6 +1616,8 @@ async def grade_submission(submission_id: str, request: GradeSubmissionRequest, 
         
         db.grade_submission(submission_id, request.score, request.feedback)
         return {"message": "Submission graded"}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -1597,6 +1645,8 @@ async def create_resource(section_id: str, request: CreateResourceRequest, user=
         resource_id = str(uuid.uuid4())
         db.create_resource(resource_id, section_id, request.title, request.resource_type, request.url)
         return {"message": "Resource created", "resource_id": resource_id}
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:

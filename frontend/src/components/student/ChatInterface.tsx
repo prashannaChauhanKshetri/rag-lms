@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Send, User, Bot, Loader2, BookOpen, ChevronRight, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { api } from '../../lib/api';
 import type { Chatbot } from '../../types';
 import { cn } from '../../lib/utils';
@@ -305,7 +306,7 @@ export function ChatInterface({ courseId }: ChatInterfaceProps) {
                                                     <p className="whitespace-pre-wrap">{msg.content}</p>
                                                 ) : (
                                                     <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:mt-3 prose-headings:mb-1 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-pre:my-2 prose-code:text-xs prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
-                                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                                                     </div>
                                                 )}
 

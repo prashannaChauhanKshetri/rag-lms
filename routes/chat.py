@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Form, Depends, Request
 from pydantic import BaseModel
 import database_postgres as db
 import vectorstore_postgres as vs
-from utils import build_system_user_prompt
+from utils import build_system_user_prompt, is_structural_query
 import utils_auth
 import utils_redis as rc
 import logging
@@ -103,15 +103,6 @@ def classify_query(question: str) -> Dict[str, Any]:
     """
     q_lower = question.lower()
 
-    # Structural queries: about book organization
-    structural_keywords = [
-        "chapter", "unit", "table of contents", "toc", "topics",
-        "syllabus", "index", "how many units", "how many chapters",
-        "what are the", "list all", "list the", "contents of",
-        # Nepali
-        "अध्याय", "एकाइ", "विषय सूची", "पाठ",
-    ]
-
     # Exercise/problem queries
     exercise_keywords = [
         "question", "exercise", "problem", "solve", "quiz",
@@ -134,7 +125,9 @@ def classify_query(question: str) -> Dict[str, Any]:
     section_type_filter = _detect_section_type_filter(q_lower)
 
     has_exercise_kw = any(k in q_lower for k in exercise_keywords)
-    has_structural_kw = any(k in q_lower for k in structural_keywords)
+    # Use the shared structural check so factual questions like
+    # "what is the SI unit of force" don't get routed to chapter-listing.
+    has_structural_kw = is_structural_query(question)
     has_definition_kw = any(k in q_lower for k in definition_keywords)
 
     if section_type_filter and has_exercise_kw:
@@ -233,6 +226,8 @@ async def chat_endpoint(
         try:
             q_emb = get_embed_model().encode([question], convert_to_numpy=True).astype("float32")[0]
             rc.emb_set(e_key, q_emb)
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Embedding error: {e}")
 

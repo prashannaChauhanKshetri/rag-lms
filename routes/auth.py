@@ -156,6 +156,8 @@ async def signup(signup_data: SignupRequest):
             "email": signup_data.email
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Signup failed: {str(e)}")
 
@@ -187,6 +189,8 @@ async def verify_email(verify_data: VerifyEmailRequest):
             }
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Verification failed: {str(e)}")
 
@@ -221,6 +225,8 @@ async def forgot_password(forgot_data: ForgotPasswordRequest):
             "message": "If an account with this email exists, a password reset link has been sent."
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Password reset request failed: {str(e)}")
 
@@ -246,6 +252,8 @@ async def reset_password(reset_data: ResetPasswordRequest):
             "message": "Password reset successful. You can now login with your new password."
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
 
@@ -259,6 +267,8 @@ async def get_public_institutions():
             "institutions": institutions,
             "count": len(institutions)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve institutions: {str(e)}")
 
@@ -444,6 +454,8 @@ async def get_settings(request: Request):
             "settings": settings,
             "message": "Settings retrieved successfully"
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve settings: {str(e)}")
 
@@ -468,6 +480,8 @@ async def update_settings(request: Request, data: UpdateSettingsRequest):
             "message": "Settings updated successfully",
             "settings": saved
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update settings: {str(e)}")
 
@@ -534,6 +548,8 @@ async def get_activity_log(request: Request, limit: int = 20):
             "activities": [dict(row) for row in rows],
             "count": len(rows)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve activity log: {str(e)}")
 
@@ -663,6 +679,8 @@ async def export_user_data(request: Request):
         }
 
         return export_payload
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to export user data: {str(e)}")
 
@@ -728,6 +746,8 @@ async def export_user_data_summary(request: Request):
                 "excused": int(attendance_stats.get("excused") or 0)
             }
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to build export summary: {str(e)}")
 
@@ -760,6 +780,8 @@ async def get_institution_summary(request: Request):
             "active_institutions": active,
             "api_version": "v1.0"
         }
+    except HTTPException:
+        raise
     except HTTPException:
         raise
     except Exception as e:
@@ -796,6 +818,8 @@ async def update_profile(request: Request, data: UpdateProfileRequest):
                 cur.execute(f"UPDATE users SET {set_clauses} WHERE id = %s", values)
                 conn.commit()
         return {"message": "Profile updated successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update profile: {str(e)}")
 
@@ -817,6 +841,8 @@ async def change_password(request: Request, data: ChangePasswordRequest):
         new_hash = utils_auth.get_password_hash(data.new_password)
         db.update_user_password(user_id, new_hash)
         return {"message": "Password changed successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to change password: {str(e)}")
 
@@ -846,6 +872,8 @@ async def delete_account(request: Request, password: str = Body(..., embed=True)
         response = JSONResponse({"message": "Account deleted successfully"})
         response.delete_cookie("access_token")
         return response
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete account: {str(e)}")
 

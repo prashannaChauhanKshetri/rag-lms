@@ -256,6 +256,8 @@ async def list_my_sections(user=Depends(utils_auth.get_current_user)):
         # Get student's subjects (classes)
         try:
             subjects = db.list_student_subjects(user_id)
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Database error fetching subjects: {str(e)}")
         
@@ -395,6 +397,8 @@ async def get_section_overview(
         }
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -429,6 +433,8 @@ async def get_my_attendance(section_id: str, chatbot_id: Optional[str] = None, u
         }
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -449,6 +455,8 @@ async def get_section_assignments(section_id: str, user=Depends(utils_auth.get_c
             assign["score"] = submission.get("score") if submission else None
         
         return {"assignments": assignments}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -518,6 +526,8 @@ async def submit_assignment(
         return {"message": "Assignment submitted", "submission_id": submission_id}
     except HTTPException:
         raise
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -531,9 +541,46 @@ async def get_section_resources(section_id: str, user=Depends(utils_auth.get_cur
         
         resources = db.list_resources(section_id)
         return {"resources": resources}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 # --- STUDENT ASSIGNMENT SUBMISSION ---
+
+@router.get("/assignments/pending")
+async def get_pending_assignments(user=Depends(utils_auth.get_current_user)):
+    """Get all pending assignments (not yet submitted)"""
+    try:
+        student_id = user.get("sub") or user.get("id")
+
+        enrollments = db.get_student_enrollments(student_id)
+        pending = []
+
+        for enrollment in enrollments:
+            section_id = enrollment.get("section_id")
+            assignments = db.list_assignments_by_section(section_id) if hasattr(db, 'list_assignments_by_section') else []
+
+            for assign in assignments:
+                submission = db.get_student_submission(assign["id"], student_id) if hasattr(db, 'get_student_submission') else None
+                if not submission:
+                    pending.append({
+                        "id": assign.get("id"),
+                        "title": assign.get("title"),
+                        "description": assign.get("description"),
+                        "instructions": assign.get("instructions", ""),
+                        "section_name": enrollment.get("section_name", ""),
+                        "teacher_name": enrollment.get("teacher_name", ""),
+                        "due_date": assign.get("due_date"),
+                        "submission_deadline": assign.get("submission_deadline", assign.get("due_date")),
+                        "max_score": assign.get("max_score", 100),
+                        "allow_late_submission": assign.get("allow_late_submission", True)
+                    })
+
+        return {"assignments": pending}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading pending assignments: {str(e)}")
 
 @router.get("/assignments")
 async def list_student_assignments_all(user=Depends(utils_auth.get_current_user)):
@@ -556,6 +603,8 @@ async def list_student_assignments_all(user=Depends(utils_auth.get_current_user)
                 all_assignments.append(assign)
         
         return {"assignments": all_assignments}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -568,6 +617,8 @@ async def get_assignment_details(assignment_id: str, user=Depends(utils_auth.get
             raise HTTPException(status_code=404, detail="Assignment not found")
         
         return {"assignment": assignment}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -645,6 +696,8 @@ async def submit_assignment(
             "submission_id": submission_id,
             "file_path": file_path
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -661,47 +714,14 @@ async def get_submission_details(submission_id: str, user=Depends(utils_auth.get
             raise HTTPException(status_code=403, detail="Unauthorized")
         
         return {"submission": submission}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================
 # PHASE 7: STUDENT FEATURES (NEW ENDPOINTS)
 # ============================================
-
-@router.get("/assignments/pending")
-async def get_pending_assignments(user=Depends(utils_auth.get_current_user)):
-    """Get all pending assignments (not yet submitted)"""
-    try:
-        student_id = user.get("sub") or user.get("id")
-        
-        # Get all enrolled sections
-        enrollments = db.get_student_enrollments(student_id)
-        pending = []
-        
-        for enrollment in enrollments:
-            section_id = enrollment.get("section_id")
-            assignments = db.list_assignments_by_section(section_id) if hasattr(db, 'list_assignments_by_section') else []
-            
-            for assign in assignments:
-                # Check if student has submitted
-                submission = db.get_student_submission(assign["id"], student_id) if hasattr(db, 'get_student_submission') else None
-                if not submission:  # Not submitted yet
-                    pending.append({
-                        "id": assign.get("id"),
-                        "title": assign.get("title"),
-                        "description": assign.get("description"),
-                        "instructions": assign.get("instructions", ""),
-                        "section_name": enrollment.get("section_name", ""),
-                        "teacher_name": enrollment.get("teacher_name", ""),
-                        "due_date": assign.get("due_date"),
-                        "submission_deadline": assign.get("submission_deadline", assign.get("due_date")),
-                        "max_score": assign.get("max_score", 100),
-                        "allow_late_submission": assign.get("allow_late_submission", True)
-                    })
-        
-        return {"assignments": pending}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading pending assignments: {str(e)}")
 
 @router.get("/grades")
 async def get_student_grades(user=Depends(utils_auth.get_current_user)):
@@ -736,6 +756,8 @@ async def get_student_grades(user=Depends(utils_auth.get_current_user)):
             "assignments": grades,
             "stats": stats
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading grades: {str(e)}")
 
@@ -797,6 +819,8 @@ async def get_student_progress(user=Depends(utils_auth.get_current_user)):
             "completed_assignments": completed_assignments,
             "courses": courses_data
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading progress: {str(e)}")
 
@@ -839,6 +863,8 @@ async def get_progress_timeline(
                 })
         
         return {"data": timeline}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading timeline: {str(e)}")
 
@@ -872,6 +898,8 @@ async def get_course_resources(user=Depends(utils_auth.get_current_user)):
                 })
         
         return {"resources": all_resources}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading resources: {str(e)}")
 
@@ -912,5 +940,7 @@ async def get_student_stats(user=Depends(utils_auth.get_current_user)):
             "completed_assignments": completed_assignments,
             "overall_grade": round(overall_grade, 1)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading stats: {str(e)}")

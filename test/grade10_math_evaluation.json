@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "description": "Grade 10 Mathematics Evaluation - grade-10-mathematics.pdf (Nepal Curriculum)",
+    "total_questions": 10,
+    "book": "grade-10-mathematics.pdf",
+    "language": "English",
+    "categories": ["Sets", "Compound_Interest", "Growth_Depreciation", "Sequence_Series", "Quadratic_Equation", "Area_Volume", "Statistics", "Probability"]
+  },
+  "test_cases": [
+    {
+      "id": "math10-001",
+      "question": "What is the cardinality of a set? If A = {a, b, c, d, e}, find n(A).",
+      "ground_truth": "The cardinality of a set is the number of elements in the set, denoted n(A). For A = {a, b, c, d, e}, n(A) = 5. For two sets A and B, n(A ∪ B) = n(A) + n(B) - n(A ∩ B).",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Sets",
+      "grade": 10,
+      "type": "definition"
+    },
+    {
+      "id": "math10-002",
+      "question": "In a survey of 120 students, 30 like only Mathematics, 40 like only English, and 10 like neither. How many students like both Mathematics and English?",
+      "ground_truth": "Total = n(M only) + n(E only) + n(M∩E) + n(neither). 120 = 30 + 40 + n(M∩E) + 10. n(M∩E) = 120 - 30 - 40 - 10 = 40. So 40 students like both Mathematics and English.",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Sets",
+      "grade": 10,
+      "type": "problem_solving"
+    },
+    {
+      "id": "math10-003",
+      "question": "Sameer invested Rs. 5,000 at 8% per annum for 2 years with yearly compound interest. Find the compound amount.",
+      "ground_truth": "Compound Amount (CA) = P(1 + R/100)^T = 5000 × (1 + 8/100)^2 = 5000 × (1.08)^2 = 5000 × 1.1664 = Rs. 5,832. Compound Interest = CA - P = 5832 - 5000 = Rs. 832.",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Compound_Interest",
+      "grade": 10,
+      "type": "calculation"
+    },
+    {
+      "id": "math10-004",
+      "question": "What is the difference between half-yearly and yearly compound interest? Which gives more interest?",
+      "ground_truth": "Yearly CI compounds once per year. Half-yearly CI compounds twice per year with rate R/2 each period. For half-yearly: CA = P(1 + R/200)^(2T). Half-yearly compounding gives slightly more interest than yearly because interest is added more frequently, so each subsequent calculation uses a higher principal.",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Compound_Interest",
+      "grade": 10,
+      "type": "concept"
+    },
+    {
+      "id": "math10-005",
+      "question": "What is depreciation? A car costs Rs. 5,00,000 and depreciates at 10% per year. Find its value after 2 years.",
+      "ground_truth": "Depreciation is the decrease in value of an asset over time. Formula: Value = P(1 - R/100)^T. After 2 years: V = 5,00,000 × (1 - 10/100)^2 = 5,00,000 × (0.9)^2 = 5,00,000 × 0.81 = Rs. 4,05,000.",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Growth_Depreciation",
+      "grade": 10,
+      "type": "calculation"
+    },
+    {
+      "id": "math10-006",
+      "question": "What is an arithmetic sequence? Find the 10th term if a = 2 and common difference d = 3.",
+      "ground_truth": "An arithmetic sequence is a sequence where each term differs from the previous by a constant value (d). Formula: nth term = a + (n-1)d. 10th term = 2 + (10-1) × 3 = 2 + 27 = 29. The sequence is: 2, 5, 8, 11, 14, ...",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Sequence_Series",
+      "grade": 10,
+      "type": "calculation"
+    },
+    {
+      "id": "math10-007",
+      "question": "What is a quadratic equation? Solve: x² - 5x + 6 = 0.",
+      "ground_truth": "A quadratic equation has the form ax² + bx + c = 0 where a ≠ 0. To solve x² - 5x + 6 = 0: factorize → (x - 2)(x - 3) = 0. So x = 2 or x = 3. Can also use the quadratic formula: x = (-b ± √(b²-4ac)) / 2a.",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Quadratic_Equation",
+      "grade": 10,
+      "type": "problem_solving"
+    },
+    {
+      "id": "math10-008",
+      "question": "What is the volume of a cuboid-shaped pillar with length 2m, breadth 1m, height 3m? There are two such pillars. Find total volume.",
+      "ground_truth": "Volume of one cuboid = length × breadth × height = 2 × 1 × 3 = 6 m³. Volume of two pillars = 2 × 6 = 12 m³.",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Area_Volume",
+      "grade": 10,
+      "type": "calculation"
+    },
+    {
+      "id": "math10-009",
+      "question": "What is probability? If a coin is tossed, what is the probability of getting a head?",
+      "ground_truth": "Probability measures the likelihood of an event occurring. P(event) = Number of favourable outcomes / Total possible outcomes. Tossing a coin: 2 possible outcomes (H, T), 1 favourable (H). P(head) = 1/2 = 0.5. Probability ranges from 0 (impossible) to 1 (certain).",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Probability",
+      "grade": 10,
+      "type": "concept"
+    },
+    {
+      "id": "math10-010",
+      "question": "How do you construct a triangle equal in area to a given quadrilateral?",
+      "ground_truth": "To construct a triangle equal in area to a quadrilateral ABCD: (1) Draw diagonal AC, (2) Draw a line through D parallel to AC meeting BC extended at E, (3) Triangle ABE has the same area as quadrilateral ABCD. This works because triangles on the same base between parallel lines have equal areas.",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Construction",
+      "grade": 10,
+      "type": "procedure"
+    }
+  ]
+}

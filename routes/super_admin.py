@@ -98,6 +98,8 @@ async def create_institution(
             "message": "Institution created successfully",
             "institution": institution
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create institution: {str(e)}")
 
@@ -130,6 +132,8 @@ async def update_institution(
             "message": "Institution updated successfully",
             "institution": updated_institution
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update institution: {str(e)}")
 
@@ -173,6 +177,8 @@ async def assign_admin_to_institution(
             "institution_id": institution_id,
             "permissions": permissions
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to assign admin: {str(e)}")
 
@@ -262,6 +268,8 @@ async def change_user_role(
             "user_id": user_id,
             "new_role": new_role
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to change role: {str(e)}")
 

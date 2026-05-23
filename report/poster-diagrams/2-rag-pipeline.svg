@@ -30,7 +30,7 @@
   <circle cx="90" cy="137" r="18" fill="#0288D1"/>
   <text x="90" y="142" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">1</text>
   <text x="270" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#01579B">PDF Upload</text>
-  <text x="270" y="149" text-anchor="middle" font-size="10" fill="#555">Nepal CDC textbooks (32+) &bull; English &amp; Nepali</text>
+  <text x="270" y="149" text-anchor="middle" font-size="10" fill="#555">Nepal CDC textbooks (32+) • English &amp; Nepali</text>
 
   <line x1="230" y1="166" x2="230" y2="192" stroke="#455A64" stroke-width="2" marker-end="url(#arrow)"/>
 
@@ -53,7 +53,7 @@
   <text x="175" y="344" text-anchor="middle" font-size="9.5" fill="#2E7D32">Tesseract OCR</text>
   <rect x="255" y="326" width="130" height="26" rx="5" fill="#fff" stroke="#66BB6A" stroke-width="1.2"/>
   <text x="320" y="344" text-anchor="middle" font-size="9.5" fill="#2E7D32">Docling / PyMuPDF</text>
-  <text x="270" y="367" text-anchor="middle" font-size="10" fill="#555">lang=nep+eng &bull; PSM 6 &bull; 300 DPI</text>
+  <text x="270" y="367" text-anchor="middle" font-size="10" fill="#555">lang=nep+eng • PSM 6 • 300 DPI</text>
 
   <line x1="230" y1="378" x2="230" y2="404" stroke="#455A64" stroke-width="2" marker-end="url(#arrow)"/>
 
@@ -79,9 +79,9 @@
   <circle cx="90" cy="562" r="18" fill="#3949AB"/>
   <text x="90" y="567" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">5</text>
   <text x="270" y="538" text-anchor="middle" font-size="12" font-weight="700" fill="#1A237E">Section-Aware Chunking</text>
-  <text x="270" y="555" text-anchor="middle" font-size="10" fill="#555">600 tokens / 120 overlap &bull; 19+ section types</text>
-  <text x="270" y="571" text-anchor="middle" font-size="10" fill="#555">Exercises &bull; Code &bull; Reading &bull; Glossary</text>
-  <text x="270" y="587" text-anchor="middle" font-size="10" fill="#555">Chapter &bull; Page &bull; Heading &bull; Type metadata</text>
+  <text x="270" y="555" text-anchor="middle" font-size="10" fill="#555">600 tokens / 120 overlap • 19+ section types</text>
+  <text x="270" y="571" text-anchor="middle" font-size="10" fill="#555">Exercises • Code • Reading • Glossary</text>
+  <text x="270" y="587" text-anchor="middle" font-size="10" fill="#555">Chapter • Page • Heading • Type metadata</text>
 
   <line x1="230" y1="606" x2="230" y2="632" stroke="#455A64" stroke-width="2" marker-end="url(#arrow)"/>
 
@@ -90,8 +90,8 @@
   <circle cx="90" cy="668" r="18" fill="#C62828"/>
   <text x="90" y="673" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">6</text>
   <text x="270" y="652" text-anchor="middle" font-size="12" font-weight="700" fill="#B71C1C">Embedding + Storage</text>
-  <text x="270" y="669" text-anchor="middle" font-size="10" fill="#555">paraphrase-multilingual-MiniLM &bull; 384-dim</text>
-  <text x="270" y="686" text-anchor="middle" font-size="10" fill="#555">pgvector IVFFlat &bull; GIN full-text index</text>
+  <text x="270" y="669" text-anchor="middle" font-size="10" fill="#555">paraphrase-multilingual-MiniLM-L12-v2 • 384d</text>
+  <text x="270" y="686" text-anchor="middle" font-size="10" fill="#555">pgvector IVFFlat • GIN full-text index</text>
 
 
   <!-- ════════ RIGHT COLUMN: RETRIEVAL ════════ -->
@@ -112,7 +112,7 @@
   <circle cx="590" cy="221" r="18" fill="#388E3C"/>
   <text x="590" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">B</text>
   <text x="770" y="214" text-anchor="middle" font-size="12" font-weight="700" fill="#1B5E20">Query Encoding</text>
-  <text x="770" y="233" text-anchor="middle" font-size="10" fill="#555">Multilingual MiniLM → 384-dim vector</text>
+  <text x="770" y="233" text-anchor="middle" font-size="10" fill="#555">paraphrase-multilingual-MiniLM-L12-v2 → 384d</text>
 
   <line x1="730" y1="250" x2="730" y2="290" stroke="#2E7D32" stroke-width="2" marker-end="url(#arrowGreen)"/>
 
@@ -151,7 +151,7 @@
   <circle cx="590" cy="575" r="18" fill="#388E3C"/>
   <text x="590" y="580" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">E</text>
   <text x="770" y="568" text-anchor="middle" font-size="12" font-weight="700" fill="#1B5E20">Context Building (Top-5)</text>
-  <text x="770" y="587" text-anchor="middle" font-size="10" fill="#555">Chapter &bull; Heading &bull; Section type &bull; Page</text>
+  <text x="770" y="587" text-anchor="middle" font-size="10" fill="#555">Chapter • Heading • Section type • Page</text>
 
   <line x1="730" y1="604" x2="730" y2="632" stroke="#2E7D32" stroke-width="2" marker-end="url(#arrowGreen)"/>
 
@@ -161,7 +161,7 @@
   <text x="590" y="673" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">F</text>
   <text x="770" y="652" text-anchor="middle" font-size="12" font-weight="700" fill="#4A148C">Llama 3.3 70B (Groq LPU)</text>
   <text x="770" y="669" text-anchor="middle" font-size="10" fill="#555">Grounded answer + page citations</text>
-  <text x="770" y="686" text-anchor="middle" font-size="10" fill="#555">Streaming via SSE &bull; MMLU ~85%</text>
+  <text x="770" y="686" text-anchor="middle" font-size="10" fill="#555">Streaming via SSE • MMLU ~85%</text>
 
   <!-- ════════ CENTER CONNECTOR ════════ -->
   <!-- DB icon in center linking indexing to retrieval -->
@@ -178,9 +178,9 @@
   <rect x="30" y="730" width="900" height="68" rx="10" fill="#263238" filter="url(#shadow)"/>
   <text x="480" y="752" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Key Metrics</text>
   <text x="140" y="772" text-anchor="middle" font-size="10" fill="#B0BEC5">Vector Search: &lt;10ms</text>
-  <text x="140" y="787" text-anchor="middle" font-size="10" fill="#80CBC4">K=10 candidates</text>
+  <text x="140" y="787" text-anchor="middle" font-size="10" fill="#80CBC4">K=30 candidates</text>
   <text x="310" y="772" text-anchor="middle" font-size="10" fill="#B0BEC5">OCR Accuracy: 96–99%</text>
-  <text x="310" y="787" text-anchor="middle" font-size="10" fill="#80CBC4">nep+eng &bull; PSM 6</text>
+  <text x="310" y="787" text-anchor="middle" font-size="10" fill="#80CBC4">nep+eng • PSM 6</text>
   <text x="480" y="772" text-anchor="middle" font-size="10" fill="#B0BEC5">Retrieval Accuracy: 94%</text>
   <text x="480" y="787" text-anchor="middle" font-size="10" fill="#80CBC4">31/33 test questions</text>
   <text x="650" y="772" text-anchor="middle" font-size="10" fill="#B0BEC5">LLM Response: 2–3 sec</text>

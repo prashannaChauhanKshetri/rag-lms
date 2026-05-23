@@ -34,6 +34,8 @@ async def list_notifications(request: Request, limit: int = 20):
             if n.get("id"):
                 n["id"] = str(n["id"])
         return {"notifications": notifications, "count": len(notifications)}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch notifications: {e}")
 
@@ -49,6 +51,8 @@ async def unread_count(request: Request):
     try:
         count = db.get_unread_notification_count(user_id)
         return {"count": count}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch unread count: {e}")
 
@@ -65,5 +69,7 @@ async def mark_read(request: Request, body: MarkReadRequest = Body(default=MarkR
     try:
         updated = db.mark_notifications_read(user_id, notification_ids=ids)
         return {"updated": updated, "message": "Marked as read"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to mark notifications read: {e}")

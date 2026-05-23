@@ -3225,23 +3225,37 @@ def filter_by_exercise_ref(chunks: List[Dict], ref: str) -> List[Dict]:
     return partial
 
 
+_STRUCTURAL_PHRASES = (
+    "table of contents", "toc", "syllabus",
+    "list all", "how many units", "how many chapters",
+    "what are the chapters", "what are the units",
+    # Devanagari
+    "अध्याय", "पाठ", "एकाइ", "विषय सूची",
+)
+
+# "unit" / "units" / "chapter" / "chapters" only count as structural when not
+# preceded by SI/measurement context ("SI unit of", "unit of", "base unit",
+# "units of", etc.) where they mean a physical unit, not a book section.
+_STRUCTURAL_WORD_RE = re.compile(
+    r"(?<!\bsi\s)(?<!\bbase\s)(?<!\bof\s)\b(chapters?|units?)\b(?!\s+of\b)",
+    re.IGNORECASE,
+)
+
+
 def is_structural_query(question: str) -> bool:
     """Return True if the question asks about the book's structure/TOC.
 
     Centralized so both the prompt builder and the retrieval layer agree on
-    what counts as a structural query (they must, or chapter-filtering and
-    reranking behavior will diverge).
+    what counts as a structural query. Uses word boundaries and context
+    exclusions so questions like "what is the SI unit of force" aren't
+    misrouted into chapter-listing retrieval.
     """
     if not question:
         return False
     q = question.lower()
-    return any(k in q for k in (
-        "chapter", "unit", "table of contents", "toc", "topics",
-        "syllabus", "index", "what are the", "list all",
-        "how many units", "how many chapters",
-        # Devanagari
-        "अध्याय", "पाठ", "एकाइ", "विषय सूची",
-    ))
+    if any(p in q for p in _STRUCTURAL_PHRASES):
+        return True
+    return bool(_STRUCTURAL_WORD_RE.search(q))
 
 
 # =============================================================================
@@ -3439,17 +3453,16 @@ def build_system_user_prompt(context_docs: List[Dict], question: str) -> Tuple[s
         return system_prompt, user_prompt
     
     # Default generic template for non-math subjects
-    system_prompt = """You are an expert and friendly teacher.
-Your goal is to help the student understand the concept using the provided educational material.
+    system_prompt = """You are a friendly human teacher helping a student. Speak naturally, like a real teacher talking to their student — not like an AI or a document summary.
 
 Guidelines:
-1. **Be Teacher-like:** Explain simply. Use analogies when helpful.
-2. **Context First:** Answer based ONLY on the provided excerpts.
-3. **Direct Answers:** Give the answer directly. For short factual questions (definitions, SI units, single facts), keep answers concise — one or two sentences is often enough.
-4. **Do NOT cite chapter or page numbers in your answer.** The UI shows sources separately beneath your response. Writing things like "(Chapter 2, Page 15)" or "In Unit 1..." in the answer body is redundant and clutters the reply.
-5. **Honesty:** If the answer is not in the text, say so clearly.
-6. **Structural Questions:** If the student asks about chapters, units, or the table of contents, list ALL chapters/units found in the provided excerpts with their page numbers in a clear, numbered format. (This is the ONE exception where chapter/page listing belongs in the answer body.)
-7. **Be Comprehensive:** When listing items (chapters, topics, etc.), include ALL items from the context — do not summarize or skip any.
+1. Sound human. Never say "Based on the provided context", "According to the excerpts", "As an AI", "The document states", or similar phrases. Just answer the question directly.
+2. Use the provided material as your source of truth. If the answer isn't in it, say plainly that you don't have that in the book.
+3. For short factual questions (SI units, definitions, single facts, yes/no), give a direct 1–2 sentence answer. Do not list chapters, units, or page numbers — the student just wants the fact.
+4. For explanation questions, explain simply. Use analogies when they help. Keep paragraphs short.
+5. Do not cite chapter or page numbers in your answer — the UI shows sources separately. Phrases like "(Chapter 2, Page 15)" or "In Unit 1..." are noise.
+6. Use markdown sparingly. Plain prose for short answers. Only use bullet lists when you are genuinely listing multiple items, and only use **bold** for a key term the student should notice. Never wrap whole sentences in **.
+7. Only list chapters, units, or the table of contents when the student explicitly asks about the book's structure (e.g. "list the chapters", "what's in the syllabus"). A question containing the word "unit" does NOT mean the student wants a unit list — "SI unit of force" is a physics question.
 """
     
     if is_structural:

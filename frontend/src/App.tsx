@@ -362,7 +362,19 @@ function App() {
         </RoleShell>
       );
     }
-    return <SuperAdminDashboard />;
+    return (
+      <RoleShell
+        user={shellUser}
+        tabs={[]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onSettingsClick={onSettingsClick}
+        onLogout={handleLogout}
+        hideNav
+      >
+        <SuperAdminDashboard />
+      </RoleShell>
+    );
   }
 
   if (user.role === 'admin') {

@@ -1,0 +1,212 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 480" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <filter id="shadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  
+  <rect width="1000" height="480" fill="#FAFAFA"/>
+  
+  <!-- Title -->
+  <text x="500" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#C75B39">FUNCTIONAL DECOMPOSITION DIAGRAM (FDD)</text>
+  
+  <!-- ROOT NODE -->
+  <rect x="400" y="50" width="200" height="36" rx="8" fill="#C75B39" filter="url(#shadow)"/>
+  <text x="500" y="73" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">Gyana RAG-LMS System</text>
+  
+  <!-- Connector from root to Level 1 -->
+  <line x1="500" y1="86" x2="500" y2="105" stroke="#C75B39" stroke-width="2"/>
+  <line x1="125" y1="105" x2="875" y2="105" stroke="#C75B39" stroke-width="2"/>
+  <line x1="125" y1="105" x2="125" y2="120" stroke="#C75B39" stroke-width="2"/>
+  <line x1="375" y1="105" x2="375" y2="120" stroke="#C75B39" stroke-width="2"/>
+  <line x1="625" y1="105" x2="625" y2="120" stroke="#C75B39" stroke-width="2"/>
+  <line x1="875" y1="105" x2="875" y2="120" stroke="#C75B39" stroke-width="2"/>
+  
+  <!-- LEVEL 1: Four Main Layers -->
+  <rect x="25" y="120" width="200" height="34" rx="6" fill="#E8D5CE" stroke="#C75B39" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="125" y="142" text-anchor="middle" font-size="11" font-weight="600" fill="#5D4037">User Interface Layer</text>
+  
+  <rect x="275" y="120" width="200" height="34" rx="6" fill="#E8D5CE" stroke="#C75B39" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="375" y="142" text-anchor="middle" font-size="11" font-weight="600" fill="#5D4037">Application Logic Layer</text>
+  
+  <rect x="525" y="120" width="200" height="34" rx="6" fill="#E8D5CE" stroke="#C75B39" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="625" y="142" text-anchor="middle" font-size="11" font-weight="600" fill="#5D4037">RAG Pipeline Layer</text>
+  
+  <rect x="775" y="120" width="200" height="34" rx="6" fill="#E8D5CE" stroke="#C75B39" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="875" y="142" text-anchor="middle" font-size="11" font-weight="600" fill="#5D4037">Storage Layer</text>
+  
+  <!-- LEVEL 2 Connectors -->
+  <line x1="125" y1="154" x2="125" y2="175" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="50" y1="175" x2="200" y2="175" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="50" y1="175" x2="50" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="125" y1="175" x2="125" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="200" y1="175" x2="200" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  
+  <line x1="375" y1="154" x2="375" y2="175" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="300" y1="175" x2="450" y2="175" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="300" y1="175" x2="300" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="375" y1="175" x2="375" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="450" y1="175" x2="450" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  
+  <line x1="625" y1="154" x2="625" y2="175" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="550" y1="175" x2="700" y2="175" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="550" y1="175" x2="550" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="625" y1="175" x2="625" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="700" y1="175" x2="700" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  
+  <line x1="875" y1="154" x2="875" y2="175" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="800" y1="175" x2="950" y2="175" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="800" y1="175" x2="800" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="875" y1="175" x2="875" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  <line x1="950" y1="175" x2="950" y2="190" stroke="#8D6E63" stroke-width="1.5"/>
+  
+  <!-- LEVEL 2 NODES (well-spaced) -->
+  <!-- UI Layer -->
+  <rect x="10" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="50" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">Admin Portal</text>
+  
+  <rect x="85" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="125" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">Instructor Portal</text>
+  
+  <rect x="160" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="200" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">Student Portal</text>
+  
+  <!-- App Logic Layer -->
+  <rect x="260" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="300" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">Auth Manager</text>
+  
+  <rect x="335" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="375" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">LMS Workflow</text>
+  
+  <rect x="410" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="450" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">AI Content Gen</text>
+  
+  <!-- RAG Pipeline Layer -->
+  <rect x="510" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="550" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">PDF Ingestion</text>
+  
+  <rect x="585" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="625" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">Hybrid Retrieval</text>
+  
+  <rect x="660" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="700" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">LLM Generation</text>
+  
+  <!-- Storage Layer -->
+  <rect x="760" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="800" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">Vector Store</text>
+  
+  <rect x="835" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="875" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">Relational DB</text>
+  
+  <rect x="910" y="190" width="80" height="30" rx="5" fill="#fff" stroke="#C75B39" stroke-width="1" filter="url(#shadow)"/>
+  <text x="950" y="209" text-anchor="middle" font-size="9" font-weight="500" fill="#5D4037">File Storage</text>
+  
+  <!-- LEVEL 3: Simplified - only key sub-items, properly spaced -->
+  
+  <!-- Admin Portal children -->
+  <line x1="50" y1="220" x2="50" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="15" y="240" width="70" height="24" rx="4" fill="#FFF8E1" stroke="#BCAAA4" stroke-width="1"/>
+  <text x="50" y="256" text-anchor="middle" font-size="8" fill="#5D4037">Users/Courses</text>
+  
+  <!-- Instructor Portal children -->
+  <line x1="125" y1="220" x2="125" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="90" y="240" width="70" height="24" rx="4" fill="#FFF8E1" stroke="#BCAAA4" stroke-width="1"/>
+  <text x="125" y="256" text-anchor="middle" font-size="8" fill="#5D4037">Grading/Attend</text>
+  
+  <!-- Student Portal children -->
+  <line x1="200" y1="220" x2="200" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="165" y="240" width="70" height="24" rx="4" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1"/>
+  <text x="200" y="256" text-anchor="middle" font-size="8" fill="#1565C0">AI Chat/Submit</text>
+  
+  <!-- Auth Manager children -->
+  <line x1="300" y1="220" x2="300" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="265" y="240" width="70" height="24" rx="4" fill="#FFF8E1" stroke="#BCAAA4" stroke-width="1"/>
+  <text x="300" y="256" text-anchor="middle" font-size="8" fill="#5D4037">JWT + RBAC</text>
+  
+  <!-- LMS Workflow children -->
+  <line x1="375" y1="220" x2="375" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="340" y="240" width="70" height="24" rx="4" fill="#FFF8E1" stroke="#BCAAA4" stroke-width="1"/>
+  <text x="375" y="256" text-anchor="middle" font-size="8" fill="#5D4037">Enroll/Assign</text>
+  
+  <!-- AI Content Gen children -->
+  <line x1="450" y1="220" x2="450" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="415" y="240" width="70" height="24" rx="4" fill="#E8F5E9" stroke="#A5D6A7" stroke-width="1"/>
+  <text x="450" y="256" text-anchor="middle" font-size="8" fill="#2E7D32">Quiz/Flashcard</text>
+  
+  <!-- PDF Ingestion children -->
+  <line x1="550" y1="220" x2="550" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="525" y1="240" x2="575" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="525" y1="240" x2="525" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="575" y1="240" x2="575" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  
+  <rect x="495" y="255" width="60" height="24" rx="4" fill="#FCE4EC" stroke="#F48FB1" stroke-width="1"/>
+  <text x="525" y="271" text-anchor="middle" font-size="8" fill="#C2185B">Docling</text>
+  
+  <rect x="545" y="255" width="60" height="24" rx="4" fill="#FCE4EC" stroke="#F48FB1" stroke-width="1"/>
+  <text x="575" y="271" text-anchor="middle" font-size="8" fill="#C2185B">Tesseract</text>
+  
+  <!-- Hybrid Retrieval children (3-stage) -->
+  <line x1="625" y1="220" x2="625" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="595" y1="240" x2="655" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="595" y1="240" x2="595" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="625" y1="240" x2="625" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="655" y1="240" x2="655" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  
+  <rect x="570" y="255" width="50" height="24" rx="4" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1"/>
+  <text x="595" y="271" text-anchor="middle" font-size="8" fill="#1565C0">BM25</text>
+  
+  <rect x="600" y="255" width="50" height="24" rx="4" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1"/>
+  <text x="625" y="271" text-anchor="middle" font-size="8" fill="#1565C0">Semantic</text>
+  
+  <rect x="630" y="255" width="50" height="24" rx="4" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1"/>
+  <text x="655" y="271" text-anchor="middle" font-size="8" fill="#1565C0">Reranker</text>
+  
+  <!-- LLM Generation children -->
+  <line x1="700" y1="220" x2="700" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="680" y1="240" x2="720" y2="240" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="680" y1="240" x2="680" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  <line x1="720" y1="240" x2="720" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  
+  <rect x="655" y="255" width="50" height="24" rx="4" fill="#F3E5F5" stroke="#CE93D8" stroke-width="1"/>
+  <text x="680" y="271" text-anchor="middle" font-size="8" fill="#7B1FA2">Llama 3.3</text>
+  
+  <rect x="695" y="255" width="50" height="24" rx="4" fill="#F3E5F5" stroke="#CE93D8" stroke-width="1"/>
+  <text x="720" y="271" text-anchor="middle" font-size="8" fill="#7B1FA2">SSE</text>
+  
+  <!-- Storage children -->
+  <line x1="800" y1="220" x2="800" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="765" y="255" width="70" height="24" rx="4" fill="#E0F7FA" stroke="#80DEEA" stroke-width="1"/>
+  <text x="800" y="271" text-anchor="middle" font-size="8" fill="#00838F">pgvector</text>
+  
+  <line x1="875" y1="220" x2="875" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="840" y="255" width="70" height="24" rx="4" fill="#E0F7FA" stroke="#80DEEA" stroke-width="1"/>
+  <text x="875" y="271" text-anchor="middle" font-size="8" fill="#00838F">PostgreSQL</text>
+  
+  <line x1="950" y1="220" x2="950" y2="255" stroke="#BCAAA4" stroke-width="1"/>
+  <rect x="915" y="255" width="70" height="24" rx="4" fill="#E0F7FA" stroke="#80DEEA" stroke-width="1"/>
+  <text x="950" y="271" text-anchor="middle" font-size="8" fill="#00838F">PDFs/Uploads</text>
+  
+  <!-- LEVEL 4: Key deeper items -->
+  <!-- Text Chunker + Embedding under Docling/Tesseract -->
+  <line x1="550" y1="279" x2="550" y2="300" stroke="#D7CCC8" stroke-width="1"/>
+  <rect x="510" y="300" width="80" height="22" rx="3" fill="#fff" stroke="#D7CCC8" stroke-width="1"/>
+  <text x="550" y="315" text-anchor="middle" font-size="7" fill="#5D4037">Chunker → Embed</text>
+  
+  <!-- HNSW under pgvector -->
+  <line x1="800" y1="279" x2="800" y2="300" stroke="#D7CCC8" stroke-width="1"/>
+  <rect x="765" y="300" width="70" height="22" rx="3" fill="#fff" stroke="#D7CCC8" stroke-width="1"/>
+  <text x="800" y="315" text-anchor="middle" font-size="7" fill="#5D4037">HNSW Index</text>
+  
+  <!-- Users/Roles under PostgreSQL -->
+  <line x1="875" y1="279" x2="875" y2="300" stroke="#D7CCC8" stroke-width="1"/>
+  <rect x="840" y="300" width="70" height="22" rx="3" fill="#fff" stroke="#D7CCC8" stroke-width="1"/>
+  <text x="875" y="315" text-anchor="middle" font-size="7" fill="#5D4037">Users/Enrolls</text>
+  
+  <!-- Feedback under AI Chat -->
+  <line x1="200" y1="264" x2="200" y2="285" stroke="#D7CCC8" stroke-width="1"/>
+  <rect x="165" y="285" width="70" height="22" rx="3" fill="#fff" stroke="#D7CCC8" stroke-width="1"/>
+  <text x="200" y="300" text-anchor="middle" font-size="7" fill="#5D4037">Feedback Loop</text>
+  
+  <!-- Footer -->
+  <text x="500" y="350" text-anchor="middle" font-size="9" fill="#78909C">Gyana RAG-LMS | Functional Decomposition Diagram</text>
+</svg>

@@ -1,0 +1,107 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Grade 5 English Evaluation Dataset - Based on actual textbook content",
+    "total_questions": 10,
+    "book": "grade-5-english.pdf",
+    "categories": [
+      "grammar",
+      "vocabulary",
+      "comprehension",
+      "writing",
+      "speaking"
+    ]
+  },
+  "test_cases": [
+    {
+      "id": "eng5-reading-003",
+      "question": "What is the poem 'How I am Made' about?",
+      "ground_truth": "The poem describes body parts and their functions: feet for standing, belly for food, eyes to see the world, hands to grab and hold, lungs to breathe air. It explains how all body parts are linked together to make a person.",
+      "book": "grade-5-english.pdf",
+      "category": "comprehension",
+      "grade": 5,
+      "type": "poem_analysis"
+    },
+    {
+      "id": "eng5-reading-004",
+      "question": "What is the poem 'Bright and Beautiful' about?",
+      "ground_truth": "The poem 'All Things Bright and Beautiful' describes how God created all things - creatures great and small, wise and wonderful. Each flower that opens, each bird that sings, their shining colors and tiny wings were all made by the creator God.",
+      "book": "grade-5-english.pdf",
+      "category": "comprehension",
+      "grade": 5,
+      "type": "poem_analysis"
+    },
+    {
+      "id": "eng5-speaking-001",
+      "question": "How do you introduce yourself in English?",
+      "ground_truth": "To introduce yourself, say: 'My name is...', 'I'm...', 'Nice to meet you, I'm...'. When introducing others: 'Jack, please meet Nicholas', 'I'd like you to meet Liza', 'Lila, this is Anil'.",
+      "book": "grade-5-english.pdf",
+      "category": "speaking",
+      "grade": 5,
+      "type": "introduction"
+    },
+    {
+      "id": "eng5-speaking-002",
+      "question": "How do you say goodbye in English?",
+      "ground_truth": "To say goodbye: 'Goodbye to you all', 'We had a wonderful time today', 'See you soon'. These are expressions used when leaving or ending a conversation.",
+      "book": "grade-5-english.pdf",
+      "category": "speaking",
+      "grade": 5,
+      "type": "leave_taking"
+    },
+    {
+      "id": "eng5-speaking-003",
+      "question": "How do you express ability using 'can'?",
+      "ground_truth": "Use 'can' to express ability: Can you swim? Can you dive? Can you ride a bike? Can you run? Can you jump? Can you drive a car? Can you sing? Can you dance?",
+      "book": "grade-5-english.pdf",
+      "category": "speaking",
+      "grade": 5,
+      "type": "expressing_ability"
+    },
+    {
+      "id": "eng5-writing-001",
+      "question": "What are the units in the Grade 5 English textbook?",
+      "ground_truth": "The units include: Unit 1 Meeting People, Unit 2 Possession/Rooms in my House, Unit 3 Getting Information, Unit 4 Requesting and Apologising, Unit 5 Thanking and Congratulating, Unit 6 Talking about, Unit 7 Making Comparisons, and more.",
+      "book": "grade-5-english.pdf",
+      "category": "comprehension",
+      "grade": 5,
+      "type": "book_structure"
+    },
+    {
+      "id": "eng5-writing-002",
+      "question": "How do you write a thank you message?",
+      "ground_truth": "A thank you message includes: greeting the person, expressing gratitude, mentioning what you're thankful for. Example: 'Dear Mr. Karki, I just wanted to say a big thank you for teaching us English in such a nice way.'",
+      "book": "grade-5-english.pdf",
+      "category": "writing",
+      "grade": 5,
+      "type": "letter_writing"
+    },
+    {
+      "id": "eng5-writing-003",
+      "question": "How do you write a personal profile?",
+      "ground_truth": "A personal profile includes: name, place of origin, family information, what parents do, siblings, and other personal details. Example: 'Hi, my name is Ishika Pandit. I'm from Nuwakot. I live with my family in Jhapa...'",
+      "book": "grade-5-english.pdf",
+      "category": "writing",
+      "grade": 5,
+      "type": "personal_writing"
+    },
+    {
+      "id": "eng5-poem-001",
+      "question": "What is the poem 'Tree Leaves' about?",
+      "ground_truth": "The poem Tree Leaves describes how leaves fell down all day long, singing a beautiful song together. They came to say goodbye and flew again towards the sky.",
+      "book": "grade-5-english.pdf",
+      "category": "comprehension",
+      "grade": 5,
+      "type": "poem_analysis"
+    },
+    {
+      "id": "eng5-vocab-006",
+      "question": "What does 'swish' and 'swoop' mean?",
+      "ground_truth": "Swish means to move quickly through the air. Swoop means to fly quickly downwards. These are movement verbs describing fast motion.",
+      "book": "grade-5-english.pdf",
+      "category": "vocabulary",
+      "grade": 5,
+      "type": "word_meaning"
+    }
+  ]
+}

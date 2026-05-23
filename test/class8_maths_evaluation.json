@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "description": "Class 8 Mathematics Evaluation - grade-8-mathematics.pdf (Nepal Curriculum)",
+    "total_questions": 10,
+    "book": "grade-8-mathematics.pdf",
+    "language": "English",
+    "categories": ["Set", "Profit_Loss", "Ratio", "Simple_Interest", "Area_Volume", "Algebra", "Geometry"]
+  },
+  "test_cases": [
+    {
+      "id": "math8-001",
+      "question": "What is a set? Express set N = counting numbers up to 5 by listing method.",
+      "ground_truth": "A set is a well-defined collection of distinct objects. By listing method (roster form), set N of counting numbers up to 5: N = {1, 2, 3, 4, 5}. Sets are denoted by capital letters and elements are enclosed in curly braces.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Set",
+      "grade": 8,
+      "type": "definition"
+    },
+    {
+      "id": "math8-002",
+      "question": "What is the difference between rational and irrational numbers? Give one example of each.",
+      "ground_truth": "A rational number can be expressed as p/q where p and q are integers and q ≠ 0. Example: 3/4. An irrational number cannot be expressed as a simple fraction. Example: √2, π. Irrational numbers have non-terminating, non-repeating decimal expansions.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Rational_Irrational",
+      "grade": 8,
+      "type": "concept"
+    },
+    {
+      "id": "math8-003",
+      "question": "If the cost price is Rs. 500 and the selling price is Rs. 600, find the profit and profit percentage.",
+      "ground_truth": "Profit = Selling Price - Cost Price = 600 - 500 = Rs. 100. Profit percentage = (Profit / Cost Price) × 100 = (100/500) × 100 = 20%. So the profit is Rs. 100 and profit percentage is 20%.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Profit_Loss",
+      "grade": 8,
+      "type": "calculation"
+    },
+    {
+      "id": "math8-004",
+      "question": "Manisha's monthly salary is Rs. 43,689. If tax rate is 10%, find the tax amount and take-home salary.",
+      "ground_truth": "Tax amount = 10% of Rs. 43,689 = (10/100) × 43,689 = Rs. 4,368.90. Take-home salary = 43,689 - 4,368.90 = Rs. 39,320.10.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Profit_Loss",
+      "grade": 8,
+      "type": "calculation"
+    },
+    {
+      "id": "math8-005",
+      "question": "What is simple interest? Find the simple interest if Principal = Rs. 10,000, Rate = 12% per annum, Time = 2 years.",
+      "ground_truth": "Simple Interest is interest calculated only on the principal amount. Formula: SI = (P × R × T) / 100. SI = (10,000 × 12 × 2) / 100 = 240,000 / 100 = Rs. 2,400. Total amount = 10,000 + 2,400 = Rs. 12,400.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Simple_Interest",
+      "grade": 8,
+      "type": "calculation"
+    },
+    {
+      "id": "math8-006",
+      "question": "Find the area of a rectangle with length 12 cm and breadth 8 cm. Also find the area of a triangle with base 10 cm and height 6 cm.",
+      "ground_truth": "Area of rectangle = length × breadth = 12 × 8 = 96 cm². Area of triangle = (1/2) × base × height = (1/2) × 10 × 6 = 30 cm².",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Area_Volume",
+      "grade": 8,
+      "type": "calculation"
+    },
+    {
+      "id": "math8-007",
+      "question": "What are indices? Simplify: x³ × x⁴ and (x²)³.",
+      "ground_truth": "Indices (powers/exponents) show how many times a number is multiplied by itself. Law of multiplication: x³ × x⁴ = x^(3+4) = x⁷. Law of power: (x²)³ = x^(2×3) = x⁶.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Indices",
+      "grade": 8,
+      "type": "concept"
+    },
+    {
+      "id": "math8-008",
+      "question": "What is an algebraic expression? Expand (x + 3)(x - 2).",
+      "ground_truth": "An algebraic expression contains variables, constants, and arithmetic operations. Expanding (x + 3)(x - 2) using FOIL: = x² - 2x + 3x - 6 = x² + x - 6.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Algebraic_Expression",
+      "grade": 8,
+      "type": "calculation"
+    },
+    {
+      "id": "math8-009",
+      "question": "What are parallel and perpendicular lines? What is the sum of angles on a straight line?",
+      "ground_truth": "Parallel lines are lines in the same plane that never meet; they have the same slope. Perpendicular lines intersect at exactly 90°. The sum of angles on a straight line (linear pair) is always 180°.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Lines_Angles",
+      "grade": 8,
+      "type": "concept"
+    },
+    {
+      "id": "math8-010",
+      "question": "The sum of two numbers is 1 and their difference is some value. How do you set up and solve such simultaneous equations?",
+      "ground_truth": "For two equations like x + y = 5 and x - y = 1: add both equations → 2x = 6, so x = 3; then substitute back → 3 + y = 5 → y = 2. This elimination method works when adding/subtracting the equations removes one variable.",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Equation_Graph",
+      "grade": 8,
+      "type": "problem_solving"
+    }
+  ]
+}

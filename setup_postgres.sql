@@ -105,10 +105,14 @@ CREATE TABLE IF NOT EXISTS documents (
     chatbot_id TEXT NOT NULL REFERENCES chatbots(id) ON DELETE CASCADE,
     filename TEXT NOT NULL,
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    chunk_count INTEGER DEFAULT 0
+    chunk_count INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'ready'
+        CHECK (status IN ('processing', 'ready', 'failed')),
+    error_message TEXT
 );
 CREATE INDEX idx_documents_chatbot ON documents(chatbot_id);
 CREATE INDEX idx_documents_upload_date ON documents(upload_date DESC);
+CREATE INDEX idx_documents_status ON documents(status);
 -- ============================================
 -- DOCUMENT CHUNKS (NEW - WITH VECTORS)
 -- ============================================

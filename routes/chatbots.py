@@ -1,8 +1,9 @@
 import os
 import uuid
+import logging
 import numpy as np
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Depends, BackgroundTasks
 import database_postgres as db
 import vectorstore_postgres as vs
 from vectorstore_postgres import add_documents, delete_chatbot
@@ -14,6 +15,45 @@ import utils_redis as rc
 router = APIRouter(prefix="/chatbots", tags=["Chatbots"], dependencies=[Depends(utils_auth.get_current_user)])
 
 PDF_DIR = "fin_ed_docs"
+log = logging.getLogger("rag-chat")
+
+
+def _ingest_pdf_background(doc_id: int, chatbot_id: str, filename: str, file_path: str):
+    """Chunk, embed, and index a PDF off the request thread. Updates the
+    documents row's status at each stage."""
+    try:
+        with open(file_path, "rb") as f:
+            contents = f.read()
+
+        chunks_with_meta = process_pdf(contents)
+        if not chunks_with_meta:
+            db.update_document_status(doc_id, "failed", error_message="No text extracted from PDF")
+            return
+
+        texts = [c["text"] for c in chunks_with_meta]
+        metadatas = [{
+            "text": c["text"],
+            "original_text": c.get("original_text", c["text"]),
+            "source": filename,
+            "page": c["page"],
+            "chapter": c.get("chapter", "Unknown"),
+            "section_type": c.get("section_type", "content"),
+            "heading": c.get("heading", "")
+        } for c in chunks_with_meta]
+
+        emb = get_embed_model().encode(texts, show_progress_bar=False, convert_to_numpy=True)
+        emb = np.asarray(emb).astype("float32")
+        add_documents(chatbot_id, emb, metadatas)
+
+        db.update_document_status(doc_id, "ready", chunk_count=len(texts))
+
+        invalidated = rc.cache_delete_pattern(f"rag:{chatbot_id}:*")
+        if invalidated:
+            log.info(f"Invalidated {invalidated} RAG cache entries for chatbot {chatbot_id}")
+        log.info(f"Ingested document {doc_id} ({filename}) with {len(texts)} chunks")
+    except Exception as e:
+        log.exception(f"Background ingestion failed for doc {doc_id}: {e}")
+        db.update_document_status(doc_id, "failed", error_message=str(e)[:500])
 
 # --- Helper: Admin-only guard ---
 def _require_admin(user: dict):
@@ -72,77 +112,38 @@ async def delete_chatbot_endpoint(chatbot_id: str, user=Depends(utils_auth.get_c
     return {"message": "Chatbot deleted"}
 
 @router.post("/{chatbot_id}/upload")
-async def upload_document(chatbot_id: str, file: UploadFile = File(...), user=Depends(utils_auth.get_current_user)):
-    """Upload and ingest a PDF for a specific chatbot (Admin only)"""
+async def upload_document(
+    chatbot_id: str,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    user=Depends(utils_auth.get_current_user),
+):
+    """Upload a PDF; ingestion runs in the background so the request returns
+    immediately. Poll /chatbots/{id}/documents to watch status."""
     _require_admin(user)
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF uploads supported")
-    
-    # Check if chatbot exists
+
     chatbot = db.get_chatbot(chatbot_id)
     if not chatbot:
         raise HTTPException(status_code=404, detail="Chatbot not found")
-    
+
     contents = await file.read()
-    
-    # Save file
     safe_filename = os.path.basename(file.filename)
     chatbot_dir = os.path.join(PDF_DIR, chatbot_id)
     os.makedirs(chatbot_dir, exist_ok=True)
     path = os.path.join(chatbot_dir, safe_filename)
-    
     with open(path, "wb") as f:
         f.write(contents)
-    
-    # Process PDF
-    try:
-        chunks_with_meta = process_pdf(contents)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF processing error: {e}")
-    
-    if not chunks_with_meta:
-        raise HTTPException(status_code=500, detail="No text extracted from PDF")
-    
-    # Prepare embeddings
-    texts = [c["text"] for c in chunks_with_meta]
-    metadatas = []
-    for c in chunks_with_meta:
-        metadatas.append({
-            "text": c["text"],
-            "original_text": c.get("original_text", c["text"]),
-            "source": file.filename,
-            "page": c["page"],
-            "chapter": c.get("chapter", "Unknown"),
-            "section_type": c.get("section_type", "content"),
-            "heading": c.get("heading", "")
-        })
-    
-    try:
-        emb = get_embed_model().encode(texts, show_progress_bar=False, convert_to_numpy=True)
-        emb = np.asarray(emb).astype("float32")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Embedding error: {e}")
-    
-    # Add to vectorstore
-    res = add_documents(chatbot_id, emb, metadatas)
 
-    # Record in DB
-    db.add_document(chatbot_id, file.filename, len(texts))
-
-    # Invalidate all RAG response cache entries for this chatbot —
-    # content changed so cached answers may be stale
-    invalidated = rc.cache_delete_pattern(f"rag:{chatbot_id}:*")
-    if invalidated:
-        import logging
-        logging.getLogger("rag-chat").info(
-            f"Invalidated {invalidated} RAG cache entries for chatbot {chatbot_id}"
-        )
+    doc_id = db.add_document(chatbot_id, file.filename, chunk_count=0, status="processing")
+    background_tasks.add_task(_ingest_pdf_background, doc_id, chatbot_id, file.filename, path)
 
     return {
-        "message": "Document uploaded and ingested",
+        "message": "Upload accepted; ingestion started",
+        "document_id": doc_id,
         "filename": file.filename,
-        "chunks": len(texts),
-        "stats": res
+        "status": "processing",
     }
 
 @router.get("/{chatbot_id}/documents")
@@ -150,3 +151,17 @@ async def list_documents_endpoint(chatbot_id: str):
     """List documents for a chatbot (accessible to all authenticated users)"""
     docs = db.list_documents(chatbot_id)
     return {"documents": docs}
+
+@router.get("/{chatbot_id}/documents/{doc_id}/status")
+async def get_document_status(chatbot_id: str, doc_id: int):
+    """Return current ingestion status for a document (for polling)."""
+    doc = db.get_document(doc_id)
+    if not doc or doc.get("chatbot_id") != chatbot_id:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {
+        "id": doc["id"],
+        "filename": doc["filename"],
+        "status": doc["status"],
+        "chunk_count": doc.get("chunk_count", 0),
+        "error_message": doc.get("error_message"),
+    }

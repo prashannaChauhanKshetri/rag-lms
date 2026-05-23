@@ -85,7 +85,13 @@ const SuperAdminDashboard: React.FC = () => {
 
   // Search and filter
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filterRole, setFilterRole] = useState('all');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   // Modal states
   const [showNewInstitution, setShowNewInstitution] = useState(false);
@@ -110,20 +116,20 @@ const SuperAdminDashboard: React.FC = () => {
     setError('');
 
     try {
-      if (activeTab === 'institutions') {
+      if (activeTab === 'overview' || activeTab === 'analytics') {
+        const response = await api.get('/super_admin/analytics/overview') as AnalyticsResponse;
+        setAnalytics(response);
+      } else if (activeTab === 'institutions') {
         const response = await api.get('/super_admin/institutions') as InstitutionsResponse;
         setInstitutions(response.institutions || []);
       } else if (activeTab === 'users') {
         const params = new URLSearchParams();
         if (filterRole !== 'all') params.append('role', filterRole);
-        if (searchTerm) params.append('search', searchTerm);
+        if (debouncedSearch) params.append('search', debouncedSearch);
         const queryString = params.toString();
         const endpoint = `/super_admin/users${queryString ? `?${queryString}` : ''}`;
         const response = await api.get(endpoint) as UsersResponse;
         setUsers(response.users || []);
-      } else if (activeTab === 'analytics') {
-        const response = await api.get('/super_admin/analytics/overview') as AnalyticsResponse;
-        setAnalytics(response);
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } };
@@ -131,7 +137,7 @@ const SuperAdminDashboard: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, filterRole, searchTerm, currentPage]);
+  }, [activeTab, filterRole, debouncedSearch]);
 
   // Load data on component mount and tab change
   useEffect(() => {
@@ -599,10 +605,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <input
                         type="text"
                         value={searchTerm}
-                        onChange={(e) => {
-                          setSearchTerm(e.target.value);
-                          loadData();
-                        }}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search institutions by name, code, or domain..."
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                       />
@@ -758,10 +761,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <input
                       type="text"
                       value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        loadData();
-                      }}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Name, email, or username..."
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                     />
@@ -772,10 +772,7 @@ const SuperAdminDashboard: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Role</label>
                   <select
                     value={filterRole}
-                    onChange={(e) => {
-                      setFilterRole(e.target.value);
-                      loadData();
-                    }}
+                    onChange={(e) => setFilterRole(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                   >
                     <option value="all">All Roles</option>

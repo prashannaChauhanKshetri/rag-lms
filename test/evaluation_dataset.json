@@ -1,0 +1,506 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "RAG-LMS Evaluation Dataset for RAGAS Framework",
+    "total_questions": 50,
+    "books_covered": 33,
+    "categories": ["English", "Mathematics", "Science", "Social Studies", "Nepali", "Computer Science", "Health"]
+  },
+  "test_cases": [
+    {
+      "id": "eng-gr5-001",
+      "question": "What is a noun?",
+      "ground_truth": "A noun is a word that names a person, place, thing, or idea. Examples: person (teacher, boy), place (school, Nepal), thing (book, table), idea (happiness, freedom). Nouns can be common or proper.",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr5-002",
+      "question": "What are the different types of pronouns?",
+      "ground_truth": "Pronouns replace nouns. Types include: Personal (I, you, he, she), Possessive (my, your, his), Demonstrative (this, that), Interrogative (who, what), and Relative (who, which, that).",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr5-003",
+      "question": "What is an adjective and give examples?",
+      "ground_truth": "An adjective is a word that describes or modifies a noun. Examples: big, small, happy, sad, beautiful, red, tall. Adjectives answer: What kind? How many? Which one?",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr5-004",
+      "question": "What is a verb?",
+      "ground_truth": "A verb is an action word that shows what someone or something does. Examples: run, jump, eat, sleep, read, write. Verbs can show action (walk) or state of being (is, am, are).",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr5-005",
+      "question": "What are the parts of speech?",
+      "ground_truth": "The eight parts of speech are: Noun, Pronoun, Verb, Adjective, Adverb, Preposition, Conjunction, and Interjection. Each plays a different role in sentences.",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr5-006",
+      "question": "What is the difference between singular and plural nouns?",
+      "ground_truth": "Singular nouns name one person, place, or thing (book, child, box). Plural nouns name more than one (books, children, boxes). Most plurals add -s or -es, but some are irregular.",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr5-007",
+      "question": "What is a preposition? Give examples.",
+      "ground_truth": "A preposition shows the relationship between a noun and other words. Examples: in, on, at, under, over, between, through. They often show location, time, or direction.",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr5-008",
+      "question": "What are simple tenses in English?",
+      "ground_truth": "Simple tenses are: Present (I walk), Past (I walked), and Future (I will walk). They show when an action happens - now, before, or later.",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr9-001",
+      "question": "What is the main theme of the poem 'The Road Not Taken' in Grade 9 English?",
+      "ground_truth": "The main theme is about making choices in life and how the choices we make shape our future. The speaker chooses the less traveled road, symbolizing individuality and non-conformity.",
+      "book": "grade-9-english.pdf",
+      "category": "English",
+      "grade": 9,
+      "type": "comprehension"
+    },
+    {
+      "id": "eng-gr9-002",
+      "question": "List the grammar exercises in Unit 3 of Grade 9 English.",
+      "ground_truth": "Unit 3 contains exercises on reported speech, active and passive voice transformation, and tense consistency.",
+      "book": "grade-9-english.pdf",
+      "category": "English",
+      "grade": 9,
+      "type": "structural"
+    },
+    {
+      "id": "eng-gr10-001",
+      "question": "What are the key vocabulary words introduced in the first unit of Grade 10 English?",
+      "ground_truth": "Key vocabulary includes words related to communication, relationships, and social interactions as introduced in the opening reading passages.",
+      "book": "grade-10-english.pdf",
+      "category": "English",
+      "grade": 10,
+      "type": "vocabulary"
+    },
+    {
+      "id": "math-gr9-001",
+      "question": "What is the formula for the sum of arithmetic progression?",
+      "ground_truth": "The sum of n terms of an arithmetic progression is S_n = n/2 × [2a + (n-1)d], where a is the first term and d is the common difference.",
+      "book": "grade-9-mathematics (1).pdf",
+      "category": "Mathematics",
+      "grade": 9,
+      "type": "conceptual"
+    },
+    {
+      "id": "math-gr9-002",
+      "question": "Solve: Find the value of x if 2x + 5 = 15",
+      "ground_truth": "x = 5. Solution: 2x + 5 = 15, 2x = 15 - 5 = 10, x = 10/2 = 5",
+      "book": "grade-9-mathematics (1).pdf",
+      "category": "Mathematics",
+      "grade": 9,
+      "type": "exercise"
+    },
+    {
+      "id": "math-gr10-001",
+      "question": "What are the trigonometric ratios for a right-angled triangle?",
+      "ground_truth": "The six trigonometric ratios are: sin θ = opposite/hypotenuse, cos θ = adjacent/hypotenuse, tan θ = opposite/adjacent, cosec θ = 1/sin θ, sec θ = 1/cos θ, cot θ = 1/tan θ",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Mathematics",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "math-gr10-002",
+      "question": "How many chapters are there in Grade 10 Mathematics?",
+      "ground_truth": "Grade 10 Mathematics contains multiple units covering Sets, Arithmetic, Mensuration, Algebra, Geometry, Trigonometry, and Statistics.",
+      "book": "grade-10-mathematics.pdf",
+      "category": "Mathematics",
+      "grade": 10,
+      "type": "structural"
+    },
+    {
+      "id": "sci-gr9-001",
+      "question": "Explain the process of photosynthesis as described in Grade 9 Science.",
+      "ground_truth": "Photosynthesis is the process by which green plants make food using sunlight, carbon dioxide, and water. The reaction is: 6CO2 + 6H2O + sunlight → C6H12O6 + 6O2. Chlorophyll in leaves absorbs light energy.",
+      "book": "grade-9-science-and-technology.pdf",
+      "category": "Science",
+      "grade": 9,
+      "type": "conceptual"
+    },
+    {
+      "id": "sci-gr9-002",
+      "question": "What is Newton's First Law of Motion?",
+      "ground_truth": "Newton's First Law states that an object at rest stays at rest and an object in motion stays in motion with the same speed and direction unless acted upon by an unbalanced external force. This is also called the Law of Inertia.",
+      "book": "grade-9-science-and-technology.pdf",
+      "category": "Science",
+      "grade": 9,
+      "type": "conceptual"
+    },
+    {
+      "id": "sci-gr10-001",
+      "question": "What is the difference between acids and bases?",
+      "ground_truth": "Acids are substances that release H+ ions in solution, taste sour, and turn blue litmus red. Bases release OH- ions, taste bitter, feel slippery, and turn red litmus blue. pH below 7 indicates acid, above 7 indicates base.",
+      "book": "grade-10-science-and-technology-part-i (1).pdf",
+      "category": "Science",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "sci-gr10-002",
+      "question": "Describe the structure of an atom according to Grade 10 Science.",
+      "ground_truth": "An atom consists of a nucleus containing protons (positive charge) and neutrons (no charge), with electrons (negative charge) orbiting in shells around the nucleus. The atomic number equals the number of protons.",
+      "book": "grade-10-science-and-technology-part-ii.pdf",
+      "category": "Science",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "ss-gr7-001",
+      "question": "नेपालको भूगोलको बारेमा के सिक्नुहुन्छ कक्षा ७ सामाजिक अध्ययनमा?",
+      "ground_truth": "कक्षा ७ सामाजिक अध्ययनमा नेपालको भौगोलिक विभाजन, हिमाली, पहाडी र तराई क्षेत्र, जलवायु, र प्राकृतिक स्रोतहरूको बारेमा सिकाइन्छ।",
+      "book": "grade-7-social-studies.pdf",
+      "category": "Social Studies",
+      "grade": 7,
+      "type": "conceptual"
+    },
+    {
+      "id": "ss-gr7-002",
+      "question": "What are the main geographical regions of Nepal?",
+      "ground_truth": "Nepal has three main geographical regions: the Himalayan region in the north (highest mountains), the Hilly region in the middle (valleys and hills), and the Terai region in the south (flat plains).",
+      "book": "grade-7-social-studies.pdf",
+      "category": "Social Studies",
+      "grade": 7,
+      "type": "conceptual"
+    },
+    {
+      "id": "ss-gr9-001",
+      "question": "नेपालको संविधानको मुख्य विशेषताहरू के हुन्?",
+      "ground_truth": "नेपालको संविधान २०७२ ले संघीय लोकतान्त्रिक गणतन्त्र, धर्मनिरपेक्षता, समावेशी लोकतन्त्र, र मौलिक हकहरूको संरक्षण गर्दछ।",
+      "book": "grade-9-social-studies.pdf",
+      "category": "Social Studies",
+      "grade": 9,
+      "type": "conceptual"
+    },
+    {
+      "id": "ss-gr9-002",
+      "question": "Explain the federal structure of Nepal.",
+      "ground_truth": "Nepal has a three-tier federal structure: Federal government, Provincial governments (7 provinces), and Local governments (municipalities and rural municipalities). Each level has its own legislative, executive, and judicial powers.",
+      "book": "grade-9-social-studies.pdf",
+      "category": "Social Studies",
+      "grade": 9,
+      "type": "conceptual"
+    },
+    {
+      "id": "ss-gr10-001",
+      "question": "What are the fundamental rights in the Constitution of Nepal?",
+      "ground_truth": "Fundamental rights include: Right to live with dignity, Right to freedom, Right to equality, Right against untouchability, Right to property, Right to privacy, Right to religious freedom, Right to education, and Right to employment.",
+      "book": "grade-10-social-studies.pdf",
+      "category": "Social Studies",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "nep-gr9-001",
+      "question": "कक्षा ९ नेपालीमा कुन कविताहरू छन्?",
+      "ground_truth": "कक्षा ९ नेपालीमा विभिन्न कविहरूका कविताहरू समावेश छन् जसमा देशप्रेम, प्रकृति, र मानवीय मूल्यहरूसँग सम्बन्धित विषयवस्तुहरू छन्।",
+      "book": "grade-9-nepali.pdf",
+      "category": "Nepali",
+      "grade": 9,
+      "type": "structural"
+    },
+    {
+      "id": "nep-gr9-002",
+      "question": "व्याकरणमा समास भनेको के हो?",
+      "ground_truth": "समास भनेको दुई वा दुईभन्दा बढी शब्दहरू मिलेर एक शब्द बन्ने प्रक्रिया हो। यसले शब्दहरूलाई छोटो र अर्थपूर्ण बनाउँछ। जस्तै: राजा + पुत्र = राजपुत्र।",
+      "book": "grade-9-nepali.pdf",
+      "category": "Nepali",
+      "grade": 9,
+      "type": "grammar"
+    },
+    {
+      "id": "nep-gr10-001",
+      "question": "कक्षा १० नेपालीको पाठ्यक्रममा कति एकाइहरू छन्?",
+      "ground_truth": "कक्षा १० नेपालीमा साहित्य, व्याकरण, लेखन, र भाषा सम्बन्धी विभिन्न एकाइहरू छन् जसमा गद्य, पद्य, र व्यावहारिक लेखनको अभ्यास गरिन्छ।",
+      "book": "grade-10-nepali.pdf",
+      "category": "Nepali",
+      "grade": 10,
+      "type": "structural"
+    },
+    {
+      "id": "cs-001",
+      "question": "What is a computer network according to the Computer Science book?",
+      "ground_truth": "A computer network is a collection of interconnected computers and devices that can share resources and information. Networks can be LAN (Local Area Network), WAN (Wide Area Network), or MAN (Metropolitan Area Network).",
+      "book": "RS3667_Computer Science.pdf",
+      "category": "Computer Science",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "cs-002",
+      "question": "Write a QBASIC program to find the sum of two numbers.",
+      "ground_truth": "CLS\nINPUT \"Enter first number: \", A\nINPUT \"Enter second number: \", B\nSUM = A + B\nPRINT \"Sum = \"; SUM\nEND",
+      "book": "RS3667_Computer Science.pdf",
+      "category": "Computer Science",
+      "grade": 10,
+      "type": "code_program"
+    },
+    {
+      "id": "cs-003",
+      "question": "What is HTML and its basic structure?",
+      "ground_truth": "HTML (HyperText Markup Language) is used to create web pages. Basic structure: <html><head><title>Page Title</title></head><body>Content here</body></html>. Tags like <p>, <h1>, <img> are used for formatting.",
+      "book": "RS3667_Computer Science.pdf",
+      "category": "Computer Science",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "health-gr7-001",
+      "question": "What are the benefits of physical exercise?",
+      "ground_truth": "Physical exercise improves cardiovascular health, strengthens muscles and bones, helps maintain healthy weight, boosts mental health, improves sleep quality, and increases energy levels.",
+      "book": "grade-7-health-and-physical-english (1).pdf",
+      "category": "Health",
+      "grade": 7,
+      "type": "conceptual"
+    },
+    {
+      "id": "health-gr8-001",
+      "question": "What is personal hygiene and why is it important?",
+      "ground_truth": "Personal hygiene refers to practices that maintain cleanliness and health: regular bathing, handwashing, dental care, clean clothes. It prevents diseases, improves self-confidence, and promotes overall wellbeing.",
+      "book": "grade-8-health-and-physical-english-version.pdf",
+      "category": "Health",
+      "grade": 8,
+      "type": "conceptual"
+    },
+    {
+      "id": "math-gr5-001",
+      "question": "What is the place value system?",
+      "ground_truth": "The place value system shows the value of a digit based on its position. From right: ones, tens, hundreds, thousands, etc. For example, in 4,532, the 4 is in thousands place (value=4000), 5 in hundreds (500), etc.",
+      "book": "RS10811_Mathematics Grade 5 (English Translation).pdf",
+      "category": "Mathematics",
+      "grade": 5,
+      "type": "conceptual"
+    },
+    {
+      "id": "math-gr6-001",
+      "question": "How do you find the area of a rectangle?",
+      "ground_truth": "Area of a rectangle = length × width. For example, if length is 8 cm and width is 5 cm, area = 8 × 5 = 40 square centimeters (cm²).",
+      "book": "grade-6-mathematics.pdf",
+      "category": "Mathematics",
+      "grade": 6,
+      "type": "conceptual"
+    },
+    {
+      "id": "sci-gr5-001",
+      "question": "What are the states of matter?",
+      "ground_truth": "The three main states of matter are: Solid (definite shape and volume), Liquid (definite volume but takes container shape), and Gas (no definite shape or volume). Water can exist in all three states.",
+      "book": "grade-5-science-and-technology.pdf",
+      "category": "Science",
+      "grade": 5,
+      "type": "conceptual"
+    },
+    {
+      "id": "sci-gr6-001",
+      "question": "What is the water cycle?",
+      "ground_truth": "The water cycle is the continuous movement of water: Evaporation (water to vapor), Condensation (vapor to clouds), Precipitation (rain/snow), Collection (rivers, lakes, groundwater). This cycle repeats continuously.",
+      "book": "grade-6-science-and-technology.pdf",
+      "category": "Science",
+      "grade": 6,
+      "type": "conceptual"
+    },
+    {
+      "id": "eng-gr5-001",
+      "question": "What is a noun?",
+      "ground_truth": "A noun is a word that names a person, place, thing, or idea. Examples: person (teacher, boy), place (school, Nepal), thing (book, table), idea (happiness, freedom). Nouns can be common or proper.",
+      "book": "grade-5-english.pdf",
+      "category": "English",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr6-001",
+      "question": "What are the different types of sentences?",
+      "ground_truth": "Four types of sentences: 1) Declarative (statements), 2) Interrogative (questions), 3) Imperative (commands), 4) Exclamatory (strong emotions). Each ends with different punctuation.",
+      "book": "grade-6-english.pdf",
+      "category": "English",
+      "grade": 6,
+      "type": "grammar"
+    },
+    {
+      "id": "math-gr7-001",
+      "question": "What are integers?",
+      "ground_truth": "Integers are whole numbers that can be positive, negative, or zero: ...-3, -2, -1, 0, 1, 2, 3... They do not include fractions or decimals. Used for temperatures below zero, debts, elevations below sea level.",
+      "book": "grade-7-mathematics (1).pdf",
+      "category": "Mathematics",
+      "grade": 7,
+      "type": "conceptual"
+    },
+    {
+      "id": "math-gr8-001",
+      "question": "How do you solve linear equations?",
+      "ground_truth": "To solve linear equations: 1) Simplify both sides, 2) Move variables to one side and constants to other, 3) Combine like terms, 4) Divide by coefficient. Example: 3x + 5 = 14 → 3x = 9 → x = 3",
+      "book": "grade-8-mathematics.pdf",
+      "category": "Mathematics",
+      "grade": 8,
+      "type": "exercise"
+    },
+    {
+      "id": "sci-gr7-001",
+      "question": "What is the human digestive system?",
+      "ground_truth": "The digestive system breaks down food for nutrition. Parts: mouth (chewing), esophagus, stomach (acids), small intestine (absorption), large intestine, rectum. Enzymes help break down proteins, carbohydrates, and fats.",
+      "book": "grade-7-science-and-technology (1).pdf",
+      "category": "Science",
+      "grade": 7,
+      "type": "conceptual"
+    },
+    {
+      "id": "ss-gr6-001",
+      "question": "What are the local government bodies in Nepal?",
+      "ground_truth": "Local government bodies include: Metropolitan Cities, Sub-metropolitan Cities, Municipalities, and Rural Municipalities. Each has Mayor/Chairperson and elected representatives managing local affairs.",
+      "book": "grade-6-social-studies.pdf",
+      "category": "Social Studies",
+      "grade": 6,
+      "type": "conceptual"
+    },
+    {
+      "id": "ss-gr8-001",
+      "question": "What is democracy?",
+      "ground_truth": "Democracy is a system of government where citizens elect representatives. Key features: free elections, rule of law, fundamental rights, separation of powers, free press. Nepal is a federal democratic republic.",
+      "book": "grade-8-social-studies.pdf",
+      "category": "Social Studies",
+      "grade": 8,
+      "type": "conceptual"
+    },
+    {
+      "id": "optmath-gr10-001",
+      "question": "What is a matrix and its types?",
+      "ground_truth": "A matrix is a rectangular array of numbers. Types: Row matrix (1 row), Column matrix (1 column), Square matrix (equal rows and columns), Diagonal matrix, Identity matrix (1s on diagonal, 0s elsewhere), Zero/Null matrix.",
+      "book": "Optional Maths-10.pdf",
+      "category": "Mathematics",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "optmath-gr10-002",
+      "question": "What is the quadratic formula?",
+      "ground_truth": "For ax² + bx + c = 0, x = (-b ± √(b²-4ac)) / 2a. The discriminant (b²-4ac) determines roots: >0 two real roots, =0 one real root, <0 complex roots.",
+      "book": "Optional Maths-10.pdf",
+      "category": "Mathematics",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "eng-gr7-001",
+      "question": "What is active and passive voice?",
+      "ground_truth": "Active voice: subject performs action (The cat ate the fish). Passive voice: subject receives action (The fish was eaten by the cat). Passive uses be + past participle.",
+      "book": "grade-7-english.pdf",
+      "category": "English",
+      "grade": 7,
+      "type": "grammar"
+    },
+    {
+      "id": "eng-gr8-001",
+      "question": "What is reported speech?",
+      "ground_truth": "Reported speech conveys what someone said without quoting directly. Direct: She said, 'I am happy.' Reported: She said that she was happy. Tenses shift back, pronouns change based on context.",
+      "book": "grade-8-english.pdf",
+      "category": "English",
+      "grade": 8,
+      "type": "grammar"
+    },
+    {
+      "id": "sci-gr10-003",
+      "question": "What is electromagnetic induction?",
+      "ground_truth": "Electromagnetic induction is producing electric current by changing magnetic field through a conductor. Discovered by Faraday. Basis for generators, transformers, induction cooktops. EMF = -N(dΦ/dt).",
+      "book": "grade-10-science-and-technology-part-iii.pdf",
+      "category": "Science",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "multi-001",
+      "question": "Compare the math curriculum between Grade 9 and Grade 10.",
+      "ground_truth": "Grade 9 covers foundational topics like sets, arithmetic sequences, basic algebra, and geometry. Grade 10 builds on this with advanced trigonometry, statistics, mensuration of 3D shapes, and optional topics like matrices and vectors.",
+      "book": "multiple",
+      "category": "Mathematics",
+      "grade": "9-10",
+      "type": "comparative"
+    },
+    {
+      "id": "multi-002",
+      "question": "What science topics are common across grades 9 and 10?",
+      "ground_truth": "Common topics include: Force and Motion (expanded in Gr10), Energy and Work, Acids/Bases/Salts, Electricity, Human Body Systems, and Environmental Science. Grade 10 adds advanced chemistry and physics concepts.",
+      "book": "multiple",
+      "category": "Science",
+      "grade": "9-10",
+      "type": "comparative"
+    },
+    {
+      "id": "health-gr6-001",
+      "question": "What is first aid?",
+      "ground_truth": "First aid is immediate help given to an injured or sick person before professional medical help arrives. Includes: stopping bleeding, CPR, treating burns, handling fractures, recovery position.",
+      "book": "grade-six-health-and-physical-english-version.pdf",
+      "category": "Health",
+      "grade": 6,
+      "type": "conceptual"
+    },
+    {
+      "id": "nep-gr5-001",
+      "question": "वर्णमाला भनेको के हो?",
+      "ground_truth": "वर्णमाला भनेको भाषाका आधारभूत ध्वनि एकाइहरू हुन्। नेपाली वर्णमालामा स्वर वर्ण (अ, आ, इ...) र व्यञ्जन वर्ण (क, ख, ग...) समावेश छन्।",
+      "book": "grade-5-nepali.pdf",
+      "category": "Nepali",
+      "grade": 5,
+      "type": "grammar"
+    },
+    {
+      "id": "edge-001",
+      "question": "What happens when you mix an acid with a base?",
+      "ground_truth": "When an acid and base mix, they undergo neutralization reaction producing salt and water: Acid + Base → Salt + Water. Example: HCl + NaOH → NaCl + H2O. The resulting solution's pH depends on the strength of acid/base.",
+      "book": "grade-10-science-and-technology-part-i (1).pdf",
+      "category": "Science",
+      "grade": 10,
+      "type": "conceptual"
+    },
+    {
+      "id": "edge-002",
+      "question": "How do you convert decimals to fractions?",
+      "ground_truth": "To convert decimal to fraction: 1) Count decimal places, 2) Write number without decimal, 3) Put over 10^(decimal places), 4) Simplify. Example: 0.75 = 75/100 = 3/4",
+      "book": "grade-6-mathematics.pdf",
+      "category": "Mathematics",
+      "grade": 6,
+      "type": "exercise"
+    },
+    {
+      "id": "edge-003",
+      "question": "साना बालकहरूको लागि स्वास्थ्य सुझावहरू के हुन्?",
+      "ground_truth": "साना बालकहरूका लागि स्वास्थ्य सुझावहरू: नियमित हात धुने, दाँत माझ्ने, सन्तुलित आहार, पर्याप्त निद्रा, खेलकुद र व्यायाम, र स्वच्छ पानी पिउने।",
+      "book": "grade-7-health-and-physical-english (1).pdf",
+      "category": "Health",
+      "grade": 7,
+      "type": "conceptual"
+    }
+  ]
+}
